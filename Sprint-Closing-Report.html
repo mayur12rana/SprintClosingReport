@@ -1,0 +1,3533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint Closing Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-primary:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  --bg:#0f172a;--bg2:#1e293b;--card:rgba(255,255,255,0.05);--cb:rgba(255,255,255,0.1);
+  --tx:#ffffff;--tx2:#e2e8f0;--mu:#94a3b8;--acc:#6366f1;
+  --gn:#10b981;--rd:#ef4444;--am:#f59e0b;--bl:#06b6d4;--r:10px;
+}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+     background:var(--bg-primary);color:var(--tx);min-height:100vh;font-size:14px;
+     line-height:1.5;padding-bottom:60px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}
+
+/* ═══ CONFIG OVERLAY — matches indexAHA style ════════════ */
+#cfgOverlay{
+  position:fixed;inset:0;z-index:99998;
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;overflow-y:auto;
+}
+#cfgBox{
+  width:100%;max-width:500px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;padding:28px 30px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  margin:auto;
+}
+/* Header branding */
+#cfgBox .cfg-logo{
+  text-align:center;margin-bottom:22px;
+}
+#cfgBox .cfg-logo-icon{
+  font-size:2.4rem;display:block;margin-bottom:8px;
+}
+#cfgBox .cfg-logo-title{
+  font-size:1.3rem;font-weight:700;color:#ffffff;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+#cfgBox .cfg-logo-sub{
+  font-size:.75rem;color:#64748b;margin-top:3px;
+}
+/* Section heading */
+#cfgBox h2{
+  font-size:1rem;color:#e2e8f0;margin-bottom:4px;
+  display:flex;align-items:center;gap:8px;
+}
+#cfgBox .sub{font-size:.75rem;color:#94a3b8;margin-bottom:20px;}
+/* Field labels */
+.cfl{
+  display:block;font-size:.85rem;color:#94a3b8;
+  margin-bottom:6px;font-weight:500;
+}
+/* Inputs — match indexAHA config-field input style */
+.cfi{
+  width:100%;padding:10px 14px;
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:8px;background:rgba(0,0,0,0.3);color:#ffffff;
+  font-family:'Inter',sans-serif;font-size:.95rem;outline:none;
+  transition:border-color .2s;
+}
+.cfi:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,.25);}
+.cfi::placeholder{color:#475569;}
+.cfi-row{display:flex;gap:8px;align-items:center;}
+.cfg-field{margin-bottom:16px;}
+/* Detected config banner */
+.cfg-detected{
+  background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.35);
+  border-radius:10px;padding:12px 14px;margin-bottom:18px;
+}
+.cfg-detected .det-title{
+  font-weight:700;margin-bottom:6px;font-size:.8rem;color:#34d399;
+  display:flex;align-items:center;gap:6px;
+}
+.cfg-detected .det-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.cfg-detected .det-item{
+  background:rgba(16,185,129,.15);padding:3px 10px;border-radius:6px;
+  font-size:.68rem;color:#6ee7b7;border:1px solid rgba(16,185,129,.2);
+}
+/* Generate button */
+#cfgGenBtn{
+  width:100%;padding:12px;border:none;border-radius:9px;cursor:pointer;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;
+  transition:opacity .2s,transform .15s;margin-top:6px;
+  box-shadow:0 4px 14px rgba(99,102,241,.4);
+}
+#cfgGenBtn:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 6px 18px rgba(99,102,241,.5);}
+#cfgGenBtn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+/* Load Sprints button */
+.cfg-load-btn{
+  padding:10px 14px;border:1px solid rgba(99,102,241,0.5);
+  background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:8px;
+  cursor:pointer;font-size:.8rem;white-space:nowrap;
+  font-family:'Inter',sans-serif;font-weight:600;
+  transition:background .2s;
+}
+.cfg-load-btn:hover{background:rgba(99,102,241,0.35);}
+/* Toggle link */
+.cfg-manual-toggle{
+  text-align:center;margin-top:14px;font-size:.72rem;color:#64748b;
+}
+.cfg-manual-toggle a{color:#a5b4fc;cursor:pointer;text-decoration:none;}
+.cfg-manual-toggle a:hover{text-decoration:underline;}
+#cfgManualSection{
+  display:none;margin-top:16px;
+  border-top:1px solid rgba(255,255,255,.08);padding-top:16px;
+}
+/* Auth success info box */
+.cfg-auth-info{
+  display:none;margin-top:7px;padding:8px 12px;
+  background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
+  border-radius:7px;font-size:.75rem;
+}
+.cfg-auth-info .auth-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cfg-auth-info .auth-ok{color:#34d399;font-weight:600;}
+.cfg-auth-info .auth-name{color:#e2e8f0;}
+.cfg-auth-info .auth-email{color:#94a3b8;font-size:.7rem;}
+
+/* iter multiselect box */
+#iterBox{
+  max-height:200px;overflow-y:auto;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;padding:8px;
+}
+.iter-item{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 4px;border-radius:5px;cursor:pointer;
+  font-size:.76rem;color:#cbd5e1;transition:background .15s;
+}
+.iter-item:hover{background:rgba(255,255,255,0.06);}
+.iter-item input[type=checkbox]{accent-color:#1e40af;width:14px;height:14px;cursor:pointer;}
+
+/* ═══ LOADING OVERLAY ══════════════════════════════════ */
+#ldgOverlay{
+  position:fixed;inset:0;z-index:99997;display:none;
+  background:rgba(8,15,32,.97);
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;
+}
+#ldgOverlay.on{display:flex}
+.ldg-spinner{
+  width:44px;height:44px;border:3px solid rgba(30,58,138,.2);
+  border-top-color:#1e40af;border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ldg-msg{font-size:.82rem;color:#94a3b8;text-align:center;max-width:320px;}
+.ldg-prog{
+  width:280px;height:4px;background:rgba(255,255,255,.08);
+  border-radius:2px;overflow:hidden;
+}
+.ldg-prog-fill{
+  height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);
+  border-radius:2px;transition:width .4s ease;
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{0%{opacity:.7}50%{opacity:1}100%{opacity:.7}}
+
+/* xbar toolbar removed */
+
+/* ═══ TOAST ════════════════════════════════════════════ */
+#xtoast{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);
+  background:#1e293b;border:1px solid rgba(16,185,129,.45);color:#34d399;
+  padding:10px 22px;border-radius:8px;font-size:.78rem;font-weight:600;
+  z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s;
+  white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5);
+}
+#xtoast.show{opacity:1}
+
+/* ═══ HERO ══════════════════════════════════════════════ */
+.hero{
+  background:linear-gradient(135deg,#0b1535 0%,#1e293b 60%,#0f172a 100%);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:20px 0 16px;position:relative;overflow:hidden;
+  width:100%;
+}
+.hero::before{
+  content:'';position:absolute;top:-80px;right:-80px;
+  width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hi{max-width:960px;margin:0 auto;padding:0 24px}
+.htop{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.hey{display:inline-flex;align-items:center;gap:6px;font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a5b4fc;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:3px 10px;margin-bottom:9px}
+.htitle{font-size:1.55rem;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:4px}
+.htitle span{color:#a5b4fc}
+.hdate{font-size:.74rem;color:#64748b;margin-bottom:9px}
+.gbox{display:flex;align-items:flex-start;gap:8px;background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.25);border-left:3px solid #38bdf8;border-radius:0 8px 8px 0;padding:12px 16px;width:100%;box-sizing:border-box}
+.glbl{font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#38bdf8;margin-bottom:3px}
+.gtxt{font-size:.82rem;color:#e2e8f0;line-height:1.5;font-weight:500}
+.hr{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.gbadge{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:.83rem;font-weight:700}
+.ba{background:rgba(16,185,129,.2);border:1.5px solid rgba(16,185,129,.5);color:#34d399;font-weight:700;box-shadow:0 0 18px rgba(16,185,129,.14)}
+.bna{background:rgba(239,68,68,.2);border:1.5px solid rgba(239,68,68,.5);color:#fca5a5;font-weight:700}
+.hmeta{display:flex;gap:16px;flex-wrap:wrap}
+.hm{display:flex;flex-direction:column;align-items:flex-end}
+.hm .l{font-size:.59rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b}
+.hm .v{font-size:.81rem;font-weight:600;color:#334155}
+
+/* ═══ SEC NAV ═══════════════════════════════════════════ */
+
+/* ═══ PAGE WRAP ═════════════════════════════════════════ */
+.pw{max-width:960px;margin:0 auto;padding:0 24px 40px}
+
+/* ═══ SECTION ═══════════════════════════════════════════ */
+.sec{display:block;padding-top:22px}
+.sec{display:block}
+
+/* ═══ DIVIDER ═══════════════════════════════════════════ */
+.div{display:flex;align-items:center;gap:10px;margin:24px 0 14px}
+.div-lbl{font-size:.69rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#38bdf8;white-space:nowrap;padding:0 0 4px 0;border-bottom:1px solid rgba(56,189,248,0.4);background:none;border-radius:0;}
+.div::after{content:'';flex:1;height:1px;background:rgba(56,189,248,0.2);margin-left:10px}
+
+/* ═══ GRIDS ═════════════════════════════════════════════ */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
+@media(max-width:900px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr}}
+
+/* ═══ STAT CARD ═════════════════════════════════════════ */
+.sc{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 15px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+.sc:hover{border-color:rgba(255,255,255,0.18)}
+.si{width:40px;height:40px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+.sv{font-size:1.4rem;font-weight:700;line-height:1;color:#fff}
+.sl{font-size:.66rem;color:#94a3b8;margin-top:3px}
+.sd{font-size:.62rem;font-weight:600;margin-top:3px;display:inline-flex;align-items:center;gap:2px}
+.up{color:#10b981}.dn{color:#ef4444}.neu{color:#94a3b8}
+
+/* ═══ CHART CARD ════════════════════════════════════════ */
+.cc{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;overflow:hidden}
+.cch{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.cct{font-size:.77rem;font-weight:600;color:#e2e8f0}
+.ccs{font-size:.63rem;color:#94a3b8;margin-top:1px}
+.cw{position:relative}
+
+/* ═══ PROGRESS ══════════════════════════════════════════ */
+.pl{display:flex;flex-direction:column;gap:8px}
+.ph{display:flex;justify-content:space-between;margin-bottom:3px}
+.pll{font-size:.7rem;color:#cbd5e1}
+.plv{font-size:.66rem;font-weight:600;color:#e2e8f0}
+.pt{height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.pf{height:100%;border-radius:4px}
+
+/* ═══ TABLE ═════════════════════════════════════════════ */
+.rt{width:100%;border-collapse:collapse;font-size:.68rem}
+.rt thead tr{border-bottom:2px solid rgba(99,102,241,0.5)}
+.rt th{padding:7px 9px;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#e2e8f0;background:rgba(0,0,0,0.4);white-space:nowrap;text-align:left;border:1px solid rgba(255,255,255,0.12)}
+.rt td{padding:6px 9px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:middle}
+.rt tbody tr:nth-child(odd){background:rgba(255,255,255,0.02)}.rt tbody tr:hover td{background:rgba(99,102,241,0.08)}
+.rt .n{text-align:right}
+
+/* ═══ TAG ═══════════════════════════════════════════════ */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.6rem;font-weight:700;white-space:nowrap;letter-spacing:.04em}
+.tg{background:rgba(16,185,129,.18);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.tr{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.ta{background:rgba(245,158,11,.18);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.tb{background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+.tp{background:rgba(168,85,247,.18);color:#d8b4fe;border:1px solid rgba(168,85,247,.3)}
+.tgr{background:rgba(100,116,139,.2);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+
+/* ═══ LEGEND ════════════════════════════════════════════ */
+.leg{list-style:none;display:flex;flex-direction:column;gap:6px}
+.leg li{display:flex;align-items:center;gap:7px;font-size:.71rem;color:#94a3b8}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.lv{font-weight:700;font-size:.82rem;color:#e2e8f0;margin-left:auto}
+.lp{font-size:.6rem;color:#64748b;min-width:32px;text-align:right}
+
+/* ═══ METRIC ROW ════════════════════════════════════════ */
+.mr{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.07)}
+.mr:last-child{border-bottom:none}
+.mri{font-size:1rem;width:25px;text-align:center;flex-shrink:0}
+.mrn{flex:1;font-size:.74rem;color:#94a3b8}
+.mrv{font-size:.87rem;font-weight:700;color:#e2e8f0}
+.mrs{font-size:.6rem;color:#64748b;text-align:right}
+
+/* ═══ BUG COLS ══════════════════════════════════════════ */
+.bcg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:700px){.bcg{grid-template-columns:1fr}}
+.bcol{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden}
+.bch{padding:9px 13px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between}
+.bcht{font-size:.71rem;font-weight:700}
+.bcb{padding:9px 13px}
+.bs{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.bs:last-child{border-bottom:none}
+.bsl{font-size:.68rem;color:#94a3b8}
+.bsv{font-size:.79rem;font-weight:700}
+
+/* ═══ KPI PAIR ══════════════════════════════════════════ */
+.kpair{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.ki{background:rgba(255,255,255,0.06);border-radius:6px;padding:7px 9px;text-align:center}
+.kn{font-size:1.22rem;font-weight:700;line-height:1}
+.kl{font-size:.57rem;color:#94a3b8;margin-top:2px}
+
+/* ═══ CALLOUT ═══════════════════════════════════════════ */
+.cal{border-radius:8px;padding:11px 14px;margin-bottom:13px;display:flex;gap:9px;align-items:flex-start}
+.ci{font-size:1rem;flex-shrink:0}
+.ct{font-size:.73rem;font-weight:700;margin-bottom:2px}
+.cx{font-size:.69rem;line-height:1.5;color:#cbd5e1}
+.cag{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25)}.cag .ct{color:#34d399}
+.car{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25)}.car .ct{color:#fca5a5}
+.caa{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25)}.caa .ct{color:#fcd34d}
+.cab{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)}.cab .ct{color:#93c5fd}
+
+/* ═══ KPI BREAKDOWN CARDS ════════════════════════════════ */
+/* ═══ PRINT ═════════════════════════════════════════════ */
+@media print{
+  @page{size:letter;margin:0.5in}
+  .snav,#cfgOverlay,#ldgOverlay,#scrollTop{display:none !important}
+  .sec{display:block}
+  body{background:#0f172a;color:#e2e8f0;padding-bottom:0;font-size:10px}
+  .hero{background:linear-gradient(135deg,#0f172a,#1e293b) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cc,.sc,.bcol{border-color:#ddd !important;page-break-inside:avoid}
+  .pw{padding:0 8px;max-width:100%}
+  .hi{max-width:100%}
+  .g4,.g3,.g2{grid-template-columns:repeat(2,1fr);page-break-inside:avoid}
+  .g4{grid-template-columns:repeat(4,1fr)}
+}
+
+/* Print */
+@media print{
+      }
+
+/* ═══ REPORT DOCUMENT STYLES ════════════════════════════ */
+.rpt-wrap{max-width:900px;margin:0 auto;padding:20px 24px 60px;}
+
+/* Header box — team / sprint / dates */
+.rpt-header-box{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:12px;flex-wrap:wrap;
+  background:rgba(0,0,0,0.25);border:1px solid rgba(56,189,248,0.25);
+  border-radius:8px;padding:14px 18px;margin-bottom:14px;
+}
+.rpt-header-label{font-size:.58rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.rpt-header-val{font-size:1.05rem;font-weight:700;color:#e2e8f0;}
+.rpt-sprint-val{color:#38bdf8;}
+
+/* Goal block */
+.rpt-goal-block{
+  background:rgba(56,189,248,0.07);border-left:3px solid #38bdf8;
+  border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:14px;
+}
+.rpt-goal-title{font-size:.62rem;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.rpt-goal-list{list-style:none;margin:0;padding:0;}
+.rpt-goal-list li{font-size:.72rem;color:#e2e8f0;padding:2px 0;display:flex;align-items:flex-start;gap:6px;}
+.rpt-goal-list li::before{content:'◆';color:#38bdf8;font-size:.5rem;margin-top:4px;flex-shrink:0;}
+
+/* Section title */
+.rpt-section-title{
+  font-size:.69rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:#38bdf8;margin:20px 0 8px;padding-bottom:5px;
+  border-bottom:1px solid rgba(56,189,248,0.3);
+}
+
+/* Report table — matches spdr-table */
+        /* ── Team B / Adhoc Support ──────────────────────── */
+        #rpt-teamBWrap{margin-bottom:4px;}
+        .tb-header{
+          display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+          padding:8px 12px;border-radius:8px 8px 0 0;
+          background:linear-gradient(90deg,rgba(99,102,241,.25),rgba(139,92,246,.18));
+          border:1px solid rgba(99,102,241,.3);border-bottom:none;
+        }
+        .tb-header-title{font-size:.65rem;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:.06em;flex:0 0 auto;}
+        .tb-header-count{font-size:.72rem;font-weight:700;color:#e2e8f0;background:rgba(0,0,0,.25);padding:2px 9px;border-radius:10px;flex:0 0 auto;}
+        .tb-header-pills{display:flex;gap:5px;flex-wrap:wrap;}
+        .tb-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:.6rem;font-weight:700;}
+        .tb-pill-closed  {background:rgba(52,211,153,.15);color:#34d399;border:1px solid rgba(52,211,153,.35);}
+        .tb-pill-resolved{background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.35);}
+        .tb-pill-open    {background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.35);}
+        /* Discipline table */
+        .tb-disc-tbl{width:100%;border-collapse:collapse;font-size:.68rem;
+          border:1px solid rgba(99,102,241,.25);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
+        .tb-disc-tbl th{
+          background:rgba(30,20,60,.7);color:#c4b5fd;font-weight:700;
+          padding:6px 12px;text-align:center;font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;
+          border-bottom:1px solid rgba(99,102,241,.25);border-right:1px solid rgba(99,102,241,.12);
+        }
+        .tb-disc-tbl th:first-child{text-align:left;}
+        .tb-disc-tbl th:last-child{border-right:none;}
+        .tb-disc-tbl td{padding:7px 12px;text-align:center;border-bottom:1px solid rgba(255,255,255,.05);border-right:1px solid rgba(99,102,241,.08);}
+        .tb-disc-tbl td:first-child{text-align:left;font-weight:600;}
+        .tb-disc-tbl td:last-child{border-right:none;}
+        .tb-disc-tbl tr:last-child td{border-bottom:none;}
+        .tb-disc-tbl tfoot td{
+          background:rgba(30,20,60,.55);font-weight:700;color:#e2e8f0;
+          border-top:1px solid rgba(99,102,241,.3);border-bottom:none;padding:6px 12px;
+        }
+        .tb-disc-tbl tbody tr:nth-child(odd){background:rgba(99,102,241,.05);}
+        .tb-disc-tbl tbody tr:hover td{background:rgba(99,102,241,.12)!important;}
+        /* Light theme */
+        body.light-theme .tb-header{background:linear-gradient(90deg,rgba(99,102,241,.12),rgba(139,92,246,.08));border-color:rgba(99,102,241,.25);}
+        body.light-theme .tb-header-title{color:#4338ca;}
+        body.light-theme .tb-header-count{background:rgba(0,0,0,.07);color:#1e293b;}
+        body.light-theme .tb-pill-closed  {background:rgba(5,150,105,.12);color:#065f46;border-color:rgba(5,150,105,.3);}
+        body.light-theme .tb-pill-resolved{background:rgba(37,99,235,.1);color:#1e40af;border-color:rgba(37,99,235,.3);}
+        body.light-theme .tb-pill-open    {background:rgba(217,119,6,.1);color:#92400e;border-color:rgba(217,119,6,.3);}
+        body.light-theme .tb-disc-tbl{border-color:rgba(99,102,241,.2);}
+        body.light-theme .tb-disc-tbl th{background:#ede9fe;color:#4338ca;border-bottom-color:rgba(99,102,241,.2);border-right-color:rgba(99,102,241,.12);}
+        body.light-theme .tb-disc-tbl td{border-bottom-color:rgba(0,0,0,.05);border-right-color:rgba(99,102,241,.08);color:#1e293b;}
+        body.light-theme .tb-disc-tbl tbody tr:nth-child(odd){background:rgba(99,102,241,.04);}
+        body.light-theme .tb-disc-tbl tbody tr:hover td{background:rgba(99,102,241,.1)!important;}
+        body.light-theme .tb-disc-tbl tfoot td{background:#ede9fe;color:#312e81;border-top-color:rgba(99,102,241,.25);}
+
+        /* ── AI Data table — blue header/footer ───── */
+        #rpt-aiDataTable th{
+          background:rgba(59,130,246,.28);color:#bfdbfe;
+          border-bottom-color:rgba(59,130,246,.4);border-right-color:rgba(59,130,246,.15);
+        }
+        #rpt-aiDataTable tfoot td{
+          background:rgba(59,130,246,.2);color:#93c5fd;
+          border-top:1px solid rgba(59,130,246,.4);
+        }
+        #rpt-aiDataTable tbody tr:hover{background:rgba(59,130,246,.07)!important;}
+        /* Team B discipline table — light green */
+        .tb-disc-tbl th{
+          background:rgba(16,185,129,.28)!important;color:#6ee7b7!important;
+          border-bottom-color:rgba(16,185,129,.4)!important;border-right-color:rgba(16,185,129,.15)!important;
+        }
+        .tb-disc-tbl tfoot td{
+          background:rgba(16,185,129,.2)!important;color:#a7f3d0!important;
+          border-top:1px solid rgba(16,185,129,.4)!important;
+        }
+        /* Defect table — light red header/footer */
+        .rpt-bug-tbl th{
+          background:rgba(239,68,68,.25);color:#fca5a5;
+          border-bottom-color:rgba(239,68,68,.4);border-right-color:rgba(239,68,68,.15);
+        }
+        .rpt-bug-tbl tfoot td{
+          background:rgba(239,68,68,.2);color:#fecaca;
+          border-top:1px solid rgba(239,68,68,.4);
+        }
+        .rpt-bug-tbl tbody tr:hover{background:rgba(239,68,68,.06)!important;}
+        /* Light theme */
+        body.light-theme #rpt-aiDataTable th{background:rgba(5,150,105,.18)!important;color:#065f46!important;border-bottom-color:rgba(5,150,105,.3)!important;}
+        body.light-theme #rpt-aiDataTable tfoot td{background:rgba(5,150,105,.12)!important;color:#064e3b!important;border-top-color:rgba(5,150,105,.3)!important;}
+        body.light-theme .tb-disc-tbl th{background:rgba(5,150,105,.15)!important;color:#065f46!important;}
+        body.light-theme .tb-disc-tbl tfoot td{background:rgba(5,150,105,.1)!important;color:#064e3b!important;}
+        body.light-theme .rpt-bug-tbl th{background:rgba(239,68,68,.12)!important;color:#991b1b!important;}
+        body.light-theme .rpt-bug-tbl tfoot td{background:rgba(239,68,68,.08)!important;color:#7f1d1d!important;}
+
+        .rpt-edit{outline:none;cursor:text;}
+        .rpt-edit:hover{background:rgba(99,102,241,.1)!important;border-radius:3px;}
+        .rpt-edit:focus{background:rgba(99,102,241,.18)!important;box-shadow:0 0 0 2px rgba(99,102,241,.4);border-radius:3px;}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:.68rem;}
+.rpt-tbl th{
+  background:rgba(0,0,0,0.45);color:#e2e8f0;font-weight:700;
+  padding:7px 9px;border:1px solid rgba(255,255,255,0.14);
+  text-align:center;white-space:nowrap;font-size:.61rem;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.rpt-tbl th:first-child{text-align:left;}
+.rpt-tbl td{
+  padding:6px 9px;border:1px solid rgba(255,255,255,0.07);
+  color:#cbd5e1;vertical-align:middle;text-align:center;
+}
+.rpt-tbl td:first-child{text-align:left;font-weight:500;color:#e2e8f0;}
+.rpt-tbl tbody tr:nth-child(odd){background:rgba(255,255,255,0.025);}
+.rpt-tbl tbody tr:hover{background:rgba(56,189,248,0.06);}
+.rpt-tbl tfoot td{
+  background:rgba(30,41,59,0.85);font-weight:700;color:#fff;
+  border-top:2px solid rgba(56,189,248,0.45);text-align:center;
+}
+.rpt-tbl tfoot td:first-child{text-align:left;}
+.rpt-tbl a{color:#60a5fa;text-decoration:none;}
+.rpt-tbl a:hover{text-decoration:underline;}
+
+/* Insight input */
+.rpt-insight-area{
+  flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);
+  border-radius:6px;color:#e2e8f0;font-family:'Inter',sans-serif;
+  font-size:.68rem;padding:8px 10px;resize:vertical;min-height:56px;outline:none;
+}
+.rpt-insight-area:focus{border-color:#38bdf8;}
+.rpt-insight-area::placeholder{color:#64748b;}
+
+/* Insight list */
+.rpt-insight-list{list-style:none;margin:6px 0 0;padding:0;}
+.rpt-insight-list li{
+  font-size:.7rem;color:#e2e8f0;padding:5px 10px;
+  background:rgba(56,189,248,0.07);border-left:3px solid #38bdf8;
+  border-radius:0 5px 5px 0;margin-bottom:4px;
+  display:flex;align-items:flex-start;gap:6px;justify-content:space-between;
+}
+.rpt-insight-list li::before{content:'◆';color:#38bdf8;font-size:.5rem;flex-shrink:0;margin-top:4px;}
+
+/* Over-plan badge */
+.rpt-over{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.62rem;font-weight:700;
+  background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.4);}
+.rpt-ok{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.62rem;font-weight:700;
+  background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.4);}
+.rpt-neutral{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.62rem;font-weight:700;
+  background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.3);}
+</style>
+</head>
+<body>
+
+<!-- ═══ CONFIG OVERLAY ══════════════════════════════════ -->
+<div id="cfgOverlay">
+  <div id="cfgBox">
+
+    <!-- Logo / Brand -->
+    <div class="cfg-logo">
+      <span class="cfg-logo-icon">📋</span>
+      <div class="cfg-logo-title">Sprint Closing Report</div>
+      <div class="cfg-logo-sub">End-of-sprint summary &amp; quality metrics</div>
+    </div>
+
+    <!-- Detected config banner (shown when indexAHA has passed context) -->
+    <div class="cfg-detected" id="detectedBanner" style="display:none">
+      <div class="det-title">✅ Configuration detected from Dashboard</div>
+      <div class="det-row" id="detectedDetails"></div>
+    </div>
+
+    <!-- Connection section -->
+    <div id="cfgManualSection" style="display:block">
+      <h2>🔗 Connect to TFS</h2>
+      <div class="cfg-field" style="margin-top:12px">
+        <label class="cfl">TFS / Azure DevOps URL</label>
+        <input class="cfi" type="text" id="cfgTfsUrl" placeholder="https://tfs.company.com/tfs/ProjectCollection"
+             oninput="safeLS.set('scr_tfsUrl',this.value.trim())">
+      </div>
+      <div class="cfg-field">
+        <label class="cfl">Personal Access Token (PAT)</label>
+        <div class="cfi-row">
+          <div style="position:relative;flex:1;">
+            <input class="cfi" type="password" id="cfgPat" placeholder="Enter your PAT"
+              style="padding-right:38px;"
+              oninput="safeLS.set('scr_pat',this.value.trim())"
+              onblur="scrAutoVerifyPat()">
+            <button type="button" onclick="scrTogglePatEye()" id="scrPatEye"
+              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:2px 4px;line-height:1;" title="Show/Hide PAT">👁️</button>
+          </div>
+          <button class="cfg-load-btn" onclick="loadProjectsAndIters()">🔗 Load Sprints</button>
+        </div>
+        <!-- Auth success info — mimics indexAHA patUserInfo -->
+        <div class="cfg-auth-info" id="cfgAuthInfo">
+          <div class="auth-row">
+            <span class="auth-ok">✅ Authenticated as:</span>
+            <span class="auth-name" id="cfgAuthName"></span>
+            <span class="auth-email" id="cfgAuthEmail"></span>
+          </div>
+        </div>
+        <div id="patStatus" style="font-size:.72rem;margin-top:5px;color:#94a3b8"></div>
+      </div>
+
+      <!-- Project select -->
+      <div class="cfg-field" id="areaField" style="display:none">
+        <label class="cfl">Project</label>
+        <select class="cfi" id="cfgProject">
+          <option value="">-- Select Project --</option>
+        </select>
+      </div>
+
+      <!-- Area Path multi-select -->
+      <div class="cfg-field" id="areaPathField" style="display:none">
+        <label class="cfl">Area Path <span style="font-weight:400;font-size:.8rem;color:#64748b;">(select one or more)</span></label>
+        <input type="text" id="areaSearch" class="cfi" placeholder="🔍 Search area path…"
+          oninput="filterBox('areaBox', this.value)"
+          style="padding:8px 12px;font-size:.82rem;margin-bottom:6px;">
+        <div id="areaBox" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;"></div>
+        <div id="areaSelCount" style="font-size:.7rem;color:#60a5fa;margin-top:5px"></div>
+      </div>
+
+      <!-- Sprint / Iteration multi-select -->
+      <div class="cfg-field" id="iterField" style="display:none">
+        <label class="cfl">Sprint / Iteration <span style="font-weight:400;font-size:.8rem;color:#64748b;">(select one or more)</span></label>
+        <input type="text" id="iterSearch" class="cfi" placeholder="🔍 Search sprint / iteration…"
+          oninput="filterBox('iterBox', this.value)"
+          style="padding:8px 12px;font-size:.82rem;margin-bottom:6px;">
+        <div id="iterBox" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;"></div>
+        <div id="iterSelCount" style="font-size:.7rem;color:#60a5fa;margin-top:5px"></div>
+      </div>
+    </div>
+
+    <button id="cfgGenBtn" onclick="generateReport()" disabled>📊 Generate Report</button>
+
+    <div class="cfg-manual-toggle" id="manualHint" style="display:none">
+      <a onclick="toggleManualConfig()">⚙️ Edit connection settings</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ LOADING OVERLAY ════════════════════════════════ -->
+<div id="ldgOverlay">
+  <div class="ldg-spinner"></div>
+  <div class="ldg-msg" id="ldgMsg">Fetching sprint data…</div>
+  <div class="ldg-prog"><div class="ldg-prog-fill" id="ldgFill" style="width:20%"></div></div>
+</div>
+
+<div id="xtoast"></div>
+
+<!-- ═══ DRILL-DOWN POPUP MODAL ════════════════════════════ -->
+<div id="rptPopupOverlay" onclick="closeRptPopup()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;"></div>
+<div id="rptPopupBox"
+  style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+         z-index:9001;width:min(92vw,860px);max-height:82vh;overflow:hidden;
+         background:#0f172a;border:1px solid rgba(56,189,248,.3);border-radius:12px;
+         box-shadow:0 24px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;
+              background:rgba(30,58,138,.8);border-bottom:1px solid rgba(56,189,248,.2);flex-shrink:0;">
+    <span id="rptPopupTitle" style="font-size:.82rem;font-weight:700;color:#e2e8f0;"></span>
+    <button onclick="closeRptPopup()"
+      style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;
+             padding:0 4px;line-height:1;">✕</button>
+  </div>
+  <div id="rptPopupBody" style="overflow-y:auto;flex:1;padding:0;"></div>
+</div>
+
+
+<!-- ═══ REPORT DOCUMENT ════════════════════════════════ -->
+<div id="rptWrap" style="display:none;max-width:960px;margin:0 auto;padding:20px 24px 60px;">
+
+  <!-- ── Top bar: Change Sprint (left) + Export toolbar (right) ── -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+
+    <button onclick="changeSprint()" id="changeSprintBtn"
+      style="display:none;align-items:center;gap:6px;padding:6px 16px;
+             background:rgba(99,102,241,0.25);border:1px solid rgba(99,102,241,0.5);
+             color:#a5b4fc;border-radius:6px;cursor:pointer;font-size:.75rem;
+             font-weight:600;font-family:inherit;transition:background .2s;white-space:nowrap;"
+      onmouseover="this.style.background='rgba(99,102,241,0.4)'"
+      onmouseout="this.style.background='rgba(99,102,241,0.25)'">
+      ← Change Sprint
+    </button>
+
+    <!-- Export toolbar — styled like reference screenshot -->
+    <div id="scrExportBar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
+      <button onclick="scrOpenPreview()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:50px;
+               border:none;cursor:pointer;font-family:inherit;font-size:.76rem;font-weight:700;
+               background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+               box-shadow:0 3px 10px rgba(99,102,241,.35);transition:opacity .18s,transform .15s;"
+        onmouseover="this.style.opacity='.86';this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.opacity='1';this.style.transform='none'">
+        👁 Preview
+      </button>
+      <button onclick="scrCopyEmail()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:50px;
+               border:none;cursor:pointer;font-family:inherit;font-size:.76rem;font-weight:700;
+               background:linear-gradient(135deg,#047857,#059669);color:#fff;
+               box-shadow:0 3px 10px rgba(5,150,105,.3);transition:opacity .18s,transform .15s;"
+        onmouseover="this.style.opacity='.86';this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.opacity='1';this.style.transform='none'">
+        📋 Copy to Email
+      </button>
+      <button onclick="scrDownloadHtml()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:50px;
+               border:none;cursor:pointer;font-family:inherit;font-size:.76rem;font-weight:700;
+               background:linear-gradient(135deg,#1e3a8a,#1e40af);color:#fff;
+               box-shadow:0 3px 10px rgba(30,64,175,.3);transition:opacity .18s,transform .15s;"
+        onmouseover="this.style.opacity='.86';this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.opacity='1';this.style.transform='none'">
+        ⬇ HTML
+      </button>
+      <button onclick="scrDownloadPdf()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:50px;
+               border:none;cursor:pointer;font-family:inherit;font-size:.76rem;font-weight:700;
+               background:linear-gradient(135deg,#991b1b,#dc2626);color:#fff;
+               box-shadow:0 3px 10px rgba(220,38,38,.3);transition:opacity .18s,transform .15s;"
+        onmouseover="this.style.opacity='.86';this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.opacity='1';this.style.transform='none'">
+        ⬇ PDF
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── Report Panel (one bordered container) ── -->
+  <div id="rptPanel" style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(56,189,248,0.3);
+    border-radius:12px;
+    padding:22px 24px 28px;
+    box-shadow:0 4px 32px rgba(0,0,0,0.3);
+  ">
+
+    <!-- Report Header box -->
+    <div class="rpt-header-box">
+      <div>
+        <div class="rpt-header-label">AREA / TEAM</div>
+        <div class="rpt-header-val" id="rpt-areaName">—</div>
+      </div>
+      <div style="text-align:center">
+        <div class="rpt-header-label">SPRINT</div>
+        <div class="rpt-header-val rpt-sprint-val" id="rpt-sprintName">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="rpt-header-label">SPRINT DATES</div>
+        <div class="rpt-header-val" id="rpt-dates">—</div>
+      </div>
+    </div>
+
+    <!-- Sprint Goal -->
+    <div class="rpt-goal-block" id="rpt-goalBlock" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="rpt-goal-title" style="margin-bottom:0;">🎯 SPRINT GOAL</span>
+        <span id="rpt-goalBadge" style="display:none;"></span>
+      </div>
+      <table id="rpt-goalTable" style="width:100%;border-collapse:collapse;font-size:.72rem;">
+        <thead id="rpt-goalTableHead">
+          <tr>
+            <th id="rpt-goalCol-title" style="text-align:left;padding:5px 8px;background:rgba(0,0,0,.35);color:#94a3b8;font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);">Sprint Goal</th>
+            <th id="rpt-goalCol-state" style="text-align:center;padding:5px 8px;background:rgba(0,0,0,.35);color:#94a3b8;font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap;width:90px;">State</th>
+            <th id="rpt-goalCol-id"    style="text-align:center;padding:5px 8px;background:rgba(0,0,0,.35);color:#94a3b8;font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap;width:70px;">ID</th>
+          </tr>
+        </thead>
+        <tbody id="rpt-goalTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Section 1: Delivery Summary -->
+    <div class="rpt-section-title">📊 Delivery Summary</div>
+    <div style="overflow-x:auto;margin-bottom:2px">
+      <table class="rpt-tbl">
+        <thead><tr>
+          <th>Category</th><th>Total Items</th><th>Closed</th><th>Resolved</th>
+          <th>Open</th><th>OnHold</th><th>Adhoc</th><th>Delivery %</th>
+        </tr></thead>
+        <tbody id="rpt-deliverySummaryBody"></tbody>
+      </table>
+
+    <!-- Section 8: Sprint Insight -->
+    <div class="rpt-section-title" style="margin-top:16px">💡 Sprint Insight</div>
+    <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">
+      <textarea id="scrInsightInput" class="rpt-insight-area"
+        placeholder="Enter sprint insight…&#10;Each line becomes a bullet point." rows="3"></textarea>
+      <button onclick="scrAddInsight()"
+        style="background:rgba(56,189,248,0.2);border:1px solid rgba(56,189,248,0.5);
+               color:#67e8f9;border-radius:6px;padding:7px 14px;font-size:.72rem;
+               font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;margin-top:2px;
+               transition:background .2s;"
+        onmouseover="this.style.background='rgba(56,189,248,0.35)'"
+        onmouseout="this.style.background='rgba(56,189,248,0.2)'">+ Add</button>
+    </div>
+    <ul id="scrInsightList" class="rpt-insight-list"></ul>
+    <div id="scrInsightEmpty" style="font-size:.65rem;color:#64748b;text-align:center;
+      padding:8px;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">
+      No insights added yet.
+    </div>
+    </div>
+
+    <!-- Section 5: Team B / Adhoc Support -->
+    <div class="rpt-section-title" style="margin-top:16px">🅱️ Team B — Adhoc Support</div>
+    <div id="rpt-teamBWrap">
+      <!-- Header: ticket count + status pills -->
+      <div class="tb-header" id="tb-header" style="display:none">
+        <span class="tb-header-title">🅱️ Adhoc Support</span>
+        <span class="tb-header-count" id="tb-total-count">0 Tickets</span>
+        <div class="tb-header-pills" id="tb-header-pills"></div>
+      </div>
+      <!-- Discipline table -->
+      <table class="tb-disc-tbl" id="tb-disc-tbl" style="display:none">
+        <thead><tr>
+          <th>Discipline</th>
+          <th>Planned (h)</th>
+          <th>Completed (h)</th>
+          <th>Remaining (h)</th>
+        </tr></thead>
+        <tbody id="tb-disc-body"></tbody>
+        <tfoot id="tb-disc-foot"></tfoot>
+      </table>
+      <div id="rpt-teamBEmpty" style="display:none;text-align:center;padding:12px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No Adhoc Support tickets this sprint.</div>
+    </div>
+    <!-- hidden table for email/readTbl compatibility -->
+    <table style="display:none"><thead><tr><th>Discipline</th><th>Planned (h)</th><th>Completed (h)</th><th>Remaining (h)</th></tr></thead>
+      <tbody id="rpt-teamBBody"></tbody><tfoot id="rpt-teamBFoot"></tfoot></table>
+
+    <!-- Section 7: Defect Summary -->
+    <div class="rpt-section-title" style="margin-top:16px">🐛 Bug Report — Sprint Quality Analysis</div>
+    <div id="rpt-bugTotalEffortBar" style="display:none;margin-bottom:6px;padding:6px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:7px;font-size:.7rem;color:#94a3b8;cursor:pointer;"
+         onclick="showRptPopup('All Bug Tasks',window._rpt_allBugs,'tasks')">
+      🕐 Total Task Hours on All Bugs: <strong id="rpt-bugTotalEffortVal" style="color:#fbbf24;font-size:.8rem;"></strong>
+      <span style="color:#475569;margin-left:8px;">(click to view all tasks)</span>
+    </div>
+    <div style="overflow-x:auto;margin-bottom:2px">
+      <table class="rpt-tbl rpt-bug-tbl">
+        <thead><tr>
+          <th>Ownership</th><th>CS (Sprint)</th>
+          <th>Proposed</th><th>Open</th><th>Closed</th><th>Resolved</th>
+          <th>Effort Taken (h)</th>
+        </tr></thead>
+        <tbody id="rpt-bugBody"></tbody>
+        <tfoot id="rpt-bugFoot"></tfoot>
+      </table>
+    </div>
+
+    <!-- Bug Type Classification -->
+    <div class="rpt-section-title" style="margin-top:16px">🏷️ Bug Type Classification</div>
+    <div style="overflow-x:auto;margin-bottom:2px">
+      <table class="rpt-tbl rpt-bug-tbl">
+        <thead><tr>
+          <th>Type</th><th>Total</th><th>Proposed</th><th>Open</th><th>Closed</th><th>Resolved</th><th>Effort Taken (h)</th>
+        </tr></thead>
+        <tbody id="rpt-bugTypeBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Section 9: AI Data -->
+    <div class="rpt-section-title" style="margin-top:16px">🤖 AI Data — Dev &amp; QA Adoption Summary</div>
+    <div style="overflow-x:auto;margin-bottom:2px">
+      <table class="rpt-tbl" id="rpt-aiDataTable">
+        <thead><tr>
+          <th style="text-align:left;min-width:90px">Discipline</th>
+          <th>Total Tasks</th><th>AI Tasks</th><th>Manual Tasks</th>
+          <th>AI Efficiency %</th><th>Manual Efficiency %</th><th>Saved Hours</th>
+        </tr></thead>
+        <tbody id="rpt-aiDataBody"></tbody>
+        <tfoot id="rpt-aiDataFoot"></tfoot>
+      </table>
+      <div id="rpt-aiDataEmpty" style="display:none;text-align:center;padding:8px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No AI task data found for this sprint.</div>
+    </div>
+
+    <!-- hidden JS stubs for renderAll compatibility -->
+    <span style="display:none" id="goalBox"></span><span style="display:none" id="goalText"></span>
+    <span style="display:none" id="goalBadge"></span><span style="display:none" id="areaInfoBox"></span>
+    <span style="display:none" id="iterInfoBox"></span><span style="display:none" id="areaInfoVal"></span>
+    <span style="display:none" id="iterInfoVal"></span><span style="display:none" id="ov-planned"></span>
+    <span style="display:none" id="ov-plDel"></span><span style="display:none" id="ov-plDel-sub"></span>
+    <span style="display:none" id="ov-closed"></span><span style="display:none" id="ov-delRate"></span>
+    <span style="display:none" id="ov-undel"></span><span style="display:none" id="ov-delSub"></span>
+    <span style="display:none" id="k-delRate"></span><span style="display:none" id="l-closed"></span>
+    <span style="display:none" id="l-resolved"></span><span style="display:none" id="l-open"></span>
+    <span style="display:none" id="l-onhold"></span><span style="display:none" id="l-adhoc"></span>
+    <span style="display:none" id="eff-del-lbl"></span><span style="display:none" id="eff-del-pct"></span>
+    <span style="display:none" id="eff-del-rem"></span><span style="display:none" id="eff-nd-lbl"></span>
+    <span style="display:none" id="eff-nd-pct"></span><span style="display:none" id="eff-total-lbl"></span>
+    <span style="display:none" id="eff-total-rem"></span><span style="display:none" id="eff-sub"></span>
+    <span style="display:none" id="undel-count-badge"></span><span style="display:none" id="undel-sub"></span>
+    <table style="display:none"><tbody id="undel-tbody"></tbody></table>
+    <span style="display:none" id="disc-dev-capacity"></span><span style="display:none" id="disc-dev-completed"></span>
+    <span style="display:none" id="disc-dev-planned"></span><span style="display:none" id="disc-dev-util"></span>
+    <span style="display:none" id="disc-dev-saved"></span><span style="display:none" id="disc-dev-names"></span>
+    <span style="display:none" id="disc-dev-members-badge"></span>
+    <span style="display:none" id="disc-qa-capacity"></span><span style="display:none" id="disc-qa-completed"></span>
+    <span style="display:none" id="disc-qa-planned"></span><span style="display:none" id="disc-qa-util"></span>
+    <span style="display:none" id="disc-qa-saved"></span><span style="display:none" id="disc-qa-names"></span>
+    <span style="display:none" id="disc-qa-members-badge"></span>
+    <span style="display:none" id="dev-cap-del"></span><span style="display:none" id="dev-cap-nd"></span>
+    <span style="display:none" id="dev-cap-adhoc"></span><span style="display:none" id="qa-cap-del"></span>
+    <span style="display:none" id="qa-cap-nd"></span><span style="display:none" id="qa-cap-adhoc"></span>
+    <span style="display:none" id="burn-title"></span><span style="display:none" id="burn-text"></span>
+    <span style="display:none" id="plan-text"></span><span style="display:none" id="sprint-dates-text"></span>
+    <span style="display:none" id="wi-sub"></span>
+    <table style="display:none"><tbody id="tag-breakdown-tbody"></tbody></table>
+    <span style="display:none" id="ws-closedDel"></span><span style="display:none" id="ws-resolvedDel"></span>
+    <span style="display:none" id="ws-openDel"></span><span style="display:none" id="ws-nd"></span>
+    <span style="display:none" id="ws-onhold"></span><span style="display:none" id="ws-deladhoc"></span>
+    <span style="display:none" id="teamb-count-badge"></span>
+    <span style="display:none" id="teamb-total-tickets"></span><span style="display:none" id="teamb-planned-hrs"></span>
+    <span style="display:none" id="teamb-completed-hrs"></span><span style="display:none" id="teamb-remaining-hrs"></span>
+    <table style="display:none"><tbody id="teamb-tbody"></tbody></table>
+    <span style="display:none" id="nd-count-badge"></span>
+    <table style="display:none"><tbody id="nd-tbody"></tbody></table>
+    <span style="display:none" id="dq-newBugs"></span><span style="display:none" id="dq-newSub"></span>
+    <span style="display:none" id="dq-openBugs"></span><span style="display:none" id="dq-closedBugs"></span>
+    <span style="display:none" id="dq-prodBugs"></span><span style="display:none" id="dq-prodSub"></span>
+    <span style="display:none" id="dev-bug-total"></span><span style="display:none" id="db-cs"></span>
+    <span style="display:none" id="db-total"></span><span style="display:none" id="db-open"></span>
+    <span style="display:none" id="db-closed"></span><span style="display:none" id="db-resolved"></span>
+    <span style="display:none" id="db-members"></span>
+    <span style="display:none" id="qa-bug-total"></span><span style="display:none" id="qb-cs"></span>
+    <span style="display:none" id="qb-total"></span><span style="display:none" id="qb-open"></span>
+    <span style="display:none" id="qb-closed"></span><span style="display:none" id="qb-resolved"></span>
+    <span style="display:none" id="qb-members"></span>
+    <span style="display:none" id="prod-bug-total"></span><span style="display:none" id="pb-total"></span>
+    <span style="display:none" id="pb-open"></span><span style="display:none" id="pb-closed"></span>
+    <span style="display:none" id="pb-resolved"></span><span style="display:none" id="pb-sev"></span>
+    <span style="display:none" id="bugList-sub"></span>
+    <div style="display:none"><table class="rt"><tbody id="bug-tbody"></tbody></table></div>
+    <span style="display:none" id="heroDate"></span>
+    <span style="display:none" id="heroSprint"></span>
+    <span style="display:none" id="heroGenDate"></span>
+
+  </div><!-- /rptPanel -->
+
+</div><!-- /rptWrap -->
+
+<!-- Preview Modal -->
+<div id="scrPreviewModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.82);overflow-y:auto;">
+  <div style="max-width:880px;margin:28px auto;background:#fff;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">
+      <span style="font-size:.82rem;font-weight:700;color:#1e293b;">📄 Sprint Closing Report Preview</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="scrCopyEmail()" style="background:#059669;border:none;color:#fff;border-radius:6px;padding:5px 12px;font-size:.72rem;cursor:pointer;font-weight:600;">📋 Copy to Email</button>
+        <button onclick="document.getElementById('scrPreviewModal').style.display='none';document.getElementById('scrPreviewFrameHost').innerHTML=''" style="background:#ef4444;border:none;color:#fff;border-radius:6px;padding:5px 12px;font-size:.72rem;cursor:pointer;font-weight:600;">✕ Close</button>
+      </div>
+    </div>
+    <div id="scrPreviewFrameHost" style="background:#f0f4f8;"></div>
+  </div>
+</div>
+<!-- Copy target (off-screen) -->
+<div id="scrCopyTarget" style="position:fixed;left:-9999px;top:0;background:#fff;color:#1a1a1a;font-family:Arial,sans-serif;padding:0;width:860px;pointer-events:none;z-index:-1;"></div>
+
+<button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top" style="
+  position:fixed;bottom:24px;right:24px;z-index:9998;
+  width:36px;height:36px;border-radius:50%;border:1px solid rgba(99,102,241,.5);
+  background:rgba(99,102,241,0.35);color:#a5b4fc;cursor:pointer;font-size:.9rem;
+  display:none;align-items:center;justify-content:center;
+  transition:background .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);
+">↑</button>
+
+
+<!-- ═══ SCRIPTS ═════════════════════════════════════════ -->
+<script>
+'use strict';
+
+
+/* ══ Runtime state ═════════════════════════════════════ */
+let tfsUrl='', pat='', project='', selectedIterPaths=[], selectedAreaPaths=[];
+let requirements=[], bugs=[], tasks=[], taskLookup={}, reqTasksMap={}, bugTasksMap={};
+let sprintStartDate=null, sprintEndDate=null;
+let teamCapacity=0;
+let devCapacity=0, qaCapacity=0;
+let devMembers=[]; // members with Development discipline in capacity
+let qaMembers=[];  // members with Test discipline in capacity
+let disciplineCapMap={}; // { disciplineName: { cap: hrs, members: [names] } }
+
+
+/* ══ Toast ══════════════════════════════════════════════ */
+function xtoast(m,d=2800){const t=document.getElementById('xtoast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d)}
+
+/* ══ Section nav ════════════════════════════════════════ */
+function showSec(id,btn){
+  // Single-page mode: all sections always visible, scroll to target
+  const el=document.getElementById('sec-'+id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showAll(btn){
+  // All sections always visible in single-page mode
+}
+
+/* ══ Loading overlay ════════════════════════════════════ */
+function showLoading(msg,pct=30){
+  const o=document.getElementById('ldgOverlay');
+  o.classList.add('on');
+  document.getElementById('ldgMsg').textContent=msg;
+  document.getElementById('ldgFill').style.width=pct+'%';
+}
+function hideLoading(){document.getElementById('ldgOverlay').classList.remove('on')}
+
+/* ══ API fetch helper ═══════════════════════════════════ */
+function apiFetch(url,opts={}){
+  return fetch(url,{...opts,headers:{'Authorization':'Basic '+btoa(':'+pat),'Content-Type':'application/json'}});
+}
+
+/* ══ Batch fetch work items (200 per request) ═══════════ */
+async function batchFetch(ids,fields){
+  if(!ids.length)return[];
+  const fStr=fields.join(',');
+  const batches=[];
+  for(let i=0;i<ids.length;i+=200)batches.push(ids.slice(i,i+200));
+  const results=await Promise.all(batches.map(b=>
+    apiFetch(`${tfsUrl}/_apis/wit/workitems?ids=${b.join(',')}&fields=${fStr}&api-version=5.0`).then(r=>r.json())
+  ));
+  return results.flatMap(r=>r.value||[]);
+}
+
+/* ══ Batch fetch with relations ════════════════════════ */
+async function batchFetchRel(ids){
+  if(!ids.length)return[];
+  const batches=[];
+  for(let i=0;i<ids.length;i+=200)batches.push(ids.slice(i,i+200));
+  const results=await Promise.all(batches.map(b=>
+    apiFetch(`${tfsUrl}/_apis/wit/workitems?ids=${b.join(',')}&$expand=relations&api-version=5.0`).then(r=>r.json())
+  ));
+  return results.flatMap(r=>r.value||[]);
+}
+
+
+/* ══ Safe localStorage wrapper (file:// compatible) ════ */
+const safeLS = (() => {
+  let ok = false;
+  try { localStorage.setItem('_scrtest','1'); localStorage.removeItem('_scrtest'); ok = true; } catch(e) {}
+  return {
+    _ok: ok,
+    get(k)       { if(!ok) return null;  try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k,v)     { if(!ok) return;       try{ localStorage.setItem(k,v);       }catch(e){} },
+    del(k)       { if(!ok) return;       try{ localStorage.removeItem(k);      }catch(e){} },
+    getJSON(k,fb){ const v=this.get(k);  try{ return v?JSON.parse(v):fb;       }catch(e){ return fb; } }
+  };
+})();
+/* ══ Query-string helper ════════════════════════════════ */
+function getQS(){
+  const p = new URLSearchParams(window.location.search);
+  // Support both ?url= and ?tfsUrl=
+  const url    = (p.get('url')    || p.get('tfsUrl')   || '').trim().replace(/\/$/,'');
+  // PAT may be raw or base64-encoded (?pat=base64:xxx OR just btoa-encoded)
+  let   rawPat = (p.get('pat')    || '').trim();
+  if(rawPat.startsWith('base64:')) rawPat = atob(rawPat.slice(7));
+  else if(rawPat && !rawPat.includes(':') && rawPat.length > 20) {
+    // Looks like a plain btoa-encoded string — try to decode
+    try { const decoded = atob(rawPat); if(decoded) rawPat = decoded; } catch(e) { /* keep raw */ }
+  }
+  const proj   = (p.get('project')|| p.get('proj')     || '').trim();
+  // area and iter can be comma-separated for multi-select
+  const areaRaw= (p.get('area')   || p.get('areaPath') || '').trim();
+  const iterRaw= (p.get('iter')   || p.get('iteration')|| p.get('iterPath') || '').trim();
+  return { url, pat: rawPat, project: proj, area: areaRaw, iter: iterRaw };
+}
+
+/* ══ Init — read localStorage config OR query params ════ */
+function init(){
+  const genDateEl=document.getElementById('heroGenDate');
+  if(genDateEl)genDateEl.textContent=
+    new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  // ── Priority 1: Query string params ───────────────────
+  const qs = getQS();
+  if(qs.url && qs.pat && qs.iter){
+    // All mandatory params present — bypass overlay and auto-generate
+    tfsUrl = qs.url;
+    pat    = qs.pat;
+    project = qs.project;
+
+    // Build selectedIterPaths from comma-separated iter values
+    const iterList = qs.iter.split(',').map(s=>s.trim()).filter(Boolean);
+    selectedIterPaths = iterList.map(iterPath=>{
+      // Derive project from iterPath if not given (first segment)
+      const proj = qs.project || iterPath.split('\\')[0];
+      return { path: iterPath, project: proj };
+    });
+
+    // Build selectedAreaPaths from comma-separated area values
+    const areaList = qs.area ? qs.area.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    selectedAreaPaths = areaList.map(areaPath=>({
+      path: areaPath,
+      project: qs.project || areaPath.split('\\')[0]
+    }));
+
+    // Derive project from first iter path if still blank
+    if(!project && selectedIterPaths.length)
+      project = selectedIterPaths[0].path.split('\\')[0];
+
+    // Show a slim "auto-loading" banner instead of the overlay
+    const overlay = document.getElementById('cfgOverlay');
+    overlay.style.display = 'none';
+
+    // Show loading immediately and fire report generation
+    showLoading('Auto-loading from URL parameters…', 10);
+    setTimeout(()=> fetchAndRender().catch(err=>{
+      hideLoading();
+      overlay.style.display = 'flex';
+      // Pre-fill form fields so user can correct
+      document.getElementById('cfgTfsUrl').value = qs.url;
+      document.getElementById('cfgPat').value    = qs.pat;
+      document.getElementById('patStatus').textContent = '❌ Auto-load failed: '+err.message;
+      document.getElementById('patStatus').style.color = '#dc2626';
+    }), 80);
+    return; // skip localStorage init below
+  }
+
+  // ── Priority 2: localStorage (set by index.html) ──────
+  try{
+    const lsTfsUrl = safeLS.get('scr_tfsUrl')||safeLS.get('sprintTracker_tfsUrl')||'';
+    const lsPat    = safeLS.get('scr_pat')||safeLS.get('sprintTracker_pat')||'';
+    const lsIters  = safeLS.getJSON('scr_iterPaths',[]);
+    const lsAreas  = safeLS.getJSON('scr_areaPaths',[]);
+    const lsSprint = safeLS.getJSON('scr_sprintInfo',{});
+    const lsProj   = safeLS.get('scr_project')||'';
+
+    if(lsTfsUrl) document.getElementById('cfgTfsUrl').value=lsTfsUrl;
+    if(lsPat)    { document.getElementById('cfgPat').value=lsPat; scrAutoVerifyPat(); }
+
+    if(lsTfsUrl && lsPat && lsIters.length && lsAreas.length){
+      const banner=document.getElementById('detectedBanner');
+      banner.style.display='block';
+      const details=document.getElementById('detectedDetails');
+      details.innerHTML='';
+      if(lsSprint.name){
+        const sp=document.createElement('span');sp.className='det-item';
+        sp.textContent='🏃 '+lsSprint.name;details.appendChild(sp);
+      }
+      if(lsSprint.areaName){
+        const ar=document.createElement('span');ar.className='det-item';
+        ar.textContent='📁 '+lsSprint.areaName;details.appendChild(ar);
+      }
+      lsIters.forEach(i=>{
+        const it=document.createElement('span');it.className='det-item';
+        it.textContent='📅 '+(i.path||'').split('\\').pop();details.appendChild(it);
+      });
+
+      tfsUrl=lsTfsUrl; pat=lsPat; project=lsProj||'';
+      selectedIterPaths=lsIters;
+      selectedAreaPaths=lsAreas;
+
+      // Show area count hint if we have stored areas
+      if(lsAreas.length){
+        const ac=document.getElementById('areaSelCount');
+        if(ac) ac.textContent=`${lsAreas.length} area(s) pre-selected from Dashboard`;
+      }
+
+      const btn=document.getElementById('cfgGenBtn');
+      btn.disabled=false;
+      btn.textContent='📊 Generate Report';
+      document.getElementById('manualHint').style.display='block';
+    } else if(lsTfsUrl && lsPat){
+      loadProjectsAndIters();
+    }
+  }catch(e){console.warn('Config load error:',e)}
+}
+
+
+/* ══ PAT eye toggle & auth verify (login screen) ═══════ */
+function scrTogglePatEye(){
+  const inp=document.getElementById('cfgPat');
+  const btn=document.getElementById('scrPatEye');
+  if(!inp)return;
+  inp.type=inp.type==='password'?'text':'password';
+  if(btn)btn.textContent=inp.type==='password'?'👁️':'🙈';
+}
+async function scrAutoVerifyPat(){
+  const url=(document.getElementById('cfgTfsUrl')?.value||'').trim().replace(/\/$/,'');
+  const p=(document.getElementById('cfgPat')?.value||'').trim();
+  if(!url||!p)return;
+  try{
+    const r=await fetch(`${url}/_apis/connectionData?api-version=1.0`,
+      {headers:{Authorization:'Basic '+btoa(':'+p),'Content-Type':'application/json'}});
+    if(r.ok){
+      const d=await r.json();
+      const info=document.getElementById('cfgAuthInfo');
+      if(info){
+        info.style.display='block';
+        const nm=document.getElementById('cfgAuthName');
+        const em=document.getElementById('cfgAuthEmail');
+        if(nm)nm.textContent=d.authenticatedUser?.providerDisplayName||'';
+        if(em)em.textContent=d.authenticatedUser?.subjectDescriptor||'';
+      }
+      const ps=document.getElementById('patStatus');
+      if(ps){ps.textContent='';ps.style.color='';}
+    }
+  }catch(e){/* silently fail */}
+}
+/* ══ Toggle manual config section ═══════════════════════ */
+function toggleManualConfig(){
+  const s=document.getElementById('cfgManualSection');
+  s.style.display=s.style.display==='none'?'block':'none';
+}
+
+/* ══ Load projects + iterations from TFS ═══════════════ */
+async function loadProjectsAndIters(){
+  const urlVal=document.getElementById('cfgTfsUrl').value.trim().replace(/\/$/,'');
+  const patVal=document.getElementById('cfgPat').value.trim();
+  if(!urlVal||!patVal){
+    document.getElementById('patStatus').textContent='⚠️ Enter TFS URL and PAT first';
+    return;
+  }
+  tfsUrl=urlVal; pat=patVal;
+  const st=document.getElementById('patStatus');
+  st.textContent='⏳ Connecting…';st.style.color='#64748b';
+
+  try{
+    // Fetch projects
+    const resp=await fetch(`${tfsUrl}/_apis/projects?api-version=5.0`,{headers:{'Authorization':'Basic '+btoa(':'+pat),'Content-Type':'application/json'}});
+    if(!resp.ok)throw new Error('Auth failed ('+resp.status+')');
+    const data=await resp.json();
+    const projects=(data.value||[]).map(p=>p.name);
+
+    const projSel=document.getElementById('cfgProject');
+    projSel.innerHTML='<option value="">-- Select Project --</option>';
+    projects.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;projSel.appendChild(o);});
+
+    document.getElementById('areaField').style.display='block';
+    st.textContent='✅ Connected — select a project then load iterations';
+    st.style.color='#34d399';
+
+    projSel.onchange=()=>loadAreaAndIter(projSel.value);
+
+    // Auto-select: exact match "Project" (case-insensitive) → else first project
+    const savedProj = safeLS.get('scr_project') || '';
+    const defaultProj = projects.find(p => p === savedProj)
+      || projects.find(p => p.toLowerCase() === 'project')
+      || (projects.length === 1 ? projects[0] : null);
+    if (defaultProj) { projSel.value = defaultProj; loadAreaAndIter(defaultProj); }
+  }catch(e){
+    st.textContent='❌ '+e.message;st.style.color='#dc2626';
+  }
+}
+
+/* ══ Load areas + iterations for a project ══════════════ */
+async function loadAreaAndIter(proj){
+  if(!proj)return;
+  project=proj;
+  safeLS.set('scr_project', proj);
+
+  // Load both in parallel
+  const [areaResp, iterResp] = await Promise.all([
+    apiFetch(`${tfsUrl}/${proj}/_apis/wit/classificationnodes/areas?$depth=8&api-version=5.0`),
+    apiFetch(`${tfsUrl}/${proj}/_apis/wit/classificationnodes/iterations?$depth=10&api-version=5.0`)
+  ]);
+
+  // ── Area Paths ─────────────────────────────────────────
+  try{
+    const aData = await areaResp.json();
+    const areas = [];
+    function walkA(node, prefix){
+      const path = prefix ? prefix+'\\'+node.name : node.name;
+      areas.push({ name: node.name, path: proj+'\\'+path, project: proj, display: path });
+      (node.children||[]).forEach(c=>walkA(c,path));
+    }
+    (aData.children||[]).forEach(c=>walkA(c,''));
+    areas.sort((a,b)=>a.path.localeCompare(b.path));
+
+    const aBox = document.getElementById('areaBox');
+    aBox.innerHTML = '';
+    if(!areas.length){ aBox.innerHTML='<div style="color:#64748b;font-size:.75rem;padding:6px">No areas found</div>'; }
+    else {
+      areas.forEach(ar=>{
+        const depth = (ar.display.match(/\\/g)||[]).length;
+        const d=document.createElement('div'); d.className='iter-item';
+        d.style.paddingLeft = (4 + depth*14)+'px';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.value=JSON.stringify(ar);
+        cb.onchange=updateAreaSel;
+        const l=document.createElement('span');
+        l.textContent=ar.name;
+        l.style.fontSize='.74rem';
+        if(depth===0) l.style.fontWeight='600';
+        d.appendChild(cb); d.appendChild(l);
+        d.onclick=e=>{if(e.target!==cb)cb.click();};
+        aBox.appendChild(d);
+      });
+
+      // Pre-check from localStorage
+      const lsAreas=safeLS.getJSON('scr_areaPaths',[]);
+      if(lsAreas.length){
+        aBox.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+          const v=JSON.parse(cb.value||'{}');
+          if(lsAreas.some(la=>la.path===v.path)) cb.checked=true;
+        });
+        updateAreaSel();
+      }
+    }
+    document.getElementById('areaPathField').style.display='block';
+  }catch(e){console.warn('Area load error:',e)}
+
+  // ── Iterations ─────────────────────────────────────────
+  try{
+    const iData = await iterResp.json();
+    const iters = [];
+    function walkI(node,prefix){
+      const path=prefix?prefix+'\\'+node.name:node.name;
+      if(node.attributes?.startDate)iters.push({name:node.name,path:proj+'\\'+path,project:proj});
+      (node.children||[]).forEach(c=>walkI(c,path));
+    }
+    (iData.children||[]).forEach(c=>walkI(c,''));
+    const box=document.getElementById('iterBox');
+    box.innerHTML='';
+    if(!iters.length){box.innerHTML='<div style="color:#64748b;font-size:.75rem;padding:6px">No iterations found</div>';return;}
+    iters.slice().reverse().forEach(it=>{
+      const d=document.createElement('div');d.className='iter-item';
+      const cb=document.createElement('input');cb.type='checkbox';cb.value=JSON.stringify(it);
+      cb.onchange=updateIterSel;
+      const l=document.createElement('span');l.textContent=it.name;
+      d.appendChild(cb);d.appendChild(l);d.onclick=e=>{if(e.target!==cb)cb.click();};
+      box.appendChild(d);
+    });
+    const lsIters=safeLS.getJSON('scr_iterPaths',[]);
+    if(lsIters.length){
+      box.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        const v=JSON.parse(cb.value||'{}');
+        if(lsIters.some(li=>li.path===v.path))cb.checked=true;
+      });
+      updateIterSel();
+    }
+    document.getElementById('iterField').style.display='block';
+  }catch(e){console.warn('Iter load error:',e)}
+}
+
+function updateAreaSel(){
+  const checks=document.querySelectorAll('#areaBox input:checked');
+  selectedAreaPaths=Array.from(checks).map(c=>JSON.parse(c.value));
+  const cnt=document.getElementById('areaSelCount');
+  if(cnt) cnt.textContent=checks.length?`${checks.length} area(s) selected`:'No area selected';
+}
+
+function updateIterSel(){
+  const checks=document.querySelectorAll('#iterBox input:checked');
+  selectedIterPaths=Array.from(checks).map(c=>JSON.parse(c.value));
+  document.getElementById('iterSelCount').textContent=
+    checks.length?`${checks.length} sprint(s) selected`:'No sprints selected';
+  const areaChecks=document.querySelectorAll('#areaBox input:checked').length;
+  const btn=document.getElementById('cfgGenBtn');
+  btn.disabled=!(tfsUrl&&pat&&selectedIterPaths.length);
+  if(!btn.disabled)btn.textContent='📊 Generate Report';
+}
+
+/* ══ Search filter for area / iter boxes ════════════════ */
+function filterBox(boxId, query) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  const q = query.trim().toLowerCase();
+  box.querySelectorAll('.iter-item').forEach(item => {
+    const txt = item.textContent.trim().toLowerCase();
+    item.style.display = (!q || txt.includes(q)) ? '' : 'none';
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   MAIN: generateReport()
+══════════════════════════════════════════════════════ */
+async function generateReport(){
+  // Read current form values
+  tfsUrl=document.getElementById('cfgTfsUrl').value.trim().replace(/\/$/,'');
+  pat=document.getElementById('cfgPat').value.trim();
+  if(!project)project=document.getElementById('cfgProject')?.value||'';
+
+  // If no selectedIterPaths yet (came from detected banner with no form interaction):
+  if(!selectedIterPaths.length){
+    try{selectedIterPaths=safeLS.getJSON('scr_iterPaths',[]);}catch(e){}
+  }
+  if(!selectedAreaPaths.length){
+    try{selectedAreaPaths=safeLS.getJSON('scr_areaPaths',[]);}catch(e){}
+  }
+  if(!project){
+    try{project=safeLS.get('scr_project')||'';}catch(e){}
+  }
+
+  if(!tfsUrl||!pat){xtoast('⚠️ TFS URL and PAT required');return;}
+  if(!selectedIterPaths.length){xtoast('⚠️ Select at least one sprint');return;}
+
+  // Hide config overlay + show loading
+  document.getElementById('cfgOverlay').style.display='none';
+  showLoading('Phase 1/3 — Querying work items…',15);
+
+  try{
+    await fetchAndRender();
+  }catch(err){
+    hideLoading();
+    document.getElementById('cfgOverlay').style.display='flex';
+    document.getElementById('patStatus').textContent='❌ Error: '+err.message;
+    document.getElementById('patStatus').style.color='#dc2626';
+    console.error(err);
+  }
+}
+
+async function fetchAndRender(){
+  // Resolve project from first iterPath if missing
+  if(!project && selectedIterPaths.length)
+    project=selectedIterPaths[0].project||selectedIterPaths[0].path.split('\\')[0];
+
+  // Reset velocity chart state for fresh load — removed (velocity section deleted)
+
+  // ── Build WIQL filters ──────────────────────────────
+  const iterClauses=selectedIterPaths.map(i=>`[System.IterationPath] UNDER '${i.path}'`);
+  const iterFilter=iterClauses.length>1?`(${iterClauses.join(' OR ')})`:iterClauses[0];
+
+  let areaFilter='';
+  if(selectedAreaPaths.length){
+    const ac=selectedAreaPaths.map(a=>`[System.AreaPath] UNDER '${a.path}'`);
+    areaFilter='AND '+(ac.length>1?`(${ac.join(' OR ')})`:ac[0]);
+  }
+
+  // ── PHASE 1: WIQL — get all IDs ─────────────────────
+  showLoading('Phase 1/3 — Fetching work item IDs…',20);
+  const wiql=`SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] IN ('Requirement','Change Request','Bug','Task') AND ${iterFilter} ${areaFilter}`;
+  const wiqlResp=await apiFetch(`${tfsUrl}/${project}/_apis/wit/wiql?api-version=5.0`,{method:'POST',body:JSON.stringify({query:wiql})});
+  if(!wiqlResp.ok)throw new Error('WIQL query failed ('+wiqlResp.status+') — check PAT and project');
+  const wiqlData=await wiqlResp.json();
+  const allIds=(wiqlData.workItems||[]).map(w=>w.id);
+
+  // ── PHASE 2: Batch fetch items ───────────────────────
+  showLoading(`Phase 2/3 — Fetching ${allIds.length} work items…`,40);
+  const FIELDS=[
+    'System.Id','System.Title','System.State','System.WorkItemType',
+    'System.Tags','System.IterationPath','System.AreaPath','System.AssignedTo',
+    'System.Reason','System.CreatedDate',
+    'Microsoft.VSTS.Scheduling.OriginalEstimate',
+    'Microsoft.VSTS.Scheduling.CompletedWork',
+    'Microsoft.VSTS.Scheduling.RemainingWork',
+    'Microsoft.VSTS.Scheduling.Size',
+    'Microsoft.VSTS.Common.Discipline',
+    'Microsoft.VSTS.Common.Severity',
+    'Casepoint.TFS.CustomFields.OwnedBy',
+    'Casepoint.TFS.CustomFields.RevisedEstimate',
+    'Casepoint.TFS.CustomFields.CompletedWork',
+    'Casepoint.TFS.CustomFields.ActualCompletedHours',
+    'Casepoint.TFS.CustomFields.CompletedEffort',
+    'Casepoint.TFS.CustomFields.TaskExecutionType',
+    'Microsoft.VSTS.Common.StateChangeDate'
+  ];
+  const allItems=await batchFetch(allIds,FIELDS);
+
+  const reqData=allItems.filter(w=>{const t=w.fields['System.WorkItemType'];return t==='Requirement'||t==='Change Request';});
+  const bugData=allItems.filter(w=>w.fields['System.WorkItemType']==='Bug');
+  const taskData=allItems.filter(w=>w.fields['System.WorkItemType']==='Task');
+
+  bugs=bugData; tasks=taskData;
+
+  // ── Auto-discover "Found in Environment" field by fetching one bug without field filter ──
+  {
+    const bugById = {};
+    bugData.forEach(b => { bugById[b.id] = b; });
+
+    let foundEnvFieldName = null;
+
+    if (bugData.length > 0) {
+      try {
+        // Fetch a single bug with ALL fields (no &fields= param) to discover field names
+        const singleResp = await apiFetch(
+          `${tfsUrl}/_apis/wit/workitems/${bugData[0].id}?api-version=5.0`
+        );
+        if (singleResp.ok) {
+          const singleData = await singleResp.json();
+          const allFieldKeys = Object.keys(singleData.fields || {});
+          // Find any field whose reference name contains "found" and "environment" or "env"
+          const envKey = allFieldKeys.find(k => {
+            const kl = k.toLowerCase();
+            return (kl.includes('found') && (kl.includes('env') || kl.includes('environment')));
+          }) || allFieldKeys.find(k => k.toLowerCase().includes('foundin'));
+          if (envKey) foundEnvFieldName = envKey;
+        }
+      } catch(e) { /* non-fatal */ }
+    }
+
+    if (foundEnvFieldName) {
+      // Fetch the discovered field for all bugs in batches
+      const bugIds_env = bugData.map(b => b.id);
+      try {
+        for (let i = 0; i < bugIds_env.length; i += 200) {
+          const batch = bugIds_env.slice(i, i + 200);
+          const resp = await apiFetch(
+            `${tfsUrl}/_apis/wit/workitems?ids=${batch.join(',')}&fields=System.Id,${foundEnvFieldName}&api-version=5.0`
+          );
+          if (!resp.ok) break;
+          const data = await resp.json();
+          (data.value || []).forEach(item => {
+            const bug = bugById[item.id];
+            if (bug && item.fields && item.fields[foundEnvFieldName] != null)
+              bug.fields['_foundInEnv'] = String(item.fields[foundEnvFieldName]).trim();
+          });
+        }
+      } catch(e) { /* non-fatal */ }
+    }
+  }
+
+  // ── Fetch relations for requirements AND bugs ────────
+  showLoading('Phase 2/3 — Building work item relationships…',55);
+  const reqIds = reqData.map(r=>r.id);
+  const bugIds = bugData.map(b=>b.id);
+  const [reqsRel, bugsRel] = await Promise.all([
+    batchFetchRel(reqIds),
+    batchFetchRel(bugIds)
+  ]);
+
+  // ── PHASE 3: Build maps & process ────────────────────
+  showLoading('Phase 3/3 — Computing sprint metrics…',70);
+
+  taskLookup={};taskData.forEach(t=>taskLookup[t.id]=t);
+
+  // Build reqTasksMap
+  reqTasksMap={};
+  reqsRel.forEach(req=>{
+    const childIds=(req.relations||[])
+      .filter(r=>r.rel==='System.LinkTypes.Hierarchy-Forward')
+      .map(r=>parseInt(r.url.split('/').pop()));
+    reqTasksMap[req.id]=childIds;
+  });
+
+  // Build bugTasksMap — child tasks of bugs
+  const bugTasksMap={};
+  bugsRel.forEach(bug=>{
+    const childIds=(bug.relations||[])
+      .filter(r=>r.rel==='System.LinkTypes.Hierarchy-Forward')
+      .map(r=>parseInt(r.url.split('/').pop()));
+    bugTasksMap[bug.id]=childIds;
+  });
+
+  // Fetch any bug child tasks that were NOT returned by the WIQL (different iteration/area)
+  const missingBugTaskIds = [];
+  Object.values(bugTasksMap).forEach(cids => cids.forEach(tid => {
+    if (!taskLookup[tid]) missingBugTaskIds.push(tid);
+  }));
+  if (missingBugTaskIds.length > 0) {
+    showLoading(`Phase 3/3 — Fetching ${missingBugTaskIds.length} bug task(s)…`, 72);
+    try {
+      const missingTasks = await batchFetch(missingBugTaskIds, FIELDS);
+      missingTasks.forEach(t => { taskLookup[t.id] = t; });
+    } catch(e) { /* non-fatal */ }
+  }
+
+  // Build taskParentMap — reverse lookup: taskId → parentReqId (or bugId)
+  const taskParentMap={};
+  Object.entries(reqTasksMap).forEach(([rid,cids])=>cids.forEach(tid=>taskParentMap[tid]=parseInt(rid)));
+  Object.entries(bugTasksMap).forEach(([bid,cids])=>cids.forEach(tid=>{ if(!taskParentMap[tid]) taskParentMap[tid]=parseInt(bid); }));
+
+  // Process requirements
+  requirements=reqData.map(req=>{
+    const tags=(req.fields['System.Tags']||'').toLowerCase();
+    const category=tags.includes('deliverable')&&!tags.includes('non-deliverable')?'deliverable':
+                   tags.includes('non-deliverable')?'nonDeliverable':'unclassified';
+    const isAdhocSupport=tags.includes('adhoc support');
+    const isDeliverablesAdhoc=tags.includes('deliverables adhoc');
+    const isDeliverablesOnHold=tags.includes('deliverables onhold');
+    const childIds=reqTasksMap[req.id]||[];
+    const allChildTasks=childIds.map(id=>taskLookup[id]).filter(t=>!!t);
+
+    // Dev + Test discipline only for effort calculation (as per requirement)
+    const devTestTasks=allChildTasks.filter(t=>{
+      const disc=(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase().trim();
+      return disc==='development'||disc==='test';
+    });
+    const taskEstimate      =devTestTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+    const taskCompletedWork =devTestTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.CompletedWork']    ||0),0);
+    const taskRemainingWork =devTestTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.RemainingWork']    ||0),0);
+
+    return{...req,category,isAdhocSupport,isDeliverablesAdhoc,isDeliverablesOnHold,
+      size:req.fields['Microsoft.VSTS.Scheduling.Size']||0,
+      taskEstimate,taskCompletedWork,taskRemainingWork};
+  });
+
+  // ── Fetch sprint dates + team capacity ───────────────
+  showLoading('Phase 3/3 — Loading team capacity…',82);
+  await fetchCapacity();
+
+  // ── Render ───────────────────────────────────────────
+  showLoading('Rendering report…',95);
+  await new Promise(r=>setTimeout(r,100));
+  renderAll();    // fills hidden stubs & old state vars
+  renderReport(); // renders new clean report document
+  hideLoading();
+}
+
+/* ══ Fetch team capacity ════════════════════════════════
+   Mirrors index.html Tab-1 "Team Members Capacity" logic:
+   - Fetches teamdaysoff + individual member daysoff
+   - Deducts both from working days per member per iteration
+   - Aggregates capacity per discipline across all members
+═══════════════════════════════════════════════════════ */
+
+async function fetchCapacity(){
+  teamCapacity=0; devCapacity=0; qaCapacity=0;
+  disciplineCapMap = {};
+  sprintStartDate=null; sprintEndDate=null;
+
+  try{
+    // ── 1. Get iteration date ranges ─────────────────────
+    const iterNodeResp = await apiFetch(`${tfsUrl}/${project}/_apis/wit/classificationnodes/iterations?$depth=10&api-version=5.0`);
+    const iterNodeData = await iterNodeResp.json();
+    const iterAttrMap  = {};
+    function walkIter(n, pre){
+      const path     = pre ? pre+'\\'+n.name : n.name;
+      const fullPath = project+'\\'+path;
+      iterAttrMap[fullPath] = {...n.attributes, name: n.name};
+      (n.children||[]).forEach(c => walkIter(c, path));
+    }
+    (iterNodeData.children||[]).forEach(c => walkIter(c,''));
+
+    // Build selectedIterObjects with start/end dates
+    const selectedIterObjects = [];
+    selectedIterPaths.forEach(si => {
+      const attr = iterAttrMap[si.path];
+      if(attr?.startDate){
+        const s = new Date(attr.startDate);
+        const e = new Date(attr.finishDate || attr.endDate || attr.startDate);
+        selectedIterObjects.push({ path: si.path, startDate: s, endDate: e });
+        if(!sprintStartDate || s < sprintStartDate) sprintStartDate = s;
+        if(!sprintEndDate   || e > sprintEndDate  ) sprintEndDate   = e;
+      }
+    });
+
+    // ── 2. Get teams and match to selected area ──────────
+    const teamsResp = await apiFetch(`${tfsUrl}/_apis/projects/${project}/teams?api-version=5.0`);
+    const teamsData = await teamsResp.json();
+    const teams = teamsData.value || [];
+
+    let matchedTeam = null;
+    if(selectedAreaPaths.length){
+      const areaName = (selectedAreaPaths[0].path||'').split('\\').pop().toLowerCase();
+      matchedTeam = teams.find(t => t.name.toLowerCase() === areaName)
+                 || teams.find(t => t.name.toLowerCase() === areaName+' team')
+                 || teams[0];
+    } else {
+      matchedTeam = teams[0];
+    }
+    if(!matchedTeam) return;
+
+    // ── 3. Fetch team iterations list ───────────────────
+    const tiResp  = await apiFetch(`${tfsUrl}/${project}/${encodeURIComponent(matchedTeam.name)}/_apis/work/teamsettings/iterations?api-version=5.0`);
+    const tiData  = await tiResp.json();
+    const matchedIters = (tiData.value||[]).filter(i =>
+      selectedIterPaths.some(s =>
+        (s.project === project && i.path === s.path) ||
+        i.name === s.path.split('\\').pop()
+      )
+    );
+    if(!matchedIters.length) return;
+
+    // ── 4. Fetch capacity + team days-off for each iter ──
+    const capResults = await Promise.all(matchedIters.map(mi =>
+      Promise.all([
+        apiFetch(`${tfsUrl}/${project}/${encodeURIComponent(matchedTeam.name)}/_apis/work/teamsettings/iterations/${mi.id}/teamdaysoff?api-version=5.0`)
+          .then(r => r.ok ? r.json() : { daysOff: [] }),
+        apiFetch(`${tfsUrl}/${project}/${encodeURIComponent(matchedTeam.name)}/_apis/work/teamsettings/iterations/${mi.id}/capacities?api-version=5.0`)
+          .then(r => r.ok ? r.json() : { value: [] })
+      ]).then(([daysOffData, capData]) => ({ mi, daysOffData, capData }))
+    ));
+
+    // ── 5. Aggregate per-discipline capacity ─────────────
+    // key: memberName → { disciplines: { [disc]: capPerDay }, daysOff per iter }
+    const memberCapMap = {};
+    devMembers = []; qaMembers = [];
+    const devSet = new Set(), qaSet = new Set();
+
+    capResults.forEach(({ mi, daysOffData, capData }) => {
+      // Find this iteration's date range
+      const iterObj  = selectedIterObjects.find(so =>
+        so.path === mi.path || mi.name === so.path.split('\\').pop()
+      );
+      const iterStart = iterObj?.startDate || sprintStartDate;
+      const iterEnd   = iterObj?.endDate   || sprintEndDate;
+
+      // Calendar work days for this iteration
+      let iterCalDays = 0;
+      if(iterStart && iterEnd){
+        for(let d=new Date(iterStart); d<=iterEnd; d.setDate(d.getDate()+1)){
+          if(d.getDay()!==0 && d.getDay()!==6) iterCalDays++;
+        }
+      }
+
+      // Team days off for this iteration
+      let iterTeamDaysOff = 0;
+      (daysOffData.daysOff||[]).forEach(dayOff => {
+        if(dayOff.start && dayOff.end){
+          for(let d=new Date(dayOff.start); d<=new Date(dayOff.end); d.setDate(d.getDate()+1)){
+            if(d.getDay()!==0 && d.getDay()!==6 && d>=iterStart && d<=iterEnd)
+              iterTeamDaysOff++;
+          }
+        }
+      });
+      const iterWorkDays = Math.max(0, iterCalDays - iterTeamDaysOff);
+
+      // Per-member
+      (capData.value||[]).forEach(member => {
+        const raw  = member.teamMember?.displayName || member.teamMember?.uniqueName || '';
+        const name = raw.replace(/\s*<[^>]*>/g,'').trim();
+        if(!name) return;
+
+        // Member personal days off for this iteration
+        let memberDaysOff = 0;
+        (member.daysOff||[]).forEach(dayOff => {
+          if(dayOff.start && dayOff.end){
+            for(let d=new Date(dayOff.start); d<=new Date(dayOff.end); d.setDate(d.getDate()+1)){
+              if(d.getDay()!==0 && d.getDay()!==6 && d>=iterStart && d<=iterEnd)
+                memberDaysOff++;
+            }
+          }
+        });
+        const memberWorkDays = Math.max(0, iterWorkDays - memberDaysOff);
+
+        // Accumulate capacity per discipline for this member
+        (member.activities||[]).forEach(activity => {
+          const disc = (activity.name||'').trim();   // e.g. "Development", "Test", "User Experience"
+          const cap  = (activity.capacityPerDay||0) * memberWorkDays;
+          if(!disc || cap === 0) return;
+
+          // Init discipline bucket
+          if(!disciplineCapMap[disc])
+            disciplineCapMap[disc] = { cap: 0, members: new Set() };
+          disciplineCapMap[disc].cap += cap;
+          disciplineCapMap[disc].members.add(name);
+          teamCapacity += cap;
+
+          // Keep dev/qa members lists for bug classification
+          const discL = disc.toLowerCase();
+          if(discL === 'development'){
+            devCapacity += cap;
+            if(!devSet.has(name)){ devSet.add(name); devMembers.push(name); }
+          }
+          if(discL === 'test'){
+            qaCapacity += cap;
+            if(!qaSet.has(name)){ qaSet.add(name); qaMembers.push(name); }
+          }
+        });
+      });
+    });
+
+    // Convert Sets to arrays in disciplineCapMap
+    Object.keys(disciplineCapMap).forEach(d => {
+      disciplineCapMap[d].members = [...disciplineCapMap[d].members];
+    });
+
+  }catch(e){ console.warn('Capacity fetch failed:', e); }
+}
+
+/* ══ Fetch velocity — previous 2 sibling iterations ════ */
+/* ══ Change Sprint — show config overlay again ══════════ */
+function changeSprint(){
+  document.querySelectorAll('#iterBox input:checked').forEach(cb=>cb.checked=false);
+  document.querySelectorAll('#areaBox input:checked').forEach(cb=>cb.checked=false);
+  selectedIterPaths=[];
+  selectedAreaPaths=[];
+  document.getElementById('iterSelCount').textContent='';
+  const ac=document.getElementById('areaSelCount'); if(ac) ac.textContent='';
+  document.getElementById('cfgGenBtn').disabled=true;
+  document.getElementById('cfgGenBtn').textContent='📊 Generate Report';
+  document.getElementById('cfgOverlay').style.display='flex';
+  const wrap=document.getElementById('rptWrap');
+  if(wrap) wrap.style.display='none';
+  const csBtn=document.getElementById('changeSprintBtn');
+  if(csBtn) csBtn.style.display='none';
+  const expBar=document.getElementById('scrExportBar');
+  if(expBar) expBar.style.display='none';
+  scrInsights=[];
+  scrRenderInsights();
+}
+const fmtH=v=>Number.isInteger(v)?v:parseFloat(v.toFixed(1));
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+
+/* ══ Sprint Insight ═════════════════════════════════════ */
+let scrInsights = [];
+function scrAddInsight(){
+  const inp = document.getElementById('scrInsightInput');
+  const raw = (inp?.value||'').trim();
+  if(!raw) return;
+  raw.split('\n').map(l=>l.trim()).filter(Boolean).forEach(line=>scrInsights.push(line));
+  inp.value='';
+  scrRenderInsights();
+}
+function scrRenderInsights(){
+  const ul    = document.getElementById('scrInsightList');
+  const empty = document.getElementById('scrInsightEmpty');
+  if(!ul) return;
+  ul.innerHTML='';
+  scrInsights.forEach((r,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${r}</span><button onclick="scrRemoveInsight(${i})"
+      style="background:none;border:none;color:#64748b;cursor:pointer;font-size:.7rem;padding:0 2px;flex-shrink:0"
+      title="Remove">✕</button>`;
+    ul.appendChild(li);
+  });
+  if(empty) empty.style.display = scrInsights.length===0 ? '' : 'none';
+}
+function scrRemoveInsight(i){ scrInsights.splice(i,1); scrRenderInsights(); }
+
+/* ══ SCR BUILD EMAIL REPORT ═════════════════════════════ */
+function scrBuildReport(){
+  const area   = document.getElementById('rpt-areaName')?.textContent||'—';
+  const sprint = document.getElementById('rpt-sprintName')?.textContent||'—';
+  const dates  = document.getElementById('rpt-dates')?.textContent||'—';
+  const today  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const F      = 'font-family:Verdana,Geneva,Tahoma,sans-serif;';
+
+  // ── Read live DOM tables ──────────────────────────────
+  const readTbl = (tbodyId,tfootId)=>{
+    const rows = Array.from(document.querySelectorAll(`#${tbodyId} tr`))
+      .map(tr=>Array.from(tr.cells).map(td=>td.textContent.trim()));
+    const foot = tfootId ? Array.from(document.querySelectorAll(`#${tfootId} tr`))
+      .map(tr=>Array.from(tr.cells).map(td=>td.textContent.trim())) : [];
+    return{rows,foot};
+  };
+  const delivery  = readTbl('rpt-deliverySummaryBody');
+  const teamB     = readTbl('rpt-teamBBody','rpt-teamBFoot');
+  const bugData    = readTbl('rpt-bugBody');
+  const bugTypeData = readTbl('rpt-bugTypeBody');
+  const aiData    = readTbl('rpt-aiDataBody','rpt-aiDataFoot');
+  const insights  = Array.from(document.querySelectorAll('#scrInsightList li')).map(li=>{
+    const c=li.cloneNode(true); c.querySelector('button')?.remove(); return c.textContent.trim();
+  }).filter(Boolean);
+  const goalItems = Array.from(document.querySelectorAll('#rpt-goalTableBody tr')).map(tr => {
+    const titleCell = tr.querySelector('td[id$="-title"]');
+    if (!titleCell) return '';
+    // Strip the ◆ bullet span, return plain text
+    const clone = titleCell.cloneNode(true);
+    clone.querySelector('span')?.remove();
+    return clone.textContent.trim();
+  }).filter(Boolean);
+
+  const rowBg    = i => i%2===0 ? '#f8fafc' : '#ffffff';
+  const rowBgRed = i => i%2===0 ? '#fff5f5' : '#ffffff';
+  const rowBgGrn = i => i%2===0 ? '#f0fdf4' : '#ffffff';
+
+  // ── Cell builders ────────────────────────────────────────────────
+  // Default (blue header/footer)
+  const TH  =(t,ex='')=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #1e3a5f;text-align:center;white-space:nowrap;${ex}">${t}</th>`;
+  const THL =(t)=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #1e3a5f;text-align:left;">${t}</th>`;
+  const TD  =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:center;background:${rowBg(i)};${ex}">${t}</td>`;
+  const TDL =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBg(i)};${ex}">${t}</td>`;
+  const TF  =(t,ex='')=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #93c5fd;text-align:center;${ex}">${t}</td>`;
+  const TFL =(t)=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #93c5fd;text-align:left;">${t}</td>`;
+  // Green header/footer (Team B / AI Data)
+  const THG =(t,ex='')=>`<th style="${F}background:#14532d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #14532d;text-align:center;white-space:nowrap;${ex}">${t}</th>`;
+  const THLG=(t)=>`<th style="${F}background:#14532d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #14532d;text-align:left;">${t}</th>`;
+  const TDG =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #d1fae5;color:#1a1a1a;text-align:center;background:${rowBgGrn(i)};${ex}">${t}</td>`;
+  const TDLG=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #d1fae5;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgGrn(i)};${ex}">${t}</td>`;
+  const TFG =(t,ex='')=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #6ee7b7;text-align:center;${ex}">${t}</td>`;
+  const TFLG=(t)=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #6ee7b7;text-align:left;">${t}</td>`;
+  // Red header/footer (Defect)
+  const THR =(t,ex='')=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #7f1d1d;text-align:center;white-space:nowrap;${ex}">${t}</th>`;
+  const THLR=(t)=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #7f1d1d;text-align:left;">${t}</th>`;
+  const TDR =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #fee2e2;color:#1a1a1a;text-align:center;background:${rowBgRed(i)};${ex}">${t}</td>`;
+  const TDLR=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #fee2e2;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgRed(i)};${ex}">${t}</td>`;
+  const TFR =(t,ex='')=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #fca5a5;text-align:center;${ex}">${t}</td>`;
+  const TFLR=(t)=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #fca5a5;text-align:left;">${t}</td>`;
+
+  const SECH=(label)=>`<tr><td colspan="10" style="background:#1e3a8a;padding:8px 12px;border-bottom:2px solid #3b82f6;">
+    <span style="${F}font-size:10pt;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.05em;">${label}</span></td></tr>`;
+
+  // Generic table builder
+  const _buildTbl=(cols,rows,foot,H,HL,D,DL,Ft,FtL)=>{
+    const hdr  = cols.map((c,i)=>i===0?HL(c):H(c)).join('');
+    const body = rows.map((r,i)=>`<tr>${r.map((c,j)=>j===0?DL(c,'',i):D(c,'',i)).join('')}</tr>`).join('');
+    const ftr  = foot.map(r=>`<tr>${r.map((c,j)=>j===0?FtL(c):Ft(c)).join('')}</tr>`).join('');
+    return`<table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;margin-bottom:14px;">
+      <thead><tr>${hdr}</tr></thead>
+      <tbody>${body}</tbody>${ftr?`<tfoot>${ftr}</tfoot>`:''}
+    </table>`;
+  };
+  const tbl      = (cols,rows,foot)=>_buildTbl(cols,rows,foot, TH, THL, TD, TDL, TF, TFL);
+  const tblGreen = (cols,rows,foot)=>_buildTbl(cols,rows,foot, THG,THLG,TDG,TDLG,TFG,TFLG);
+  const tblRed   = (cols,rows,foot)=>_buildTbl(cols,rows,foot, THR,THLR,TDR,TDLR,TFR,TFLR);
+
+  // Badge for sprint goal
+  const badgeEl  = document.getElementById('rpt-goalBadge');
+  const badgeTxt = badgeEl ? badgeEl.textContent.trim() : '';
+  const badgeCls = badgeEl ? badgeEl.className : '';
+  const badgeBg  = badgeCls.includes('rpt-ok')
+    ? 'background:#dcfce7;color:#166534;border:1px solid #86efac;'
+    : badgeCls.includes('rpt-over')
+    ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;'
+    : '';
+  const badgeHtml = badgeTxt && badgeBg
+    ? `<span style="${F}display:inline-block;padding:2px 9px;border-radius:10px;font-size:8pt;font-weight:bold;margin-left:8px;${badgeBg}">${badgeTxt}</span>`
+    : '';
+
+  const goalStatusEl  = document.getElementById('rpt-goalBadge');
+  const goalStatusTxt = goalStatusEl ? goalStatusEl.textContent.trim() : '';
+  const goalStatusBg  = goalStatusEl && goalStatusEl.className.includes('rpt-ok')
+    ? 'background:#dcfce7;color:#166534;border:1px solid #86efac;'
+    : goalStatusEl && goalStatusEl.className.includes('rpt-over')
+    ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;' : '';
+
+  const goalHtml = goalItems.length
+    ? goalItems.map((g, gi) => `<tr>
+        <td style="${F}font-size:9.5pt;color:#1e293b;padding:7px 12px;border-bottom:1px solid #bfdbfe;line-height:1.55;background:${gi%2===0?'#eff6ff':'#fff'};">
+          <span style="color:#1d4ed8;font-weight:bold;margin-right:6px;">◆</span>${g}
+        </td>
+      </tr>`).join('')
+    : `<tr><td style="${F}padding:8px 12px;color:#94a3b8;font-style:italic;font-size:9pt;">No sprint goal items.</td></tr>`;
+
+  const insightHtml = insights.length
+    ? insights.map(r=>`<tr><td style="${F}font-size:9.5pt;color:#1e293b;padding:7px 12px;border-bottom:1px solid #bfdbfe;line-height:1.55;text-align:left;">
+        <span style="color:#1d4ed8;font-weight:bold;margin-right:6px;">◆</span>${r}</td></tr>`).join('')
+    : `<tr><td style="${F}padding:10px 12px;color:#94a3b8;font-style:italic;font-size:9pt;text-align:left;">No insights recorded.</td></tr>`;
+
+  return`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body,html{margin:0;padding:0;background:#f1f5f9;}*{box-sizing:border-box;}</style>
+<title>Sprint Closing Report — ${sprint}</title>
+</head>
+<body style="margin:0;padding:16px;background:#f1f5f9;font-family:Verdana,Geneva,Tahoma,sans-serif;">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="780"
+  style="border-collapse:collapse;background:#fff;border:1px solid #cbd5e1;">
+
+  <!-- HEADER -->
+  <tr><td style="padding:0;">
+    <table border="0" cellpadding="0" cellspacing="0" width="780" style="border-collapse:collapse;">
+      <tr>
+        <td width="520" bgcolor="#dbeafe" style="background:#dbeafe;padding:14px 18px;vertical-align:middle;border-bottom:2px solid #93c5fd;">
+          <span style="${F}font-size:14pt;font-weight:bold;color:#1e3a5f;">Sprint Closing Report — ${area}</span>
+        </td>
+        <td width="260" bgcolor="#f0f7ff" style="background:#f0f7ff;padding:10px 14px;text-align:center;vertical-align:middle;border-left:2px solid #93c5fd;border-bottom:2px solid #93c5fd;">
+          <p style="${F}font-size:7pt;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin:0 0 3px;">SPRINT</p>
+          <p style="${F}font-size:11pt;font-weight:bold;color:#1e3a5f;margin:0;">${sprint}</p>
+          <p style="${F}font-size:8pt;color:#475569;margin:3px 0 0;">${dates}</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="padding:20px 24px 24px;">
+
+    <!-- Sprint Goal -->
+    <table border="0" cellpadding="0" cellspacing="0" width="732"
+      style="border-collapse:collapse;margin-bottom:16px;border:1px solid #bfdbfe;">
+      <!-- Header row: icon + title + badge -->
+      <tr bgcolor="#1e3a8a">
+        <td style="background:#1e3a8a;padding:10px 14px;vertical-align:middle;border-bottom:2px solid #3b82f6;">
+          <span style="${F}font-size:10pt;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.06em;">🎯 Sprint Goal</span>
+        </td>
+        <td style="background:#1e3a8a;padding:10px 14px;text-align:right;vertical-align:middle;white-space:nowrap;border-bottom:2px solid #3b82f6;">
+          ${goalStatusTxt && goalStatusBg
+            ? `<span style="${F}${goalStatusBg}padding:3px 12px;border-radius:12px;font-weight:700;font-size:8.5pt;">${goalStatusTxt}</span>`
+            : ''}
+        </td>
+      </tr>
+      <!-- Goal rows -->
+      <tr><td colspan="2" style="padding:0;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;background:#eff6ff;">${goalHtml}</table>
+      </td></tr>
+    </table>
+
+    <!-- Delivery Summary -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:0 0 5px;">📊 Delivery Summary</p>
+    ${tbl(['Category','Total','Closed','Resolved','Open','OnHold','Adhoc','Delivery %'], delivery.rows, delivery.foot)}
+
+    <!-- Sprint Insight -->
+    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;margin-top:14px;margin-bottom:14px;">
+      ${SECH('💡 Sprint Insight')}
+      <tr><td colspan="10" style="padding:0;">
+        <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;background:#eff6ff;border:1px solid #bfdbfe;">${insightHtml}</table>
+      </td></tr>
+    </table>
+
+    <!-- Team B -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🅱️ Team B / Adhoc Support — Discipline Summary</p>
+    ${tblGreen(['Discipline','Planned (h)','Completed (h)','Remaining (h)'], teamB.rows, teamB.foot)}
+
+    <!-- Defect Summary -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🐛 Bug Report — Sprint Quality Analysis</p>
+    ${tblRed(['Ownership','CS (Sprint)','Proposed','Open','Closed','Resolved','Effort Taken (h)'], bugData.rows, [])}
+
+    <!-- Bug Type -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🏷️ Bug Type Classification</p>
+    ${tblRed(['Type','Total','Proposed','Open','Closed','Resolved','Effort Taken (h)'], bugTypeData.rows, [])}
+
+    <!-- AI Data -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🤖 AI Data — Dev &amp; QA Adoption Summary</p>
+    ${tbl(['Discipline','Total Tasks','AI Tasks','Manual Tasks','AI Efficiency %','Manual Efficiency %','Saved Hours'], aiData.rows, aiData.foot)}
+
+    <!-- Footer -->
+    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;border-top:1px solid #e2e8f0;margin-top:18px;">
+      <tr>
+        <td style="${F}padding:7px 0 0;font-size:7.5pt;color:#94a3b8;">Sprint Closing Report &bull; ${sprint}</td>
+        <td style="${F}padding:7px 0 0;font-size:7.5pt;color:#94a3b8;text-align:right;">Generated ${today}</td>
+      </tr>
+    </table>
+
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+
+/* ══ Double-click on any numeric cell → open popup ═════ */
+document.addEventListener('dblclick', function(e) {
+  const td = e.target.closest('td.rpt-edit');
+  if (!td) return;
+  const row = td.closest('tr');
+  if (!row) return;
+  // Find the window key stored on the row via onclick attr
+  const rowOnClick = row.getAttribute('onclick') || '';
+  // Extract first showRptPopup call args from the row onclick
+  const m = rowOnClick.match(/showRptPopup\s*\(([^)]+)\)/);
+  if (m) {
+    try { eval(rowOnClick); } catch(e2) {}
+    return;
+  }
+  // Fallback: check the td itself
+  const tdClick = td.getAttribute('onclick') || '';
+  if (tdClick) {
+    try { eval(tdClick.replace(/event\.stopPropagation\(\);?/,'')); } catch(e2) {}
+  }
+});
+/* ══ SCR PREVIEW ════════════════════════════════════════ */
+function scrOpenPreview(){
+  if(document.getElementById('rptWrap').style.display==='none'){xtoast('⚠️ Load a sprint first');return;}
+  const html=scrBuildReport();
+  const host=document.getElementById('scrPreviewFrameHost');
+  host.innerHTML='';
+  const frame=document.createElement('iframe');
+  frame.srcdoc=html;
+  frame.style.cssText='width:100%;height:82vh;border:none;display:block;background:#f0f4f8;';
+  host.appendChild(frame);
+  document.getElementById('scrPreviewModal').style.display='';
+}
+
+/* ══ SCR COPY TO EMAIL ══════════════════════════════════ */
+async function scrCopyEmail(){
+  if(document.getElementById('rptWrap').style.display==='none'){xtoast('⚠️ Load a sprint first');return;}
+  const fullHtml=scrBuildReport();
+  const bodyMatch=fullHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const bodyContent=bodyMatch?bodyMatch[1]:fullHtml;
+  const styleMatch=fullHtml.match(/<style>([\s\S]*?)<\/style>/i);
+  const styleContent=styleMatch?styleMatch[1]:'';
+  const pasteHtml=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>html,body{margin:0!important;padding:0!important;background:#ffffff!important;color:#1a1a1a!important;}*{box-sizing:border-box;}${styleContent}</style>
+</head><body style="margin:0;padding:0;background:#fff;font-family:Verdana,Geneva,Tahoma,sans-serif;">
+<div style="background:#fff;color:#1a1a1a;">${bodyContent}</div></body></html>`;
+  try{
+    const blob=new Blob([pasteHtml],{type:'text/html'});
+    await navigator.clipboard.write([new ClipboardItem({'text/html':blob})]);
+    xtoast('✅ Report copied — paste into Outlook / Gmail');
+  }catch(e){
+    const target=document.getElementById('scrCopyTarget');
+    target.style.cssText='position:fixed;left:-9999px;top:0;background:#fff;color:#1a1a1a;font-family:Arial,sans-serif;padding:0;width:860px;pointer-events:none;z-index:-1;';
+    target.innerHTML=bodyContent;
+    try{
+      const range=document.createRange();
+      range.selectNode(target);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+      xtoast('✅ Report copied (paste into your email client)');
+    }catch(e2){
+      xtoast('Copy failed — use Download HTML instead','#ef4444');
+    }finally{target.innerHTML='';}
+  }
+}
+
+/* ══ SCR DOWNLOAD HTML ══════════════════════════════════ */
+function scrDownloadHtml(){
+  if(document.getElementById('rptWrap').style.display==='none'){xtoast('⚠️ Load a sprint first');return;}
+  const sprint=document.getElementById('rpt-sprintName')?.textContent||'Sprint';
+  const blob=new Blob([scrBuildReport()],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='Sprint_Closing_Report_'+sprint.replace(/[^a-z0-9]/gi,'_')+'.html';
+  a.click();
+  xtoast('✅ HTML downloaded');
+}
+
+/* ══ SCR DOWNLOAD PDF ═══════════════════════════════════ */
+function scrDownloadPdf(){
+  if(document.getElementById('rptWrap').style.display==='none'){xtoast('⚠️ Load a sprint first');return;}
+  const sprint=document.getElementById('rpt-sprintName')?.textContent||'Sprint';
+  const html=scrBuildReport()
+    .replace('</style>',`  @page{size:A4 portrait;margin:12mm 10mm;}
+  @media print{.no-print{display:none!important}body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+</style>`)
+    .replace('<body','<body><div class="no-print" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e3a8a;color:#fff;padding:7px 16px;font-family:Segoe UI,Calibri;font-size:13px;font-weight:bold;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.4);">📄 Save as PDF &nbsp;<button onclick="window.print()" style="background:#fff;color:#1e3a8a;border:none;border-radius:4px;padding:3px 12px;cursor:pointer;font-weight:700;font-size:13px;">🖨 Print</button>&nbsp;<button onclick="window.close()" style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">✕</button></div><div style="padding-top:46px;')
+    .replace('</body>','</div></body>');
+  const popup=window.open('','_blank','width=920,height=780,scrollbars=yes,menubar=no,toolbar=no');
+  if(popup){popup.document.open();popup.document.write(html);popup.document.close();setTimeout(()=>{try{popup.print();}catch(e){}},900);}
+  else{const a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(scrBuildReport());a.download='Sprint_Closing_Report_'+sprint.replace(/[^a-z0-9]/gi,'_')+'.html';a.click();xtoast('Popup blocked — downloaded as HTML','#f59e0b');}
+}
+
+/* ══ RENDER REPORT ══════════════════════════════════════ */
+
+/* ══ Popup sort state ══════════════════════════════════ */
+let _popupSortCol = -1, _popupSortDir = 1;
+let _popupRows = [], _popupCols = [], _popupType = '';
+
+function _sortPopupBy(colIdx) {
+  if (_popupSortCol === colIdx) _popupSortDir *= -1;
+  else { _popupSortCol = colIdx; _popupSortDir = 1; }
+  _renderPopupTable();
+}
+
+function _renderPopupTable() {
+  const body = document.getElementById('rptPopupBody');
+  if (!body || !_popupRows.length) return;
+  // Build sort indicator on headers
+  const summaryBar = `<div style="padding:6px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);font-size:.68rem;color:#64748b;">
+    Showing <strong style="color:#e2e8f0">${_popupRows.length}</strong> item${_popupRows.length!==1?'s':''}</div>`;
+
+  const isRed = _popupType === 'bugs';
+  const hdrBg  = isRed ? 'rgba(127,29,29,.5)' : 'rgba(30,58,138,.6)';
+  const hdrClr = isRed ? '#fca5a5' : '#93c5fd';
+
+  const sorted = [..._popupRows].sort((a,b)=>{
+    if(_popupSortCol<0) return 0;
+    const av = (a._cells||[])[_popupSortCol]||'';
+    const bv = (b._cells||[])[_popupSortCol]||'';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if(!isNaN(an)&&!isNaN(bn)) return (an-bn)*_popupSortDir;
+    return av.toString().localeCompare(bv.toString())*_popupSortDir;
+  });
+
+  const ths = _popupCols.map((col,i)=>{
+    const arrow = _popupSortCol===i ? (_popupSortDir===1?'▲':'▼') : '⇅';
+    const sorted_cls = _popupSortCol===i ? 'sorted' : '';
+    return `<th class="rpt-popup-th ${sorted_cls}" onclick="_sortPopupBy(${i})"
+      style="padding:8px 12px;text-align:left;color:${hdrClr};font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);background:${hdrBg};white-space:nowrap;">
+      ${col}<span class="sort-arrow">${arrow}</span></th>`;
+  }).join('');
+
+  const trs = sorted.map((row,i)=> {
+    const bugRow = `<tr style="background:${i%2===0?'rgba(255,255,255,.03)':'transparent'}">
+      ${(row._htmlCells||[]).join('')}
+    </tr>`;
+    const taskRows = row._taskSubRows || '';
+    return bugRow + taskRows;
+  }).join('');
+
+  body.innerHTML = summaryBar + `<table style="width:100%;border-collapse:collapse;font-size:.72rem;">
+    <thead><tr>${ths}</tr></thead>
+    <tbody>${trs}</tbody>
+  </table>`;
+}
+/* ══ DRILL-DOWN POPUP ═══════════════════════════════════ */
+function closeRptPopup(){
+  document.getElementById('rptPopupOverlay').style.display='none';
+  document.getElementById('rptPopupBox').style.display='none';
+}
+
+function showRptPopup(title, itemsArr, type){
+  const cnt = itemsArr ? itemsArr.length : 0;
+  document.getElementById('rptPopupTitle').textContent = title + (cnt ? '  (' + cnt + ' items)' : '');
+  const body = document.getElementById('rptPopupBody');
+  const tfsBase = tfsUrl && project ? `${tfsUrl}/${project}/_workitems/edit/` : null;
+
+  _popupSortCol = -1; _popupSortDir = 1; _popupType = type;
+
+  if(!itemsArr || itemsArr.length === 0){
+    body.innerHTML = `<p style="color:#64748b;padding:20px;text-align:center;font-size:.75rem;">No items found.</p>`;
+    document.getElementById('rptPopupOverlay').style.display='block';
+    document.getElementById('rptPopupBox').style.display='flex';
+    return;
+  }
+
+  if(type === 'reqs') {
+    _popupCols = ['ID','Title','Type','State','Size'];
+    _popupRows = itemsArr.map(r => {
+      const st  = r.fields['System.State']||'';
+      const stC = st==='Closed'?'#34d399':st==='Resolved'?'#60a5fa':'#fbbf24';
+      const wt  = r.fields['System.WorkItemType']||'';
+      const sz  = String(r.fields['Microsoft.VSTS.Scheduling.Size']||'—');
+      const link= tfsBase?`<a href="${tfsBase}${r.id}" target="_blank" style="color:#60a5fa;">${r.id}</a>`:`${r.id}`;
+      return {
+        _cells: [String(r.id), r.fields['System.Title']||'', wt, st, sz],
+        _htmlCells: [
+          `<td style="padding:7px 12px;">${link}</td>`,
+          `<td style="padding:7px 12px;color:#e2e8f0;">${r.fields['System.Title']||''}</td>`,
+          `<td style="padding:7px 12px;color:#a5b4fc;font-size:.67rem;">${wt}</td>`,
+          `<td style="padding:7px 12px;color:${stC};font-weight:600;">${st}</td>`,
+          `<td style="padding:7px 12px;text-align:center;color:#fbbf24;">${sz}</td>`
+        ]
+      };
+    });
+  } else if(type === 'bugs') {
+    _popupCols = ['ID','Title','State','Reason','Effort Taken (h)'];
+    _popupRows = itemsArr.map(b => {
+      const st    = b.fields['System.State']||'';
+      const stC   = st==='Closed'?'#34d399':st==='Resolved'?'#60a5fa':'#fbbf24';
+      const reason= b.fields['System.Reason']||'—';
+      const childIds = bugTasksMap[b.id]||[];
+      const compWork = childIds.reduce((s,tid)=>{const t=taskLookup[tid];return s+(t?t.fields['Casepoint.TFS.CustomFields.CompletedWork']||t.fields['Microsoft.VSTS.Scheduling.CompletedWork']||0:0);},0);
+      const cw = compWork>0 ? fmtH(compWork)+'h' : '—';
+      const link= tfsBase?`<a href="${tfsBase}${b.id}" target="_blank" style="color:#f87171;">${b.id}</a>`:`${b.id}`;
+
+      // Task sub-rows — shown inline under each bug
+      const taskSubRows = childIds.length === 0 ? '' :
+        `<tr style="background:rgba(15,23,42,.6);">
+          <td colspan="5" style="padding:0;">
+            <table style="width:100%;border-collapse:collapse;font-size:.67rem;">
+              <thead>
+                <tr style="background:rgba(99,102,241,.18);">
+                  <th style="padding:4px 8px 4px 24px;color:#818cf8;font-weight:700;text-align:left;white-space:nowrap;">↳ Task ID</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:left;">Task Title</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">State</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:left;white-space:nowrap;">Discipline</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:left;white-space:nowrap;">Assigned To</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Exec Type</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Orig Est</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Completed</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Remaining</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${childIds.map((tid,ti) => {
+                  const t = taskLookup[tid];
+                  if (!t) return '';
+                  const tState = t.fields['System.State'] || '';
+                  const tStateC= tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
+                  const tDisc  = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
+                  const tAssign= t.fields['System.AssignedTo']?.displayName || '—';
+                  const tOrig  = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+                  const tRev   = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
+                  const tComp  = t.fields['Casepoint.TFS.CustomFields.CompletedWork'] || t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+                  const tRem   = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
+                  const tExec  = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '—';
+                  const execC  = tExec.startsWith('AI-')?'#34d399':tExec.includes('Manual-AI')?'#fca5a5':'#94a3b8';
+                  const tLink  = tfsBase?`<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>`:`${t.id}`;
+                  const rowBg  = ti%2===0?'rgba(99,102,241,.04)':'transparent';
+                  return `<tr style="background:${rowBg}">
+                    <td style="padding:4px 8px 4px 24px;color:#64748b;">${tLink}</td>
+                    <td style="padding:4px 8px;color:#cbd5e1;">${t.fields['System.Title']||''}</td>
+                    <td style="padding:4px 8px;color:${tStateC};text-align:center;font-weight:600;">${tState}</td>
+                    <td style="padding:4px 8px;color:#a5b4fc;">${tDisc}</td>
+                    <td style="padding:4px 8px;color:#94a3b8;">${tAssign}</td>
+                    <td style="padding:4px 8px;color:${execC};text-align:center;font-size:.62rem;">${tExec}</td>
+                    <td style="padding:4px 8px;color:#fbbf24;text-align:center;">${tOrig>0?fmtH(tRev>0?tRev:tOrig)+'h':'—'}</td>
+                    <td style="padding:4px 8px;color:#34d399;text-align:center;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>
+                    <td style="padding:4px 8px;color:#f87171;text-align:center;">${tRem>0?fmtH(tRem)+'h':'—'}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </td>
+        </tr>`;
+
+      return {
+        _cells: [String(b.id), b.fields['System.Title']||'', st, reason, String(compWork)],
+        _htmlCells: [
+          `<td style="padding:7px 12px;">${link}</td>`,
+          `<td style="padding:7px 12px;color:#e2e8f0;font-weight:600;">${b.fields['System.Title']||''}</td>`,
+          `<td style="padding:7px 12px;color:${stC};font-weight:600;">${st}</td>`,
+          `<td style="padding:7px 12px;color:#94a3b8;font-size:.68rem;">${reason}</td>`,
+          `<td style="padding:7px 12px;text-align:center;color:#fbbf24;font-weight:600;">${cw}${childIds.length?` <span style="color:#475569;font-size:.6rem;">(${childIds.length} task${childIds.length>1?'s':''})</span>`:''}</td>`
+        ],
+        _taskSubRows: taskSubRows,
+        _hasExpandedTasks: childIds.length > 0
+      };
+    });
+
+    // Signal renderer to include task sub-rows
+    _popupRows._hasTasks = true;
+  } else if(type === 'tasks') {
+    // Show ALL child tasks (flat list) for given bug array with full details
+    const allTaskRows = [];
+    itemsArr.forEach(b => {
+      const childIds = bugTasksMap[b.id] || [];
+      childIds.forEach(tid => {
+        const t = taskLookup[tid];
+        if (!t) return;
+        allTaskRows.push({ bug: b, task: t });
+      });
+    });
+    _popupCols = ['Task ID','Task Title','Bug','State','Discipline','Assigned To','Orig Est','Completed','Remaining'];
+    _popupRows = allTaskRows.map(({bug, task: t}) => {
+      const tState  = t.fields['System.State'] || '';
+      const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
+      const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
+      const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
+      const tOrig   = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+      const tComp   = t.fields['Casepoint.TFS.CustomFields.CompletedWork'] || t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+      const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
+      const tExec   = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '—';
+      const bugTitle= bug.fields['System.Title'] || '';
+      const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
+      const bLink   = tfsBase ? `<a href="${tfsBase}${bug.id}" target="_blank" style="color:#f87171;font-size:.65rem;">${bug.id}</a>` : `${bug.id}`;
+      const execColor = tExec.startsWith('AI-') ? '#34d399' : tExec.includes('Manual-AI') ? '#fca5a5' : '#94a3b8';
+      return {
+        _cells: [String(t.id), t.fields['System.Title']||'', bugTitle, tState, tDisc, tAssign, String(tOrig), String(tComp), String(tRem)],
+        _htmlCells: [
+          `<td style="padding:7px 10px;">${tLink}</td>`,
+          `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}<br><span style="color:${execColor};font-size:.62rem;">${tExec}</span></td>`,
+          `<td style="padding:7px 10px;color:#f87171;font-size:.65rem;">${bLink} ${bugTitle.substring(0,40)}${bugTitle.length>40?'…':''}</td>`,
+          `<td style="padding:7px 10px;color:${tStateC};font-weight:600;">${tState}</td>`,
+          `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
+          `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#fbbf24;">${tOrig>0?fmtH(tOrig)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#f87171;">${tRem>0?fmtH(tRem)+'h':'—'}</td>`
+        ]
+      };
+    });
+  }
+
+  _renderPopupTable();
+  document.getElementById('rptPopupOverlay').style.display='block';
+  document.getElementById('rptPopupBox').style.display='flex';
+}
+
+
+
+function renderReport(){
+  const deliverables = requirements.filter(r=>r.category==='deliverable');
+  const nonDel       = requirements.filter(r=>r.category==='nonDeliverable');
+  const adhoc        = requirements.filter(r=>r.isAdhocSupport);
+  const delAdhoc     = requirements.filter(r=>r.isDeliverablesAdhoc);
+  const delOnHold    = requirements.filter(r=>r.isDeliverablesOnHold);
+  const sprintGoalReqs=requirements.filter(r=>(r.fields['System.Tags']||'').toLowerCase().includes('sprint goal'));
+
+  const sprintName = selectedIterPaths.map(i=>i.path.split('\\').pop()).join(', ');
+  const areaName   = selectedAreaPaths.length?(selectedAreaPaths.map(a=>a.path.split('\\').pop()).join(', ')):'—';
+  const dateStr    = sprintStartDate&&sprintEndDate
+    ?sprintStartDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' – '+sprintEndDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})
+    :'—';
+
+  // ── Header ────────────────────────────────────────────
+  const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  setEl('rpt-areaName', areaName);
+  setEl('rpt-sprintName', sprintName);
+  setEl('rpt-dates', dateStr);
+
+  // Show Change Sprint + export bar
+  const csBtn=document.getElementById('changeSprintBtn');
+  if(csBtn) csBtn.style.display='flex';
+  const expBar=document.getElementById('scrExportBar');
+  if(expBar) expBar.style.display='flex';
+
+  // ── Sprint Goal ───────────────────────────────────────
+  const goalBlock=document.getElementById('rpt-goalBlock');
+  if(sprintGoalReqs.length && goalBlock){
+    goalBlock.style.display='block';
+    const tbody=document.getElementById('rpt-goalTableBody');
+    if(tbody) tbody.innerHTML=sprintGoalReqs.map((r,i)=>{
+      const st=r.fields['System.State']||'';
+      const stColor=st==='Closed'?'#34d399':st==='Resolved'?'#60a5fa':st==='Active'||st==='Open'?'#fbbf24':'#94a3b8';
+      return`<tr id="rpt-goalRow-${i}" data-req-id="${r.id}">
+        <td id="rpt-goalRow-${i}-title" style="padding:6px 8px;color:#e2e8f0;border-bottom:1px solid rgba(255,255,255,.06);">
+          <span style="color:#38bdf8;font-weight:bold;margin-right:5px;font-size:.6rem;">◆</span>${r.fields['System.Title']||''}
+        </td>
+        <td id="rpt-goalRow-${i}-state" style="padding:6px 8px;text-align:center;color:${stColor};font-weight:600;font-size:.68rem;border-bottom:1px solid rgba(255,255,255,.06);">${st}</td>
+        <td id="rpt-goalRow-${i}-id"    style="padding:6px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06);">
+          <a href="${tfsUrl}/${project}/_workitems/edit/${r.id}" target="_blank" style="color:#60a5fa;font-size:.65rem;">${r.id}</a>
+        </td>
+      </tr>`;
+    }).join('');
+    const goalAchieved=sprintGoalReqs.every(r=>['Closed','Resolved'].includes(r.fields['System.State']||''));
+    const badge=document.getElementById('rpt-goalBadge');
+    if(badge){
+      badge.style.display='inline-block';
+      badge.className=goalAchieved?'rpt-ok':'rpt-over';
+      badge.textContent=goalAchieved?'✅ Goal Achieved':'⚠️ Goal Not Achieved';
+    }
+  }
+
+  // ── Section 1: Delivery Summary ──────────────────────
+  const closedDel  =deliverables.filter(r=>r.fields['System.State']==='Closed');
+  const resolvedDel=deliverables.filter(r=>r.fields['System.State']==='Resolved');
+  const openDel    =deliverables.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State']));
+  const openActive =openDel.filter(r=>!r.isDeliverablesOnHold&&!r.isDeliverablesAdhoc);
+  const undelivered=deliverables.filter(r=>r.fields['System.State']!=='Closed');
+  const delivRate  =pct(closedDel.length, deliverables.length||1);
+
+  const delivRows = [
+    { label:'📦 Deliverable', items:deliverables,
+      closed:closedDel.length, resolved:resolvedDel.length,
+      open:openActive.length, onhold:delOnHold.length, adhoc:delAdhoc.length },
+    { label:'📋 Non-Deliverable', items:nonDel,
+      closed:nonDel.filter(r=>r.fields['System.State']==='Closed').length,
+      resolved:nonDel.filter(r=>r.fields['System.State']==='Resolved').length,
+      open:nonDel.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length,
+      onhold:0, adhoc:0 },
+    { label:'🅱️ Adhoc Support', items:adhoc,
+      closed:adhoc.filter(r=>r.fields['System.State']==='Closed').length,
+      resolved:adhoc.filter(r=>r.fields['System.State']==='Resolved').length,
+      open:adhoc.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length,
+      onhold:0, adhoc:0 },
+  ];
+  const dsbody=document.getElementById('rpt-deliverySummaryBody');
+  if(dsbody) dsbody.innerHTML=delivRows.map((row,ri)=>{
+    // Store item slices on window for popup access
+    const closedItems   = row.items.filter(r=>r.fields['System.State']==='Closed');
+    const resolvedItems = row.items.filter(r=>r.fields['System.State']==='Resolved');
+    const openItems     = row.items.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])&&!r.isDeliverablesOnHold&&!r.isDeliverablesAdhoc);
+    const onholdItems   = row.items.filter(r=>r.isDeliverablesOnHold);
+    const adhocItems    = row.items.filter(r=>r.isDeliverablesAdhoc);
+    const key = `ds_${ri}`;
+    window[`_rpt_${key}_all`]     = row.items;
+    window[`_rpt_${key}_closed`]  = closedItems;
+    window[`_rpt_${key}_resolved`]= resolvedItems;
+    window[`_rpt_${key}_open`]    = openItems;
+    window[`_rpt_${key}_onhold`]  = onholdItems;
+    window[`_rpt_${key}_adhoc`]   = adhocItems;
+    const rate=pct(row.closed, row.items.length||1);
+    const rateHtml=rate>=80?`<span class="rpt-ok">${rate}%</span>`:rate>=50?`<span class="rpt-neutral">${rate}%</span>`:`<span class="rpt-over">${rate}%</span>`;
+    const D=(val,arr,label)=>arr.length?`<td class="rpt-edit rpt-drill" contenteditable="true" onclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'reqs')">${val}</td>`:`<td class="rpt-edit" contenteditable="true">${val}</td>`;
+    return`<tr onclick="showRptPopup('${row.label} — All Items',window['_rpt_${key}_all'],'reqs')" style="cursor:pointer;" title="Click to view all items">
+      <td>${row.label}</td>
+      ${D(row.items.length, row.items, 'all')}
+      ${D(row.closed, closedItems, 'closed')}
+      ${D(row.resolved, resolvedItems, 'resolved')}
+      ${D(row.open, openItems, 'open')}
+      ${D(row.onhold, onholdItems, 'onhold')}
+      ${D(row.adhoc, adhocItems, 'adhoc')}
+      <td>${rateHtml}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Section 4: Capacity Toward ────────────────────────
+  function capToward(disciplineFilter){
+    const dispTasks=tasks.filter(t=>(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()===disciplineFilter);
+    let dH=0,nH=0,aH=0;
+    const delIds=new Set(deliverables.filter(r=>!r.isDeliverablesAdhoc&&!r.isDeliverablesOnHold).map(r=>r.id));
+    const ndIds=new Set(nonDel.map(r=>r.id));
+    const ahIds=new Set([...delAdhoc,...delOnHold,...adhoc].map(r=>r.id));
+    dispTasks.forEach(t=>{
+      const re=t.fields['Casepoint.TFS.CustomFields.RevisedEstimate']||0;
+      const oe=t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0;
+      const h=re>0?re:oe;
+      // find parent req
+      const pid=Object.keys(reqTasksMap).find(k=>reqTasksMap[k]&&reqTasksMap[k].includes(t.id));
+      const pid_n=pid?parseInt(pid):null;
+      if(pid_n&&ahIds.has(pid_n)) aH+=h;
+      else if(pid_n&&delIds.has(pid_n)) dH+=h;
+      else if(pid_n&&ndIds.has(pid_n)) nH+=h;
+      else dH+=h;
+    });
+    return{del:fmtH(dH),nd:fmtH(nH),adhoc:fmtH(aH),total:fmtH(dH+nH+aH)};
+  }
+  const devCap=capToward('development');
+  const qaCap =capToward('test');
+  // ── Section 5: Team B ─────────────────────────────────
+  const tbEmpty   = document.getElementById('rpt-teamBEmpty');
+  const tbHeader  = document.getElementById('tb-header');
+  const tbTbl     = document.getElementById('tb-disc-tbl');
+  const tbDBody   = document.getElementById('tb-disc-body');
+  const tbDFoot   = document.getElementById('tb-disc-foot');
+  const tbbodyEl  = document.getElementById('rpt-teamBBody');
+  const tbfootEl  = document.getElementById('rpt-teamBFoot');
+
+  if (!adhoc.length) {
+    if (tbEmpty)  tbEmpty.style.display  = '';
+    if (tbHeader) tbHeader.style.display = 'none';
+    if (tbTbl)    tbTbl.style.display    = 'none';
+  } else {
+    if (tbEmpty)  tbEmpty.style.display  = 'none';
+    if (tbHeader) tbHeader.style.display = 'flex';
+    if (tbTbl)    tbTbl.style.display    = '';
+
+    // ── Header: ticket count + open/closed/resolved pills ──────────
+    const totalTickets = adhoc.length;
+    const stateCount = {};
+    adhoc.forEach(r => {
+      const st = r.fields['System.State'] || 'Active';
+      stateCount[st] = (stateCount[st] || 0) + 1;
+    });
+    const closed   = stateCount['Closed']   || 0;
+    const resolved = stateCount['Resolved'] || 0;
+    const open     = totalTickets - closed - resolved;
+
+    const countEl = document.getElementById('tb-total-count');
+    if (countEl) countEl.textContent = `${totalTickets} Ticket${totalTickets !== 1 ? 's' : ''}`;
+
+    const pillsEl = document.getElementById('tb-header-pills');
+    if (pillsEl) {
+      pillsEl.innerHTML =
+        (closed   ? `<span class="tb-pill tb-pill-closed">✓ Closed ${closed}</span>`     : '') +
+        (resolved ? `<span class="tb-pill tb-pill-resolved">✓ Resolved ${resolved}</span>` : '') +
+        (open     ? `<span class="tb-pill tb-pill-open">● Open ${open}</span>`             : '');
+    }
+
+    // ── Table: aggregate task hours by discipline ───────────────────
+    // Source: actual TASKS of each adhoc req, grouped by task discipline
+    const discData = {};  // { disciplineLabel → { plan, comp, rem } }
+
+    adhoc.forEach(r => {
+      const childIds   = reqTasksMap[r.id] || [];
+      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean);
+
+      childTasks.forEach(t => {
+        const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
+        if (!discData[disc]) discData[disc] = { plan: 0, comp: 0, rem: 0 };
+        discData[disc].plan += t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']  || 0;
+        discData[disc].comp += t.fields['Microsoft.VSTS.Scheduling.CompletedWork']     || 0;
+        discData[disc].rem  += t.fields['Microsoft.VSTS.Scheduling.RemainingWork']     || 0;
+      });
+    });
+
+    // Sort: Development first, Test second, rest alphabetically
+    const ORDER = ['development', 'test'];
+    const sortedDiscs = Object.keys(discData).sort((a, b) => {
+      const ai = ORDER.indexOf(a.toLowerCase()), bi = ORDER.indexOf(b.toLowerCase());
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return  1;
+      return a.localeCompare(b);
+    });
+
+    let totP = 0, totC = 0, totR = 0;
+    const DISC_COLOR = { development: '#93c5fd', test: '#6ee7b7' };
+
+    const tableRows = sortedDiscs.map(disc => {
+      const d = discData[disc];
+      totP += d.plan; totC += d.comp; totR += d.rem;
+      const clr = DISC_COLOR[disc.toLowerCase()] || '#cbd5e1';
+      const discLabel = disc.toLowerCase() === 'development' ? '💻 Development'
+                      : disc.toLowerCase() === 'test'        ? '🧪 Test'
+                      : disc;
+      return `<tr>
+        <td style="color:${clr}">${discLabel}</td>
+        <td style="color:#fbbf24;font-weight:600">${fmtH(d.plan)}h</td>
+        <td style="color:#34d399;font-weight:600">${fmtH(d.comp)}h</td>
+        <td style="color:#f87171;font-weight:600">${fmtH(d.rem)}h</td>
+      </tr>`;
+    });
+
+    if (tbDBody) tbDBody.innerHTML = tableRows.join('');
+    if (tbDFoot) tbDFoot.innerHTML = `<tr>
+      <td>Total</td>
+      <td style="color:#fbbf24">${fmtH(totP)}h</td>
+      <td style="color:#34d399">${fmtH(totC)}h</td>
+      <td style="color:#f87171">${fmtH(totR)}h</td>
+    </tr>`;
+
+    // Populate hidden table for email/readTbl (discipline rows)
+    if (tbbodyEl) tbbodyEl.innerHTML = sortedDiscs.map(disc => {
+      const d = discData[disc];
+      const lbl = disc.toLowerCase()==='development'?'💻 Development':disc.toLowerCase()==='test'?'🧪 Test':disc;
+      return `<tr><td>${lbl}</td><td>${fmtH(d.plan)}h</td><td>${fmtH(d.comp)}h</td><td>${fmtH(d.rem)}h</td></tr>`;
+    }).join('');
+    if (tbfootEl) tbfootEl.innerHTML = `<tr>
+      <td>Total (${adhoc.length} tickets · Closed:${closed} Resolved:${resolved} Open:${open})</td>
+      <td>${fmtH(totP)}h</td><td>${fmtH(totC)}h</td><td>${fmtH(totR)}h</td>
+    </tr>`;
+  }
+
+  // ── Section 7: Bug Summary ────────────────────────────
+  // Bug bucket logic:
+  //   1. Get OwnedBy and AssignedTo for each bug
+  //   2. If OwnedBy matches any QA member name (case-insensitive) → QA bucket
+  //   3. Else if OwnedBy is blank AND AssignedTo matches any QA member → QA bucket
+  //   4. Everything else (including unmatched) → Dev bucket
+  //   5. Production bugs = separate tag-based row (can overlap Dev/QA)
+  const nameMatch = (field, memberList) => {
+    if(!field || !memberList.length) return false;
+    const fl = field.toLowerCase().trim();
+    return memberList.some(m => {
+      const ml = m.toLowerCase().trim();
+      // Match if either fully contains the other (handles "First Last" vs "Last, First" etc)
+      return fl === ml || fl.includes(ml) || ml.includes(fl);
+    });
+  };
+  // Bug ownership:
+  //  - Created on/after sprint start date AND has "QA Owned" tag → QA / Test
+  //  - Created on/after sprint start date AND no "QA Owned" tag  → Development
+  //  - Created before sprint start date (any tag)               → Past Sprint Bug
+  const hasQAOwnedTag = b => {
+    const tags = (b.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
+    return tags.includes('qa owned') || tags.includes('bug qa owned');
+  };
+  const isAfterSprintStart = b => {
+    if (!sprintStartDate) return true; // no date info → treat as current sprint
+    const cd = b.fields['System.CreatedDate'];
+    return cd ? new Date(cd) >= sprintStartDate : true;
+  };
+
+  // Production environments list
+  const PROD_ENVS = new Set([
+    'azure europe','canada','foia-cgce',
+    'production','production-azure','production-azure dod'
+  ]);
+  const isProductionBug = b => {
+    const env = (b.fields['_foundInEnv'] || '').toLowerCase().trim();
+    return PROD_ENVS.has(env);
+  };
+
+  const prodBugs    = bugs.filter(b => isProductionBug(b));
+  const prodBugIds  = new Set(prodBugs.map(b => b.id));
+
+  // Exclude production bugs and Rejected bugs from Dev and Test buckets
+  const isRejectedBug = b => (b.fields['System.Reason'] || '').toLowerCase() === 'rejected';
+  const isCannotReproduce = b => {
+    const tags = (b.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
+    const resolvedRsn = (b.fields['Microsoft.VSTS.Common.ResolvedReason'] || '').toLowerCase().trim();
+    return resolvedRsn === 'cannot reproduce'
+        || tags.includes('cannot reproduce')
+        || tags.includes('cannot reproduced');
+  };
+  const qaBugs  = bugs.filter(b =>  isAfterSprintStart(b) &&  hasQAOwnedTag(b) && !prodBugIds.has(b.id) && !isRejectedBug(b) && !isCannotReproduce(b));
+  const devBugs = bugs.filter(b =>  isAfterSprintStart(b) && !hasQAOwnedTag(b) && !prodBugIds.has(b.id) && !isRejectedBug(b) && !isCannotReproduce(b));
+  const pastBugs = bugs.filter(b => !isAfterSprintStart(b));
+
+  const csFn=arr=>arr.filter(b=>(b.fields['System.Tags']||'').toLowerCase().split(';').map(t=>t.trim()).includes('cs')).length;
+
+  // Helper: member names from bugs in a bucket
+  const buckMembers = arr => {
+    const names = new Set();
+    arr.forEach(b=>{
+      const ob=(b.fields['Casepoint.TFS.CustomFields.OwnedBy']||'').trim();
+      const at=(b.fields['System.AssignedTo']?.displayName||'').trim();
+      if(ob) names.add(ob); else if(at) names.add(at);
+    });
+    return [...names].join(', ')||'—';
+  };
+
+  const bugOwnerRows=[
+    {label:'🔧 Development', bugsArr:devBugs, members:buckMembers(devBugs)},
+    {label:'🧪 Test',         bugsArr:qaBugs,  members:buckMembers(qaBugs)},
+  ];
+  const bugbody=document.getElementById('rpt-bugBody');
+  const bugfoot=document.getElementById('rpt-bugFoot');
+
+
+  // Sum a specific field directly from bug work items
+  const bugFieldSum = (arr, fieldName) => {
+    return arr.reduce((s, b) => s + (b.fields[fieldName] || 0), 0);
+  };
+  // Sum a specific field from child tasks of bugs
+  const bugTaskFieldSum = (arr, fieldName) => {
+    let total = 0;
+    arr.forEach(b => {
+      const childIds = bugTasksMap[b.id] || [];
+      childIds.forEach(tid => {
+        const t = taskLookup[tid];
+        if (t) total += t.fields[fieldName] || 0;
+      });
+    });
+    return total;
+  };
+  // Sum CompletedWork from child tasks (bug task map)
+  const bugTaskCompWork = arr => bugTaskFieldSum(arr, 'Microsoft.VSTS.Scheduling.CompletedWork');
+  // Helper: sum Actual Completed Hours directly from bug work items
+  //  Primary: Casepoint.TFS.CustomFields.CompletedWork on the bug itself
+  //  Fallback: sum Microsoft.VSTS.Scheduling.CompletedWork from child tasks
+  const bugEffort = arr => {
+    let total = 0;
+    arr.forEach(b => {
+      const direct = b.fields['Casepoint.TFS.CustomFields.CompletedWork'];
+      if (direct != null && direct > 0) {
+        total += direct;
+      } else {
+        // fallback: sum CompletedWork from child tasks
+        const childIds = bugTasksMap[b.id] || [];
+        childIds.forEach(tid => {
+          const t = taskLookup[tid];
+          if (t) total += t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+        });
+      }
+    });
+    return total;
+  };
+
+  // ── Total effort label: sum CompletedWork from ALL bug tasks ────────────────
+  const allBugTotalEffort = bugTaskCompWork(bugs);
+  const effortBar = document.getElementById('rpt-bugTotalEffortBar');
+  const effortVal = document.getElementById('rpt-bugTotalEffortVal');
+  window._rpt_allBugs = bugs;
+  if (effortBar && effortVal && allBugTotalEffort > 0) {
+    effortVal.textContent = fmtH(allBugTotalEffort) + 'h';
+    effortBar.style.display = 'block';
+  }
+
+  if(bugbody) bugbody.innerHTML=bugOwnerRows.map((row,ri)=>{
+    const cs     =csFn(row.bugsArr);
+    const openArr=row.bugsArr.filter(b=>['Active','Open','New'].includes(b.fields['System.State']));
+    const closedArr=row.bugsArr.filter(b=>b.fields['System.State']==='Closed');
+    const resolvedArr=row.bugsArr.filter(b=>b.fields['System.State']==='Resolved');
+    const effort =bugEffort(row.bugsArr);
+    const key=`bug_${ri}`;
+    window[`_rpt_${key}_all`]     = row.bugsArr;
+    window[`_rpt_${key}_open`]    = openArr;
+    window[`_rpt_${key}_closed`]  = closedArr;
+    const proposedArr=row.bugsArr.filter(b=>['Proposed','New','Design'].includes(b.fields['System.State']));
+    window[`_rpt_${key}_proposed`]  = proposedArr;
+    window[`_rpt_${key}_resolved`]= resolvedArr;
+    const B=(val,arr,label,style='')=>arr.length
+      ?`<td class="rpt-edit rpt-drill" contenteditable="true" ${style?`style="${style}"`:''}
+          onclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'bugs')">${val}</td>`
+      :`<td class="rpt-edit" contenteditable="true" ${style?`style="${style}"`:''}>${val}</td>`;
+    // CS count = proposed + open + closed + resolved
+    const csCount = proposedArr.length + openArr.length + closedArr.length + resolvedArr.length;
+    return`<tr onclick="showRptPopup('${row.label}',window['_rpt_${key}_all'],'bugs')" style="cursor:pointer;" title="Click to view bugs">
+      <td>${row.label}</td>
+      ${B(csCount, row.bugsArr, 'all', 'color:#34d399')}
+      ${B(proposedArr.length, proposedArr, 'proposed', 'color:#c084fc')}
+      ${B(openArr.length,     openArr,     'open',     'color:#f87171')}
+      ${B(closedArr.length,   closedArr,   'closed',   'color:#34d399')}
+      ${B(resolvedArr.length, resolvedArr, 'resolved', 'color:#60a5fa')}
+      <td class="rpt-edit rpt-drill" contenteditable="true" style="color:#fbbf24;font-weight:600"
+          onclick="event.stopPropagation();showRptPopup('${row.label} — Task Effort',window['_rpt_${key}_all'],'tasks')">${(()=>{const v=bugEffort(row.bugsArr);return v?fmtH(v)+'h':'—';})()}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Bug Type Classification ──────────────────────────────────────────────
+  const bugTypeBodyEl = document.getElementById('rpt-bugTypeBody');
+  if (bugTypeBodyEl) {
+    const bugTypeRows = [
+      {
+        label: '🚀 Production Bug',
+        bugsArr: prodBugs
+      },
+      {
+        label: '↩️ Carry Forward',
+        bugsArr: bugs.filter(b => {
+          if (!sprintStartDate) return false;
+          const cd = b.fields['System.CreatedDate'];
+          return cd && new Date(cd) < sprintStartDate;
+        })
+      },
+      {
+        label: '❓ Cannot Reproduce',
+        bugsArr: bugs.filter(b => {
+          const tags = (b.fields['System.Tags']||'').split(';').map(t=>t.trim().toLowerCase());
+          return tags.includes('cannot reproduce') || tags.includes('cannot reproduced');
+        })
+      },
+      {
+        label: '🚫 Rejected',
+        bugsArr: bugs.filter(b => (b.fields['System.Reason']||'').toLowerCase() === 'rejected')
+      },
+    ];
+    bugTypeBodyEl.innerHTML = bugTypeRows.map((row,ri) => {
+      const eff = bugEffort(row.bugsArr);
+      const key = `bugtype_${ri}`;
+      const propArr = row.bugsArr.filter(b=>['Proposed','New','Design'].includes(b.fields['System.State']));
+      const openArr = row.bugsArr.filter(b=>['Active','Open'].includes(b.fields['System.State']));
+      const closedArr  = row.bugsArr.filter(b=>b.fields['System.State']==='Closed');
+      const resolvedArr= row.bugsArr.filter(b=>b.fields['System.State']==='Resolved');
+      window[`_rpt_${key}_all`]      = row.bugsArr;
+      window[`_rpt_${key}_proposed`] = propArr;
+      window[`_rpt_${key}_open`]     = openArr;
+      window[`_rpt_${key}_closed`]   = closedArr;
+      window[`_rpt_${key}_resolved`] = resolvedArr;
+      const BT=(val,arr,lbl,style='')=>arr.length
+        ?`<td class="rpt-edit rpt-drill" contenteditable="true" ${style?`style="${style}"`:''}
+             onclick="event.stopPropagation();showRptPopup('${row.label} — ${lbl}',window['_rpt_${key}_${lbl}'],'bugs')">${val}</td>`
+        :`<td class="rpt-edit" contenteditable="true" ${style?`style="${style}"`:''}>${val}</td>`;
+      return `<tr onclick="showRptPopup('${row.label}',window['_rpt_${key}_all'],'bugs')" style="cursor:pointer;" title="Click to view bugs">
+        <td style="text-align:left">${row.label}</td>
+        ${BT(propArr.length+openArr.length+closedArr.length+resolvedArr.length, row.bugsArr, 'all', 'font-weight:700')}
+        ${BT(propArr.length,    propArr,    'proposed', 'color:#c084fc;font-weight:600')}
+        ${BT(openArr.length,    openArr,    'open',     'color:#f87171;font-weight:600')}
+        ${BT(closedArr.length,  closedArr,  'closed',   'color:#34d399;font-weight:600')}
+        ${BT(resolvedArr.length,resolvedArr,'resolved', 'color:#60a5fa;font-weight:600')}
+        <td class="rpt-edit rpt-drill" contenteditable="true" style="color:#fbbf24;font-weight:600"
+            onclick="event.stopPropagation();showRptPopup('${row.label} — Task Effort Detail',window['_rpt_${key}_all'],'tasks')">${eff ? fmtH(eff)+'h' : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Section 9: AI Data — Dev & QA Adoption Summary ──────────────────────
+  (function buildAIData() {
+    const aiBody  = document.getElementById('rpt-aiDataBody');
+    const aiFoot  = document.getElementById('rpt-aiDataFoot');
+    const aiEmpty = document.getElementById('rpt-aiDataEmpty');
+    if (!aiBody) return;
+
+    // Valid parent IDs: Deliverable, Deliverables Adhoc, Deliverables OnHold,
+    // Non-Deliverable, Adhoc Support (same criteria as index.html)
+    const validReqIds = new Set();
+    requirements.forEach(req => {
+      const tags = (req.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
+      if (tags.includes('deliverable') || tags.includes('deliverables adhoc') ||
+          tags.includes('deliverables onhold') || tags.includes('non-deliverable') ||
+          req.isAdhocSupport) {
+        validReqIds.add(req.id);
+      }
+    });
+    bugs.forEach(b => {
+      if ((b.fields['System.Tags'] || '').toLowerCase().includes('adhoc support'))
+        validReqIds.add(b.id);
+    });
+
+    // Build a fast parent-lookup from reqTasksMap + bugTasksMap
+    const taskParent = {};
+    const allTaskMaps = [reqTasksMap, bugTasksMap];
+    allTaskMaps.forEach(map => {
+      Object.entries(map).forEach(([pid, tids]) => {
+        if (Array.isArray(tids)) tids.forEach(tid => { taskParent[tid] = parseInt(pid); });
+      });
+    });
+
+    // Accumulate stats for one discipline string (e.g. 'Development', 'Test')
+    function calcAI(disciplineLabel) {
+      let aiTasks=0, manTasks=0, maiTasks=0;
+      let aiOrig=0, aiRev=0, aiTot=0, aiComp=0;
+      let manOrig=0, manComp=0;
+      let maiOrig=0, maiComp=0;
+
+      tasks.forEach(t => {
+        if (!t.fields) return;
+        const pid = taskParent[t.id];
+        if (!pid || !validReqIds.has(pid)) return;
+
+        const disc  = (t.fields['Microsoft.VSTS.Common.Discipline'] || '').toLowerCase();
+        if (disc !== disciplineLabel.toLowerCase()) return;
+
+        const state  = t.fields['System.State']  || '';
+        const reason = t.fields['System.Reason'] || '';
+        if (!['Resolved','Closed'].includes(state)) return;
+        if (reason === 'Rejected') return;
+
+        const revEst  = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
+        const origEst = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+        const eff     = revEst > 0 ? revEst : origEst;
+        const comp    = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+        if (eff <= 0) return;
+
+        const exec = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '';
+        const isAI  = exec.startsWith('AI-');
+        const isMAI = exec === 'Manual-AI-Ineffective';
+        const isMan = exec === 'Manual';
+        if (!isAI && !isMAI && !isMan) return;
+
+        if (isAI)  { aiTasks++;  if (revEst <= 0) aiOrig += origEst; aiRev += revEst; aiTot += eff; aiComp += comp; }
+        else if (isMAI) { maiTasks++; maiOrig += eff; maiComp += comp; }
+        else            { manTasks++;  manOrig += eff; manComp += comp; }
+      });
+
+      const totalTasks  = aiTasks + maiTasks + manTasks;
+      const totalHrs    = aiTot + maiOrig + manOrig;
+      const adoptionPct = totalHrs > 0 ? Math.round(((aiTot + maiOrig) / totalHrs) * 100) : 0;
+      const effPct      = aiTot  > 0 ? Math.round(((aiTot - aiComp) / aiTot) * 100) : 0;
+      const savedHrs    = aiTot  - aiComp;
+      // Productivity Gain = (AI Saved + Manual Saved) / (Total Orig / 1.4) × 100
+      const aiSaved_pg    = aiTot - aiComp;
+      const manualSaved_pg= (manOrig + maiOrig) - (manComp + maiComp);
+      const totalOrig_pg  = aiTot + manOrig + maiOrig;
+      const prodGainPct = totalOrig_pg > 0
+        ? Math.round(((aiSaved_pg + manualSaved_pg) / (totalOrig_pg / 1.4)) * 100) : 0;
+
+      // Manual Efficiency = savings on manual hours / manual total
+      const manualEffDenom = manOrig + maiOrig;
+      const manualEffPct = manualEffDenom > 0
+        ? Math.round(((manualEffDenom - (manComp + maiComp)) / manualEffDenom) * 100) : 0;
+
+      return { totalTasks, aiTasks, manTasks, maiTasks, adoptionPct,
+               aiOrig, aiTot, aiComp, effPct, manualEffPct, savedHrs,
+               manOrig, maiOrig };  // needed for overall adoption calc
+    }
+
+    const DISCIPLINES = [
+      { label: '💻 Development', key: 'development', clr: '#60a5fa' },
+      { label: '🧪 Test',        key: 'test',        clr: '#34d399' },
+    ];
+
+    let totTasks=0, totAI=0, totMan=0, totSaved=0, hasData=false;
+    let totAiTot=0, totAiComp=0, totAllHrs=0;
+
+    const rows = DISCIPLINES.map(d => {
+      const s = calcAI(d.key);
+      if (s.totalTasks > 0) hasData = true;
+      totTasks  += s.totalTasks;
+      totAI     += s.aiTasks;
+      totMan    += s.manTasks;
+      totAiTot  += s.aiTot;
+      totAiComp += s.aiComp;
+      totSaved  += s.savedHrs;
+      totAllHrs += s.aiTot + s.manOrig + s.maiOrig;  // for overall adoption
+
+      const effColor    = s.effPct >= 0 ? '#22d3ee' : '#f87171';
+      const manEffColor = s.manualEffPct >= 0 ? '#a78bfa' : '#f87171';
+      const savedColor  = s.savedHrs >= 0 ? '#f472b6' : '#f87171';
+
+      return `<tr>
+        <td style="text-align:left;font-weight:600;color:${d.clr}">${d.label}</td>
+        <td style="font-weight:700">${s.totalTasks}</td>
+        <td style="color:#60a5fa">${s.aiTasks}</td>
+        <td style="color:#94a3b8">${s.manTasks}</td>
+        <td style="color:${effColor};font-weight:700">${s.effPct}%</td>
+        <td style="color:${manEffColor};font-weight:700">${s.manualEffPct}%</td>
+        <td style="color:${savedColor};font-weight:700">${fmtH(s.savedHrs)}h</td>
+      </tr>`;
+    });
+
+    if (!hasData) {
+      aiBody.innerHTML = '';
+      if (aiFoot) aiFoot.innerHTML = '';
+      if (aiEmpty) aiEmpty.style.display = '';
+      return;
+    }
+    if (aiEmpty) aiEmpty.style.display = 'none';
+    aiBody.innerHTML = rows.join('');
+
+    // Footer — all values derived from accumulators built during the rows pass (no re-iteration)
+    const totEff  = totAiTot  > 0 ? Math.round(((totAiTot - totAiComp) / totAiTot) * 100) : 0;
+    const ovAdop  = totAllHrs > 0 ? Math.round((totAiTot / totAllHrs) * 100) : 0;
+    const effColor = totEff  >= 0 ? '#22d3ee' : '#f87171';
+    const savColor = totSaved >= 0 ? '#f472b6' : '#f87171';
+    const adColor  = ovAdop >= 70 ? '#34d399' : ovAdop >= 40 ? '#fbbf24' : '#f87171';
+
+    if (aiFoot) aiFoot.innerHTML = `<tr>
+      <td style="text-align:left;font-weight:700">Overall</td>
+      <td style="font-weight:700">${totTasks}</td>
+      <td style="color:#60a5fa;font-weight:700">${totAI}</td>
+      <td style="color:#94a3b8;font-weight:700">${totMan}</td>
+      <td style="color:${effColor};font-weight:700">—</td>
+      <td style="font-weight:700">—</td>
+      <td style="color:${savColor};font-weight:700">${fmtH(totSaved)}h</td>
+    </tr>`;
+  })();
+
+  // ── Show report ───────────────────────────────────────
+  const wrap=document.getElementById('rptWrap');
+  if(wrap) wrap.style.display='block';
+
+  // Also call original renderAll for hidden stubs (keeps JS state consistent)
+  // (removed — stubs are hidden, no need)
+}
+function renderAll(){
+  const deliverables   = requirements.filter(r=>r.category==='deliverable');
+  const nonDel         = requirements.filter(r=>r.category==='nonDeliverable');
+  const adhoc          = requirements.filter(r=>r.isAdhocSupport);
+  const delAdhoc       = requirements.filter(r=>r.isDeliverablesAdhoc);
+  const delOnHold      = requirements.filter(r=>r.isDeliverablesOnHold);
+  const sprintGoalReqs = requirements.filter(r=>(r.fields['System.Tags']||'').toLowerCase().includes('sprint goal'));
+
+  // ── Delivery state counts ─────────────────────────────
+  const closedDel   = deliverables.filter(r=>r.fields['System.State']==='Closed');
+  const resolvedDel = deliverables.filter(r=>r.fields['System.State']==='Resolved');
+  const openDel     = deliverables.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State']));
+  const openDelActive = openDel.filter(r=>!r.isDeliverablesOnHold && !r.isDeliverablesAdhoc);
+  const undelivered = deliverables.filter(r=>r.fields['System.State']!=='Closed');
+  const deliveryRate= pct(closedDel.length, deliverables.length||1);
+
+  // ── Hours ─────────────────────────────────────────────
+  const plannedDel    = deliverables.reduce((s,r)=>s+r.taskEstimate,0);
+  const completedDel  = deliverables.reduce((s,r)=>s+r.taskCompletedWork,0);
+  const remDel        = deliverables.reduce((s,r)=>s+r.taskRemainingWork,0);
+  const plannedNd     = nonDel.reduce((s,r)=>s+r.taskEstimate,0);
+  const completedNd   = nonDel.reduce((s,r)=>s+r.taskCompletedWork,0);
+  const remNd         = nonDel.reduce((s,r)=>s+r.taskRemainingWork,0);
+  const totalPlanned  = plannedDel + plannedNd;
+  const totalCompleted= completedDel + completedNd;
+
+  // ── Adhoc support (Team B) hours ──────────────────────
+  const adhocPlanned   = adhoc.reduce((s,r)=>s+r.taskEstimate,0);
+  const adhocCompleted = adhoc.reduce((s,r)=>s+r.taskCompletedWork,0);
+  const adhocRem       = adhoc.reduce((s,r)=>s+r.taskRemainingWork,0);
+
+  // ── Size ──────────────────────────────────────────────
+  const totalDelSize = deliverables.reduce((s,r)=>s+r.size,0);
+  const totalNdSize  = nonDel.reduce((s,r)=>s+r.size,0);
+
+  // ── Bug metrics ───────────────────────────────────────
+  const openBugs    = bugs.filter(b=>['Active','Open','New'].includes(b.fields['System.State']));
+  const closedBugs  = bugs.filter(b=>b.fields['System.State']==='Closed');
+  const resolvedBugs= bugs.filter(b=>b.fields['System.State']==='Resolved');
+  const csBugs      = bugs.filter(b=>(b.fields['System.Tags']||'').toLowerCase().split(';').map(t=>t.trim()).includes('cs'));
+  const prodBugs    = bugs.filter(b=>{const t=(b.fields['System.Tags']||'').toLowerCase();return t.includes('production_bug')||t.includes('production bug');});
+  const devBugs     = bugs.filter(b=>{
+    const ownedBy=(b.fields['Casepoint.TFS.CustomFields.OwnedBy']||'').trim();
+    const assignedTo=b.fields['System.AssignedTo']?.displayName||'';
+    if(devMembers.length>0){
+      const ownedBlank=!ownedBy;
+      const assignedIsDev=devMembers.some(m=>assignedTo.toLowerCase().includes(m.toLowerCase())||m.toLowerCase().includes(assignedTo.toLowerCase()));
+      const ownedIsDev=devMembers.some(m=>ownedBy.toLowerCase().includes(m.toLowerCase())||m.toLowerCase().includes(ownedBy.toLowerCase()));
+      return (ownedBlank&&assignedIsDev)||ownedIsDev;
+    }
+    return ownedBy.toLowerCase().includes('dev')||(!ownedBy&&assignedTo);
+  });
+  const qaBugs = bugs.filter(b=>{
+    const ownedBy=(b.fields['Casepoint.TFS.CustomFields.OwnedBy']||'').trim();
+    if(qaMembers.length>0) return qaMembers.some(m=>ownedBy.toLowerCase().includes(m.toLowerCase())||m.toLowerCase().includes(ownedBy.toLowerCase()));
+    return ownedBy.toLowerCase().includes('qa');
+  });
+
+  // ── Sprint info ───────────────────────────────────────
+  const sprintName = selectedIterPaths.map(i=>i.path.split('\\').pop()).join(', ');
+  const areaName   = selectedAreaPaths.length?(selectedAreaPaths.map(a=>a.path.split('\\').pop()).join(', ')):'—';
+  const dateStr    = sprintStartDate&&sprintEndDate
+    ?sprintStartDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' – '+sprintEndDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})
+    :'—';
+
+  // ── Header boxes + back button ────────────────────────
+  const areaInfoBox=document.getElementById('areaInfoBox');
+  const iterInfoBox=document.getElementById('iterInfoBox');
+  const areaInfoVal=document.getElementById('areaInfoVal');
+  const iterInfoVal=document.getElementById('iterInfoVal');
+  if(areaInfoVal) areaInfoVal.textContent=areaName;
+  if(iterInfoVal) iterInfoVal.textContent=sprintName;
+  if(areaInfoBox) areaInfoBox.style.display='flex';
+  if(iterInfoBox) iterInfoBox.style.display='flex';
+  const csBtn=document.getElementById('changeSprintBtn');
+  if(csBtn) csBtn.style.display='flex';
+  const heroDateEl=document.getElementById('heroDate');
+  if(heroDateEl) heroDateEl.style.display='none';
+  const heroSprintEl=document.getElementById('heroSprint');
+  if(heroSprintEl) heroSprintEl.textContent=sprintName;
+
+  // ── Sprint Goal ───────────────────────────────────────
+  if(sprintGoalReqs.length){
+    const goalText=sprintGoalReqs.map(r=>r.fields['System.Title']).join(' | ');
+    const goalAchieved=sprintGoalReqs.every(r=>['Closed','Resolved'].includes(r.fields['System.State']));
+    document.getElementById('goalBox').style.display='flex';
+    document.getElementById('goalText').textContent=goalText;
+    const badge=document.getElementById('goalBadge');
+    badge.style.display='inline-flex';badge.style.fontSize='.7rem';badge.style.padding='3px 10px';
+    if(goalAchieved){badge.className='gbadge ba';badge.textContent='✅ Goal Achieved';}
+    else{badge.className='gbadge bna';badge.textContent='⚠️ Goal Not Achieved';}
+  }
+
+  // ── Section 1: Overview KPIs ─────────────────────────
+  document.getElementById('ov-planned').textContent = deliverables.length + nonDel.length;
+  document.getElementById('ov-plDel').textContent   = deliverables.length;
+  document.getElementById('ov-plDel-sub').textContent = `${fmtH(totalDelSize)} size pts`;
+  document.getElementById('ov-closed').textContent  = closedDel.length;
+  document.getElementById('ov-delRate').textContent  = `↑ ${deliveryRate}% delivery`;
+  document.getElementById('ov-undel').textContent   = undelivered.length;
+  document.getElementById('ov-delSub').textContent  = `Planned ${deliverables.length} deliverables`;
+  document.getElementById('k-delRate').textContent   = deliveryRate+'%';
+
+  // Delivery status rows
+  document.getElementById('l-closed').textContent   = closedDel.length;
+  document.getElementById('l-resolved').textContent = resolvedDel.length;
+  document.getElementById('l-open').textContent     = openDelActive.length;
+  document.getElementById('l-onhold').textContent   = delOnHold.length;
+  document.getElementById('l-adhoc').textContent    = delAdhoc.length;
+
+  // Effort summary rows (new IDs mapped to plain values)
+  const delPct = pct(completedDel, plannedDel||1);
+  const ndPct  = pct(completedNd,  plannedNd||1);
+  document.getElementById('eff-del-lbl').textContent = `${fmtH(plannedDel)} h`;
+  document.getElementById('eff-del-pct').textContent = `${fmtH(completedDel)} h  (${delPct}% done)`;
+  document.getElementById('eff-del-rem').textContent = `${fmtH(remDel)} h`;
+  document.getElementById('eff-nd-lbl').textContent  = `${fmtH(plannedNd)} h`;
+  document.getElementById('eff-nd-pct').textContent  = `${fmtH(completedNd)} h  (${ndPct}% done)`;
+  document.getElementById('eff-total-lbl').textContent = `${fmtH(totalCompleted)} h done`;
+  document.getElementById('eff-total-rem').textContent = `${fmtH(remDel+remNd)} h remaining`;
+  document.getElementById('eff-sub').textContent =
+    `${fmtH(totalCompleted)} completed of ${fmtH(totalPlanned)} planned · Dev + Test only`;
+
+  // ── Undelivered table ─────────────────────────────────
+  document.getElementById('undel-count-badge').textContent = undelivered.length+' Items';
+  document.getElementById('undel-sub').textContent = `${undelivered.length} items not closed`;
+  const uBody=document.getElementById('undel-tbody');
+  if(undelivered.length){
+    uBody.innerHTML=undelivered.sort((a,b)=>b.size-a.size).map(r=>{
+      const state=r.fields['System.State']||'';
+      const sc=state==='Resolved'?'tb':state.toLowerCase().includes('active')||state.toLowerCase().includes('open')?'ta':'tgr';
+      const tagLabel=r.isDeliverablesOnHold?'<span class="tag ta">OnHold</span>':r.isDeliverablesAdhoc?'<span class="tag tb">Adhoc</span>':'<span class="tag tg">Deliverable</span>';
+      return`<tr>
+        <td style="font-weight:600;color:#4f46e5">${r.id}</td>
+        <td>${r.fields['System.Title']||''}</td>
+        <td>${tagLabel}</td>
+        <td><span class="tag ${sc}">${state}</span></td>
+      </tr>`;
+    }).join('');
+  } else {uBody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#64748b;padding:14px">All deliverables closed ✓</td></tr>';}
+
+  // ── Section 2: Team Performance ───────────────────────
+  const devTasks = tasks.filter(t=>(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='development');
+  const qaTasks  = tasks.filter(t=>(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='test');
+  const devPlanned   = devTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  const devCompleted = devTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.CompletedWork']||0),0);
+  const devSaved     = Math.max(0, devPlanned - devCompleted);
+  const devUtil      = pct(devCompleted, devPlanned||1);
+  const qaPlanned    = qaTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  const qaCompleted  = qaTasks.reduce((s,t)=>s+(t.fields['Microsoft.VSTS.Scheduling.CompletedWork']||0),0);
+  const qaSaved      = Math.max(0, qaPlanned - qaCompleted);
+  const qaUtil       = pct(qaCompleted, qaPlanned||1);
+
+  document.getElementById('disc-dev-capacity').textContent  = fmtH(devCapacity)||'—';
+  document.getElementById('disc-dev-completed').textContent = fmtH(devCompleted);
+  document.getElementById('disc-dev-planned').textContent   = fmtH(devPlanned);
+  document.getElementById('disc-dev-util').textContent      = `Utilization: ${devUtil}%`;
+  document.getElementById('disc-dev-saved').textContent     = fmtH(devSaved);
+  document.getElementById('disc-dev-names').textContent     = devMembers.length?devMembers.join(', '):'—';
+  document.getElementById('disc-dev-members-badge').textContent = `${devMembers.length} members`;
+
+  document.getElementById('disc-qa-capacity').textContent  = fmtH(qaCapacity)||'—';
+  document.getElementById('disc-qa-completed').textContent = fmtH(qaCompleted);
+  document.getElementById('disc-qa-planned').textContent   = fmtH(qaPlanned);
+  document.getElementById('disc-qa-util').textContent      = `Utilization: ${qaUtil}%`;
+  document.getElementById('disc-qa-saved').textContent     = fmtH(qaSaved);
+  document.getElementById('disc-qa-names').textContent     = qaMembers.length?qaMembers.join(', '):'—';
+  document.getElementById('disc-qa-members-badge').textContent = `${qaMembers.length} members`;
+
+  // ── Capacity split toward Deliverable / Non-Del / Adhoc+OnHold ────────────
+  // Proportion of discipline task hours per requirement category
+  function capSplit(disciplineTasks, reqs){
+    const delReqIds = new Set(deliverables.map(r=>r.id));
+    const ndReqIds  = new Set(nonDel.map(r=>r.id));
+    const adhocOnHoldIds = new Set([...delAdhoc, ...delOnHold, ...adhoc].map(r=>r.id));
+    let dH=0, nH=0, aH=0;
+    disciplineTasks.forEach(t=>{
+      const pid = reqTasksMap ? Object.keys(reqTasksMap).find(k=>reqTasksMap[k]&&reqTasksMap[k].includes(t.id)) : null;
+      const est = (t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0);
+      if(pid && adhocOnHoldIds.has(parseInt(pid))) aH+=est;
+      else if(pid && delReqIds.has(parseInt(pid)))  dH+=est;
+      else if(pid && ndReqIds.has(parseInt(pid)))   nH+=est;
+      else dH+=est; // default to deliverable if unclassified
+    });
+    return{del:fmtH(dH)+'h', nd:fmtH(nH)+'h', adhoc:fmtH(aH)+'h'};
+  }
+  // Simpler approach: use requirement-level task estimates already computed
+  const devDelH = deliverables.reduce((s,r)=>{
+    const childIds=reqTasksMap?reqTasksMap[r.id]||[]:[];
+    return s+childIds.map(id=>tasks.find(t=>t.id===id)).filter(t=>t&&(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='development').reduce((ss,t)=>ss+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  },0);
+  const devNdH  = nonDel.reduce((s,r)=>{
+    const childIds=reqTasksMap?reqTasksMap[r.id]||[]:[];
+    return s+childIds.map(id=>tasks.find(t=>t.id===id)).filter(t=>t&&(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='development').reduce((ss,t)=>ss+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  },0);
+  const devAhH  = [...delAdhoc,...delOnHold,...adhoc].reduce((s,r)=>{
+    const childIds=reqTasksMap?reqTasksMap[r.id]||[]:[];
+    return s+childIds.map(id=>tasks.find(t=>t.id===id)).filter(t=>t&&(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='development').reduce((ss,t)=>ss+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  },0);
+  const qaDelH  = deliverables.reduce((s,r)=>{
+    const childIds=reqTasksMap?reqTasksMap[r.id]||[]:[];
+    return s+childIds.map(id=>tasks.find(t=>t.id===id)).filter(t=>t&&(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='test').reduce((ss,t)=>ss+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  },0);
+  const qaNdH   = nonDel.reduce((s,r)=>{
+    const childIds=reqTasksMap?reqTasksMap[r.id]||[]:[];
+    return s+childIds.map(id=>tasks.find(t=>t.id===id)).filter(t=>t&&(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='test').reduce((ss,t)=>ss+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  },0);
+  const qaAhH   = [...delAdhoc,...delOnHold,...adhoc].reduce((s,r)=>{
+    const childIds=reqTasksMap?reqTasksMap[r.id]||[]:[];
+    return s+childIds.map(id=>tasks.find(t=>t.id===id)).filter(t=>t&&(t.fields['Microsoft.VSTS.Common.Discipline']||'').toLowerCase()==='test').reduce((ss,t)=>ss+(t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']||0),0);
+  },0);
+
+  const setEl=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+  setEl('dev-cap-del',   fmtH(devDelH)+'h');
+  setEl('dev-cap-nd',    fmtH(devNdH)+'h');
+  setEl('dev-cap-adhoc', fmtH(devAhH)+'h');
+  setEl('qa-cap-del',    fmtH(qaDelH)+'h');
+  setEl('qa-cap-nd',     fmtH(qaNdH)+'h');
+  setEl('qa-cap-adhoc',  fmtH(qaAhH)+'h');
+
+  // ── Effort callouts ───────────────────────────────────
+  const remWork = requirements.reduce((s,r)=>s+r.taskRemainingWork,0);
+  document.getElementById('burn-text').textContent =
+    `${fmtH(remWork)} hrs remaining (Dev+QA). Completed: ${pct(totalCompleted,totalPlanned||1)}% of ${fmtH(totalPlanned)} planned hrs.`;
+  document.getElementById('plan-text').textContent =
+    `Deliverable: ${fmtH(plannedDel)}h planned → ${fmtH(completedDel)}h done (${pct(completedDel,plannedDel||1)}%). Non-Del: ${fmtH(plannedNd)}h → ${fmtH(completedNd)}h done.`;
+  document.getElementById('sprint-dates-text').textContent =
+    dateStr!=='—'?`Sprint ran ${dateStr}. Work days: ${countWorkDays()}.`:'Sprint date information not available.';
+
+  // ── Section 3: Tag Breakdown Table ───────────────────
+  const tagRows = [
+    { label:'📦 Deliverable',          color:'#1d4ed8', items: deliverables.filter(r=>!r.isDeliverablesAdhoc&&!r.isDeliverablesOnHold) },
+    { label:'⏸️ Deliverables OnHold',   color:'#d97706', items: delOnHold },
+    { label:'➕ Deliverables Adhoc',    color:'#0891b2', items: delAdhoc },
+    { label:'📋 Non-Deliverable',       color:'#4f46e5', items: nonDel },
+    { label:'🅱️ Adhoc Support (Team B)',color:'#b45309', items: adhoc },
+  ];
+  const tdS='padding:8px 10px;border-bottom:1px solid #f1f5f9;';
+  const tagTbody = document.getElementById('tag-breakdown-tbody');
+  if(tagTbody){
+    tagTbody.innerHTML = tagRows.map(row=>{
+      const count = row.items.length;
+      const planned   = fmtH(row.items.reduce((s,r)=>s+r.taskEstimate,0));
+      const completed = fmtH(row.items.reduce((s,r)=>s+r.taskCompletedWork,0));
+      const remaining = fmtH(row.items.reduce((s,r)=>s+r.taskRemainingWork,0));
+      const closed    = row.items.filter(r=>r.fields['System.State']==='Closed').length;
+      const open      = row.items.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length;
+      return`<tr>
+        <td style="${tdS}font-weight:600;color:${row.color}">${row.label}</td>
+        <td style="${tdS}text-align:right;font-weight:700">${count}</td>
+        <td style="${tdS}text-align:right;color:#1d4ed8">${planned}h</td>
+        <td style="${tdS}text-align:right;color:#059669">${completed}h</td>
+        <td style="${tdS}text-align:right;color:#dc2626">${remaining}h</td>
+        <td style="${tdS}text-align:right;color:#059669">${closed}</td>
+        <td style="${tdS}text-align:right;color:#b45309">${open}</td>
+      </tr>`;
+    }).join('') +
+    `<tr style="background:#f0f9ff;font-weight:700">
+      <td style="${tdS}color:#0f172a">Total</td>
+      <td style="${tdS}text-align:right">${deliverables.length+nonDel.length+adhoc.length}</td>
+      <td style="${tdS}text-align:right;color:#1d4ed8">${fmtH(plannedDel+plannedNd+adhocPlanned)}h</td>
+      <td style="${tdS}text-align:right;color:#059669">${fmtH(totalCompleted+adhocCompleted)}h</td>
+      <td style="${tdS}text-align:right;color:#dc2626">${fmtH(remDel+remNd+adhocRem)}h</td>
+      <td style="${tdS}text-align:right;color:#059669">${closedDel.length+nonDel.filter(r=>r.fields['System.State']==='Closed').length+adhoc.filter(r=>r.fields['System.State']==='Closed').length}</td>
+      <td style="${tdS}text-align:right;color:#b45309">${openDel.length+nonDel.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length+adhoc.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length}</td>
+    </tr>`;
+  }
+  document.getElementById('wi-sub').textContent = `${deliverables.length+nonDel.length+adhoc.length} total items across ${tagRows.length} categories`;
+
+  // ── Work item state summary ───────────────────────────
+  setEl('ws-closedDel',  closedDel.length);
+  setEl('ws-resolvedDel',resolvedDel.length);
+  setEl('ws-openDel',    openDelActive.length);
+  setEl('ws-nd',         nonDel.length);
+  setEl('ws-onhold',     delOnHold.length);
+  setEl('ws-deladhoc',   delAdhoc.length);
+
+  // ── Team B / Adhoc Support ────────────────────────────
+  setEl('teamb-count-badge',    adhoc.length+' tickets');
+  setEl('teamb-total-tickets',  adhoc.length);
+  setEl('teamb-planned-hrs',    fmtH(adhocPlanned)+'h');
+  setEl('teamb-completed-hrs',  fmtH(adhocCompleted)+'h');
+  setEl('teamb-remaining-hrs',  fmtH(adhocRem)+'h');
+  const tBbody = document.getElementById('teamb-tbody');
+  if(tBbody){
+    if(adhoc.length){
+      tBbody.innerHTML = adhoc.map(r=>{
+        const st=r.fields['System.State']||'';
+        const sc=st==='Closed'?'tg':st==='Resolved'?'tb':'ta';
+        return`<tr>
+          <td style="color:#b45309;font-weight:600">${r.id}</td>
+          <td>${(r.fields['System.Title']||'').substring(0,55)}</td>
+          <td style="text-align:right;color:#1d4ed8">${fmtH(r.taskEstimate)}h</td>
+          <td style="text-align:right;color:#059669">${fmtH(r.taskCompletedWork)}h</td>
+          <td><span class="tag ${sc}">${st}</span></td>
+        </tr>`;
+      }).join('');
+    } else {
+      tBbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b;padding:10px">No Adhoc Support tickets this sprint ✓</td></tr>';
+    }
+  }
+
+  // ── Non-deliverable table ─────────────────────────────
+  setEl('nd-count-badge', nonDel.length);
+  const ndBody = document.getElementById('nd-tbody');
+  if(ndBody){
+    if(nonDel.length){
+      ndBody.innerHTML = nonDel.map(r=>{
+        const state=r.fields['System.State']||'';
+        const sc=state==='Closed'?'tg':state==='Resolved'?'tb':state.toLowerCase().includes('active')?'ta':'tgr';
+        const tagStr=(r.fields['System.Tags']||'').split(';').map(t=>t.trim()).filter(t=>t).slice(0,2).map(t=>`<span class="tag tgr" style="font-size:.55rem">${t}</span>`).join(' ');
+        return`<tr><td style="color:#4f46e5;font-weight:600">${r.id}</td><td>${r.fields['System.Title']||''}</td><td><span class="tag ${sc}">${state}</span></td><td>${tagStr}</td></tr>`;
+      }).join('');
+    } else {
+      ndBody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#64748b;padding:12px">No non-deliverable items</td></tr>';
+    }
+  }
+
+  // ── Section 4: Defects ───────────────────────────────
+  document.getElementById('dq-newBugs').textContent = csBugs.length;
+  document.getElementById('dq-newSub').textContent  = csBugs.length===0?'✓ No new CS bugs':'Tagged CS';
+  document.getElementById('dq-newBugs').style.color = csBugs.length===0?'#059669':'#dc2626';
+  document.getElementById('dq-openBugs').textContent  = openBugs.length;
+  document.getElementById('dq-closedBugs').textContent= closedBugs.length;
+  document.getElementById('dq-prodBugs').textContent  = prodBugs.length;
+  document.getElementById('dq-prodSub').textContent   = prodBugs.length?prodBugs.filter(b=>['Active','Open','New'].includes(b.fields['System.State'])).length+' open':'No production bugs';
+
+  document.getElementById('dev-bug-total').textContent = devBugs.length+' Total';
+  document.getElementById('db-cs').textContent         = devBugs.filter(b=>(b.fields['System.Tags']||'').toLowerCase().split(';').map(t=>t.trim()).includes('cs')).length;
+  document.getElementById('db-total').textContent      = devBugs.length;
+  document.getElementById('db-open').textContent       = devBugs.filter(b=>['Active','Open','New'].includes(b.fields['System.State'])).length;
+  document.getElementById('db-closed').textContent     = devBugs.filter(b=>b.fields['System.State']==='Closed').length;
+  document.getElementById('db-resolved').textContent   = devBugs.filter(b=>b.fields['System.State']==='Resolved').length;
+  document.getElementById('db-members').textContent    = devMembers.length?devMembers.join(', '):'Not available';
+
+  document.getElementById('qa-bug-total').textContent = qaBugs.length+' Total';
+  document.getElementById('qb-cs').textContent        = qaBugs.filter(b=>(b.fields['System.Tags']||'').toLowerCase().split(';').map(t=>t.trim()).includes('cs')).length;
+  document.getElementById('qb-total').textContent     = qaBugs.length;
+  document.getElementById('qb-open').textContent      = qaBugs.filter(b=>['Active','Open','New'].includes(b.fields['System.State'])).length;
+  document.getElementById('qb-closed').textContent    = qaBugs.filter(b=>b.fields['System.State']==='Closed').length;
+  document.getElementById('qb-resolved').textContent  = qaBugs.filter(b=>b.fields['System.State']==='Resolved').length;
+  document.getElementById('qb-members').textContent   = qaMembers.length?qaMembers.join(', '):'Not available';
+
+  document.getElementById('prod-bug-total').textContent = prodBugs.length+' Total';
+  document.getElementById('pb-total').textContent       = prodBugs.length;
+  document.getElementById('pb-open').textContent        = prodBugs.filter(b=>['Active','Open','New'].includes(b.fields['System.State'])).length;
+  document.getElementById('pb-closed').textContent      = prodBugs.filter(b=>b.fields['System.State']==='Closed').length;
+  document.getElementById('pb-resolved').textContent    = prodBugs.filter(b=>b.fields['System.State']==='Resolved').length;
+  const maxSev=prodBugs.reduce((m,b)=>{const s=b.fields['Microsoft.VSTS.Common.Severity']||'';return s&&(!m||s<m)?s:m;},'');
+  document.getElementById('pb-sev').innerHTML = maxSev?`<span class="tag ${maxSev.includes('1')||maxSev.includes('Critical')?'tr':'ta'}">${maxSev}</span>`:'<span class="tag tg">None</span>';
+
+  document.getElementById('bugList-sub').textContent = `${bugs.length} total bugs in sprint`;
+  const bugBody = document.getElementById('bug-tbody');
+  if(bugBody){
+    if(bugs.length){
+      bugBody.innerHTML=[...bugs].sort((a,b)=>a.id-b.id).map(b=>{
+        const st=b.fields['System.State']||'';
+        const sc=st==='Closed'?'tg':st==='Resolved'?'tb':'tr';
+        const ob=b.fields['Casepoint.TFS.CustomFields.OwnedBy']||'—';
+        const sv=b.fields['Microsoft.VSTS.Common.Severity']||'—';
+        return`<tr><td style="font-weight:600;color:#4f46e5">${b.id}</td><td>${(b.fields['System.Title']||'').substring(0,60)}</td><td><span class="tag ${sc}">${st}</span></td><td>${ob}</td><td>${sv}</td></tr>`;
+      }).join('');
+    } else {
+      bugBody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b;padding:12px">No bugs in this sprint ✓</td></tr>';
+    }
+  }
+}
+
+function countWorkDays(){
+  if(!sprintStartDate||!sprintEndDate)return 0;
+  let c=0;
+  for(let d=new Date(sprintStartDate);d<=sprintEndDate;d.setDate(d.getDate()+1)){
+    if(d.getDay()!==0&&d.getDay()!==6)c++;
+  }
+  return c;
+}
+
+/* ══ Build all charts ═══════════════════════════════════ */
+/* toggleTheme removed — light theme only */
+
+/* ══ EXPORT FUNCTIONS ═══════════════════════════════════ */
+
+/* Core helper – show all + snapshot canvases → <img> in a DOM clone */
+function buildExportClone(){
+  const states=[];
+  document.querySelectorAll('.sec').forEach(s=>{states.push(s.classList.contains('on'));s.classList.add('on')});
+  const clone=document.documentElement.cloneNode(true);
+  document.querySelectorAll('.sec').forEach((s,i)=>{if(!states[i])s.classList.remove('on')});
+
+  clone.querySelectorAll('.sec').forEach(s=>{s.style.display='block';s.classList.add('on')});
+  clone.querySelectorAll('.snav,#cfgOverlay,#ldgOverlay,#xtoast').forEach(el=>el.style.display='none');
+
+  // No canvases to snapshot
+  return clone;
+}
+
+/* ── 1. PREVIEW ────────────────────────────────────────── */
+function doPreview(){
+  showAll(null);
+  setTimeout(()=>{
+    const clone=buildExportClone();
+    const w=window.open('','_blank','width=1300,height=900,scrollbars=yes');
+    if(!w){xtoast('⚠️ Popup blocked — allow popups and retry',3500);return;}
+    w.document.open();w.document.write('<!DOCTYPE html>'+clone.outerHTML);w.document.close();
+    w.document.title='Preview — Sprint Closing Report';
+    xtoast('✅ Preview opened in new window');
+  },200);
+}
+
+/* ── 2. COPY TO EMAIL ──────────────────────────────────── *
+ * Uses ClipboardItem with text/html so Outlook pastes rich  *
+ * formatted HTML directly. Falls back to a rendered window  *
+ * if the Clipboard API is unavailable.                      *
+ * ─────────────────────────────────────────────────────── */
+function doCopyEmail(){
+  xtoast('⏳ Building email report…',5000);
+  showAll(null);
+
+  setTimeout(()=>{
+    try{
+      /* ── 1. Build DOM clone with canvas → img snapshots ── */
+      const clone=buildExportClone();
+
+      /* ── 2. Strip scripts & chrome UI ── */
+      clone.querySelectorAll('script,link[rel="preconnect"]').forEach(s=>s.remove());
+      ['cfgOverlay','ldgOverlay','xtoast','changeSprintBtn','scrollTop'].forEach(id=>{
+        const el=clone.querySelector('#'+id);if(el)el.remove();
+      });
+      clone.querySelectorAll('.snav,.ldg-spinner').forEach(el=>el.remove());
+      clone.querySelector('body').className='';
+      clone.querySelector('body').style.cssText='margin:0;padding:0;background:#fff;font-family:Arial,sans-serif;';
+
+      /* ── 3. Inline all styles for Outlook compatibility ──
+         Build a comprehensive inline-style override sheet     */
+      const styleEl=document.createElement('style');
+      styleEl.textContent=`
+        *{font-family:Arial,sans-serif;box-sizing:border-box}
+        body{background:#fff;color:#0f172a;font-size:13px;margin:0;padding:0}
+        /* Hero */
+        .hero{background:#1e3a8a;color:#fff;padding:20px 24px 16px;border-bottom:3px solid #1e40af}
+        .hi{max-width:816px;margin:0 auto}
+        .htop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+        .hey{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e0e7ff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;margin-bottom:8px}
+        .htitle{font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:4px}
+        .hdate{display:none}
+        .hmeta{display:none}
+        .gbox{display:flex;align-items:flex-start;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-left:3px solid #60a5fa;border-radius:0 8px 8px 0;padding:10px 14px;margin-top:10px}
+        .glbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#bfdbfe;margin-bottom:3px}
+        .gtxt{font-size:13px;color:#e0e7ff;line-height:1.4}
+        .gbadge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-left:10px}
+        .ba{background:rgba(16,185,129,.3);border:1.5px solid rgba(16,185,129,.6);color:#fff}
+        .bna{background:rgba(239,68,68,.3);border:1.5px solid rgba(239,68,68,.6);color:#fff}
+        /* Page wrap */
+        .pw{max-width:816px;margin:0 auto;padding:16px 24px 32px;background:#fff}
+        /* Section dividers */
+        .div{display:flex;align-items:center;gap:10px;margin:24px 0 14px}
+        .div-lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap;padding:5px 14px;background:#1e3a8a;border:1px solid #1e40af;border-radius:5px}
+        .div::after{content:'';flex:1;height:1px;background:rgba(56,189,248,0.2);margin-left:10px}
+        /* Grids */
+        .g4{display:table;width:100%;border-collapse:separate;border-spacing:8px;margin-bottom:14px}
+        .g3{display:table;width:100%;border-collapse:separate;border-spacing:8px;margin-bottom:14px}
+        .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+        .g4>.sc,.g4>.cc,.g3>.sc,.g3>.cc,.g3>.cal{display:table-cell;vertical-align:top;width:25%}
+        /* Stat cards */
+        .sc{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:12px;display:inline-block;width:100%}
+        .si{width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:6px}
+        .sv{font-size:1.3rem;font-weight:700;color:#0f172a;line-height:1}
+        .sl{font-size:11px;color:#64748b;margin-top:3px}
+        .sd{font-size:11px;margin-top:3px;color:#475569}
+        .up{color:#10b981}.dn{color:#ef4444}.neu{color:#94a3b8}
+        /* Chart cards */
+        .cc{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:8px;padding:14px;overflow:hidden}
+        .cch{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+        .cct{font-size:12px;font-weight:700;color:#1e293b}
+        .ccs{font-size:10px;color:#94a3b8;margin-top:1px}
+        /* Progress */
+        .pl{display:flex;flex-direction:column;gap:8px}
+        .ph{display:flex;justify-content:space-between;margin-bottom:3px}
+        .pll{font-size:11px;color:#475569}
+        .plv{font-size:10px;font-weight:600;color:#0f172a}
+        .pt{height:6px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden}
+        .pf{height:100%;border-radius:4px}
+        /* Tables */
+        .rt{width:100%;border-collapse:collapse;font-size:12px}
+        .rt thead tr{border-bottom:2px solid #1e40af}
+        .rt th{padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#1e3a8a;text-align:left;white-space:nowrap}
+        .rt td{padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle}
+        .rt .n{text-align:right}
+        /* Tags */
+        .tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+        .tg{background:rgba(16,185,129,.18);color:#059669;border:1px solid rgba(16,185,129,.3)}
+        .tr{background:rgba(239,68,68,.18);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
+        .ta{background:rgba(245,158,11,.18);color:#b45309;border:1px solid rgba(245,158,11,.3)}
+        .tb{background:rgba(59,130,246,.18);color:#1d4ed8;border:1px solid rgba(59,130,246,.3)}
+        .tp{background:rgba(168,85,247,.18);color:#7c3aed;border:1px solid rgba(168,85,247,.3)}
+        .tgr{background:rgba(100,116,139,.12);color:#475569;border:1px solid rgba(100,116,139,.25)}
+        /* Legend */
+        .leg{list-style:none;display:flex;flex-direction:column;gap:5px;padding:0;margin:0}
+        .leg li{display:flex;align-items:center;gap:7px;font-size:11px;color:#475569}
+        .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;display:inline-block}
+        .lv{font-weight:700;font-size:12px;color:#0f172a;margin-left:auto}
+        .lp{font-size:10px;color:#94a3b8;min-width:32px;text-align:right}
+        /* Metric rows */
+        .mr{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9}
+        .mr:last-child{border-bottom:none}
+        .mri{font-size:1rem;width:24px;text-align:center;flex-shrink:0}
+        .mrn{flex:1;font-size:12px;color:#475569}
+        .mrv{font-size:14px;font-weight:700;color:#0f172a}
+        .mrs{font-size:10px;color:#94a3b8;text-align:right}
+        /* Bug columns */
+        .bcg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+        .bcol{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;overflow:hidden}
+        .bch{padding:8px 12px;border-bottom:1px solid #e8edf2;display:flex;align-items:center;justify-content:space-between}
+        .bcht{font-size:11px;font-weight:700;color:#334155}
+        .bcb{padding:8px 12px}
+        .bs{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f8fafc}
+        .bs:last-child{border-bottom:none}
+        .bsl{font-size:11px;color:#475569}
+        .bsv{font-size:12px;font-weight:700}
+        /* KPI pair */
+        .kpair{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+        .ki{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:6px;padding:7px 9px;text-align:center}
+        .kn{font-size:1.1rem;font-weight:700;line-height:1}
+        .kl{font-size:10px;color:#64748b;margin-top:2px}
+        /* Callouts */
+        .cal{border-radius:7px;padding:10px 13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+        .ci{font-size:1rem;flex-shrink:0}
+        .ct{font-size:12px;font-weight:700;margin-bottom:2px}
+        .cx{font-size:11px;line-height:1.5;color:#475569}
+        .cag{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22)}.cag .ct{color:#059669}
+        .car{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.22)}.car .ct{color:#dc2626}
+        .caa{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.22)}.caa .ct{color:#d97706}
+        .cab{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.22)}.cab .ct{color:#2563eb}
+        /* Discipline card sub-boxes */
+        #disc-dev-capacity{color:#1d4ed8}
+        #disc-dev-completed,#disc-qa-completed{color:#059669}
+        #disc-dev-planned,#disc-qa-planned{color:#b45309}
+        #disc-dev-saved,#disc-qa-saved{color:#dc2626}
+        #disc-dev-names{color:#1d4ed8}
+        #disc-qa-capacity{color:#7c3aed}
+        #disc-qa-names{color:#7c3aed}
+        /* Overview values */
+        #ov-plDel{color:#4f46e5}
+        #ov-closed{color:#059669}
+        #ov-undel{color:#dc2626}
+        #k-delRate,#k-utilRate,#ov-delRate{color:#059669}
+        #k-totalSize2{color:#4f46e5}
+        #eff-total-rem{color:#dc2626}
+        /* Work item state */
+        #ws-closedDel{color:#059669}#ws-resolvedDel{color:#1d4ed8}#ws-openDel{color:#b45309}
+        #ws-nd{color:#4f46e5}#ws-adhoc{color:#7c3aed}
+        /* Bug values */
+        #dq-newBugs,#dq-closedBugs,#db-closed,#qb-closed,#pb-closed{color:#059669}
+        #dq-openBugs,#db-open,#qb-open,#pb-open{color:#dc2626}
+        #dq-prodBugs{color:#b45309}
+        #db-resolved,#qb-resolved,#pb-resolved{color:#0891b2}
+        /* Misc */
+        img{max-width:100%}
+        .cw img{width:100%}
+        /* Footer */
+        .rpt-footer{text-align:center;padding:16px 0;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:20px}
+      `;
+      clone.querySelector('head').appendChild(styleEl);
+
+      /* ── 4. Add report footer ── */
+      const pw=clone.querySelector('.pw');
+      if(pw){
+        const footer=document.createElement('div');
+        footer.className='rpt-footer';
+        footer.textContent='Sprint Closing Report · '
+          +(selectedIterPaths.map(i=>i.path.split('\\').pop()).join(', ')||'—')
+          +' · Generated '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+        pw.appendChild(footer);
+      }
+
+      const html='<!DOCTYPE html>\n'+clone.outerHTML;
+
+      /* ── 5. Copy as rich HTML to clipboard (Outlook-compatible) ── */
+      if(navigator.clipboard && typeof ClipboardItem !== 'undefined'){
+        const blob=new Blob([html],{type:'text/html'});
+        navigator.clipboard.write([new ClipboardItem({'text/html':blob})])
+          .then(()=>{xtoast('✅ Report copied! Paste directly into Outlook or Gmail.',4000);})
+          .catch(()=>_openFallbackWindow(html));
+      } else {
+        _openFallbackWindow(html);
+      }
+
+    }catch(err){
+      xtoast('❌ Error: '+err.message,4000);
+      console.error('doCopyEmail error:',err);
+    }
+  },400);
+}
+
+function _openFallbackWindow(html){
+  const w=window.open('','_blank','width=1100,height=820,scrollbars=yes');
+  if(!w){xtoast('⚠️ Popup blocked. Allow popups and retry.',4000);return;}
+  w.document.open();w.document.write(html);w.document.close();
+  w.document.title='Sprint Closing Report — Select All & Copy';
+  setTimeout(()=>{
+    try{
+      const bar=w.document.createElement('div');
+      bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#1e3a8a;color:#fff;text-align:center;padding:10px 16px;font-size:13px;font-family:Arial,sans-serif;font-weight:600;';
+      bar.innerHTML='📋 Press <kbd style="background:#fff;color:#1e3a8a;padding:1px 6px;border-radius:3px;font-weight:700">Ctrl+A</kbd> then <kbd style="background:#fff;color:#1e3a8a;padding:1px 6px;border-radius:3px;font-weight:700">Ctrl+C</kbd> — then paste into Outlook';
+      w.document.body.prepend(bar);
+      w.document.body.style.paddingTop='44px';
+      w.document.execCommand('selectAll');
+    }catch(e){}
+  },350);
+  xtoast('⚠️ Clipboard blocked — window opened. Ctrl+A → Ctrl+C to copy.',5000);
+}
+
+/* ── 3. HTML DOWNLOAD ──────────────────────────────────── */
+function doDownloadHTML(){
+  xtoast('⏳ Building export…',5000);
+  showAll(null);
+  setTimeout(()=>{
+    const clone=buildExportClone();
+    clone.querySelectorAll('script[src*="chart"]').forEach(s=>s.remove());
+    const html='<!DOCTYPE html>\n'+clone.outerHTML;
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='Sprint-Closing-Report.html';
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+    xtoast('✅ HTML downloaded');
+  },500);
+}
+
+/* ── 4. PDF ─────────────────────────────────────────────── */
+function doPDF(){
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{
+    },1500);
+  },300);
+}
+
+/* ══ Boot ═══════════════════════════════════════════════ */
+init();
+/* Theme boot removed — always light */
+</script>
+
+<!-- Scroll to top -->
+<button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top" style="
+  position:fixed;bottom:80px;right:22px;z-index:9998;
+  width:38px;height:38px;border-radius:50%;border:1px solid #cbd5e1;
+  background:rgba(99,102,241,0.9);color:#fff;cursor:pointer;font-size:1rem;
+  display:none;align-items:center;justify-content:center;
+  transition:background .2s,opacity .2s;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+">↑</button>
+<script>
+window.addEventListener('scroll',()=>{
+  const btn=document.getElementById('scrollTop');
+  if(btn)btn.style.display=window.scrollY>400?'flex':'none';
+});
+</script>
+</body>
+</html>
+
