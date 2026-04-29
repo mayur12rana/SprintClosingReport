@@ -21,102 +21,91 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 ::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}
 
-/* ═══ CONFIG OVERLAY — matches indexAHA style ════════════ */
-#cfgOverlay{
-  position:fixed;inset:0;z-index:99998;
-  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-  display:flex;align-items:center;justify-content:center;
-  padding:20px;overflow-y:auto;
+/* ═══ Step 2 project pill ══════════════════════════════ */
+.cfg-step-sub-pill{
+  display:inline-block;background:rgba(99,102,241,.15);
+  border:1px solid rgba(99,102,241,.3);border-radius:20px;
+  padding:2px 10px;font-size:.66rem;color:#a5b4fc;font-weight:600;
+  margin-bottom:12px;
 }
-#cfgBox{
-  width:100%;max-width:500px;
+
+/* ═══ CONFIG / FILTER PANELS — index.html pattern ════════ */
+.config-panel{
   background:rgba(255,255,255,0.08);
+  border-radius:16px;padding:24px;margin:24px auto;
   border:1px solid rgba(255,255,255,0.1);
-  border-radius:16px;padding:28px 30px;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
-  margin:auto;
+  max-width:500px;
 }
-/* Header branding */
-#cfgBox .cfg-logo{
-  text-align:center;margin-bottom:22px;
+.config-panel h2{margin-bottom:16px;font-size:1.2rem;color:#ffffff;}
+.config-panel .sub{font-size:.78rem;color:#94a3b8;margin-bottom:16px;}
+.config-field{margin-bottom:16px;}
+.config-field label{display:block;font-size:.85rem;color:#94a3b8;margin-bottom:6px;}
+.config-field input,
+.config-field select{
+  width:100%;padding:10px 14px;
+  border:1px solid rgba(255,255,255,0.2);border-radius:8px;
+  background:rgba(0,0,0,0.3);color:#ffffff;
+  font-family:'Inter',sans-serif;font-size:.95rem;outline:none;
+  transition:border-color .2s;
 }
-#cfgBox .cfg-logo-icon{
-  font-size:2.4rem;display:block;margin-bottom:8px;
-}
-#cfgBox .cfg-logo-title{
-  font-size:1.3rem;font-weight:700;color:#ffffff;
-  background:linear-gradient(135deg,#6366f1,#8b5cf6);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-#cfgBox .cfg-logo-sub{
-  font-size:.75rem;color:#64748b;margin-top:3px;
-}
-/* Section heading */
-#cfgBox h2{
-  font-size:1rem;color:#e2e8f0;margin-bottom:4px;
-  display:flex;align-items:center;gap:8px;
-}
-#cfgBox .sub{font-size:.75rem;color:#94a3b8;margin-bottom:20px;}
-/* Field labels */
-.cfl{
-  display:block;font-size:.85rem;color:#94a3b8;
-  margin-bottom:6px;font-weight:500;
-}
-/* Inputs — match indexAHA config-field input style */
+.config-field input:focus,
+.config-field select:focus{border-color:#6366f1;}
+.config-field input::placeholder{color:#475569;}
+
+/* Legacy aliases — markup uses .cfg-field/.cfl/.cfi from earlier iterations */
+.cfg-field{margin-bottom:16px;}
+.cfl{display:block;font-size:.85rem;color:#94a3b8;margin-bottom:6px;font-weight:500;}
 .cfi{
   width:100%;padding:10px 14px;
-  border:1px solid rgba(255,255,255,0.2);
-  border-radius:8px;background:rgba(0,0,0,0.3);color:#ffffff;
+  border:1px solid rgba(255,255,255,0.2);border-radius:8px;
+  background:rgba(0,0,0,0.3);color:#ffffff;
   font-family:'Inter',sans-serif;font-size:.95rem;outline:none;
   transition:border-color .2s;
 }
 .cfi:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,.25);}
 .cfi::placeholder{color:#475569;}
+
+.filter-panel{
+  background:rgba(255,255,255,0.05);
+  border-radius:16px;padding:20px;margin:24px auto;
+  border:1px solid rgba(255,255,255,0.1);
+  max-width:900px;display:none;
+}
+.filter-panel.visible{display:block;}
+.filter-panel h3{margin-bottom:16px;font-size:1rem;color:#e2e8f0;}
+.filter-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;}
+.filter-field{flex:1;min-width:200px;}
+.filter-field label{display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:6px;}
+
+/* Buttons — index.html pattern */
+.btn{
+  padding:12px 24px;border:none;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:.92rem;font-weight:600;
+  cursor:pointer;transition:all .25s ease;
+  margin-right:8px;margin-top:6px;
+}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;}
+.btn-secondary{
+  background:rgba(255,255,255,0.05);color:#e2e8f0;
+  border:1px solid rgba(255,255,255,0.2);
+}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* Inline row helper */
 .cfi-row{display:flex;gap:8px;align-items:center;}
-.cfg-field{margin-bottom:16px;}
-/* Detected config banner */
-.cfg-detected{
-  background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.35);
-  border-radius:10px;padding:12px 14px;margin-bottom:18px;
+
+/* Top brand block (page-level title only) */
+.cfg-brand{
+  text-align:center;margin:24px auto 4px;max-width:600px;
 }
-.cfg-detected .det-title{
-  font-weight:700;margin-bottom:6px;font-size:.8rem;color:#34d399;
-  display:flex;align-items:center;gap:6px;
-}
-.cfg-detected .det-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
-.cfg-detected .det-item{
-  background:rgba(16,185,129,.15);padding:3px 10px;border-radius:6px;
-  font-size:.68rem;color:#6ee7b7;border:1px solid rgba(16,185,129,.2);
-}
-/* Generate button */
-#cfgGenBtn{
-  width:100%;padding:12px;border:none;border-radius:9px;cursor:pointer;
+.cfg-brand .cfg-logo-title{
+  font-size:1.3rem;font-weight:700;color:#ffffff;
   background:linear-gradient(135deg,#6366f1,#8b5cf6);
-  color:#fff;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;
-  transition:opacity .2s,transform .15s;margin-top:6px;
-  box-shadow:0 4px 14px rgba(99,102,241,.4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-#cfgGenBtn:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 6px 18px rgba(99,102,241,.5);}
-#cfgGenBtn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
-/* Load Sprints button */
-.cfg-load-btn{
-  padding:10px 14px;border:1px solid rgba(99,102,241,0.5);
-  background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:8px;
-  cursor:pointer;font-size:.8rem;white-space:nowrap;
-  font-family:'Inter',sans-serif;font-weight:600;
-  transition:background .2s;
-}
-.cfg-load-btn:hover{background:rgba(99,102,241,0.35);}
-/* Toggle link */
-.cfg-manual-toggle{
-  text-align:center;margin-top:14px;font-size:.72rem;color:#64748b;
-}
-.cfg-manual-toggle a{color:#a5b4fc;cursor:pointer;text-decoration:none;}
-.cfg-manual-toggle a:hover{text-decoration:underline;}
-#cfgManualSection{
-  display:none;margin-top:16px;
-  border-top:1px solid rgba(255,255,255,.08);padding-top:16px;
-}
+
 /* Auth success info box */
 .cfg-auth-info{
   display:none;margin-top:7px;padding:8px 12px;
@@ -128,19 +117,31 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 .cfg-auth-info .auth-name{color:#e2e8f0;}
 .cfg-auth-info .auth-email{color:#94a3b8;font-size:.7rem;}
 
-/* iter multiselect box */
-#iterBox{
-  max-height:200px;overflow-y:auto;
-  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);
-  border-radius:8px;padding:8px;
+/* Toggle link (edit connection) */
+.cfg-manual-toggle{
+  text-align:center;margin:8px auto 0;font-size:.72rem;color:#64748b;
 }
+.cfg-manual-toggle a{color:#a5b4fc;cursor:pointer;text-decoration:none;}
+.cfg-manual-toggle a:hover{text-decoration:underline;}
+
+/* Load Sprints button (smaller, inline next to PAT) */
+.cfg-load-btn{
+  padding:10px 14px;border:1px solid rgba(99,102,241,0.5);
+  background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:8px;
+  cursor:pointer;font-size:.8rem;white-space:nowrap;
+  font-family:'Inter',sans-serif;font-weight:600;
+  transition:background .2s;
+}
+.cfg-load-btn:hover{background:rgba(99,102,241,0.35);}
+
+/* Iter / Area multi-select boxes — inner items match index.html */
 .iter-item{
   display:flex;align-items:center;gap:8px;
-  padding:5px 4px;border-radius:5px;cursor:pointer;
-  font-size:.76rem;color:#cbd5e1;transition:background .15s;
+  padding:5px 8px;border-radius:4px;cursor:pointer;
+  font-size:0.8rem;color:#e2e8f0;transition:background .2s;
 }
-.iter-item:hover{background:rgba(255,255,255,0.06);}
-.iter-item input[type=checkbox]{accent-color:#1e40af;width:14px;height:14px;cursor:pointer;}
+.iter-item:hover{background:rgba(255,255,255,0.1);}
+.iter-item input[type=checkbox]{width:16px;height:16px;cursor:pointer;}
 
 /* ═══ LOADING OVERLAY ══════════════════════════════════ */
 #ldgOverlay{
@@ -320,7 +321,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 /* ═══ PRINT ═════════════════════════════════════════════ */
 @media print{
   @page{size:letter;margin:0.5in}
-  .snav,#cfgOverlay,#ldgOverlay,#scrollTop{display:none !important}
+  .snav,#cfgBrand,#configPanel,#filterPanel,#manualHint,#ldgOverlay,#scrollTop{display:none !important}
   .sec{display:block}
   body{background:#0f172a;color:#e2e8f0;padding-bottom:0;font-size:10px}
   .hero{background:linear-gradient(135deg,#0f172a,#1e293b) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -509,91 +510,98 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 </head>
 <body>
 
-<!-- ═══ CONFIG OVERLAY ══════════════════════════════════ -->
-<div id="cfgOverlay">
-  <div id="cfgBox">
+<!-- ═══ BRAND HEADER (page-level) ═══════════════════════ -->
+<div class="cfg-brand" id="cfgBrand">
+  <div class="cfg-logo-title">Sprint Closing Report</div>
+</div>
 
-    <!-- Logo / Brand -->
-    <div class="cfg-logo">
-      <span class="cfg-logo-icon">📋</span>
-      <div class="cfg-logo-title">Sprint Closing Report</div>
-      <div class="cfg-logo-sub">End-of-sprint summary &amp; quality metrics</div>
+<!-- ═══ CONFIG PANEL (Step 1: Connect & Project) ═══════ -->
+<div class="config-panel" id="configPanel">
+  <h2>🔗 Connect to TFS</h2>
+  <div class="sub">Enter your TFS URL and PAT, then pick a project.</div>
+
+  <div class="cfg-field">
+    <label class="cfl">TFS / Azure DevOps URL</label>
+    <input class="cfi" type="text" id="cfgTfsUrl" placeholder="https://tfs.company.com/tfs/ProjectCollection"
+         oninput="safeLS.set('scr_tfsUrl',this.value.trim())">
+  </div>
+
+  <div class="cfg-field">
+    <label class="cfl">Personal Access Token (PAT)</label>
+    <div class="cfi-row">
+      <div style="position:relative;flex:1;">
+        <input class="cfi" type="password" id="cfgPat" placeholder="Enter your PAT"
+          style="padding-right:38px;"
+          oninput="safeLS.set('scr_pat',this.value.trim())"
+          onblur="scrAutoVerifyPat()">
+        <button type="button" onclick="scrTogglePatEye()" id="scrPatEye"
+          style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:2px 4px;line-height:1;" title="Show/Hide PAT">👁️</button>
+      </div>
+      <button class="cfg-load-btn" onclick="loadProjectsAndIters()">🔗 Load Sprints</button>
     </div>
-
-    <!-- Detected config banner (shown when indexAHA has passed context) -->
-    <div class="cfg-detected" id="detectedBanner" style="display:none">
-      <div class="det-title">✅ Configuration detected from Dashboard</div>
-      <div class="det-row" id="detectedDetails"></div>
-    </div>
-
-    <!-- Connection section -->
-    <div id="cfgManualSection" style="display:block">
-      <h2>🔗 Connect to TFS</h2>
-      <div class="cfg-field" style="margin-top:12px">
-        <label class="cfl">TFS / Azure DevOps URL</label>
-        <input class="cfi" type="text" id="cfgTfsUrl" placeholder="https://tfs.company.com/tfs/ProjectCollection"
-             oninput="safeLS.set('scr_tfsUrl',this.value.trim())">
-      </div>
-      <div class="cfg-field">
-        <label class="cfl">Personal Access Token (PAT)</label>
-        <div class="cfi-row">
-          <div style="position:relative;flex:1;">
-            <input class="cfi" type="password" id="cfgPat" placeholder="Enter your PAT"
-              style="padding-right:38px;"
-              oninput="safeLS.set('scr_pat',this.value.trim())"
-              onblur="scrAutoVerifyPat()">
-            <button type="button" onclick="scrTogglePatEye()" id="scrPatEye"
-              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:2px 4px;line-height:1;" title="Show/Hide PAT">👁️</button>
-          </div>
-          <button class="cfg-load-btn" onclick="loadProjectsAndIters()">🔗 Load Sprints</button>
-        </div>
-        <!-- Auth success info — mimics indexAHA patUserInfo -->
-        <div class="cfg-auth-info" id="cfgAuthInfo">
-          <div class="auth-row">
-            <span class="auth-ok">✅ Authenticated as:</span>
-            <span class="auth-name" id="cfgAuthName"></span>
-            <span class="auth-email" id="cfgAuthEmail"></span>
-          </div>
-        </div>
-        <div id="patStatus" style="font-size:.72rem;margin-top:5px;color:#94a3b8"></div>
-      </div>
-
-      <!-- Project select -->
-      <div class="cfg-field" id="areaField" style="display:none">
-        <label class="cfl">Project</label>
-        <select class="cfi" id="cfgProject">
-          <option value="">-- Select Project --</option>
-        </select>
-      </div>
-
-      <!-- Area Path multi-select -->
-      <div class="cfg-field" id="areaPathField" style="display:none">
-        <label class="cfl">Area Path <span style="font-weight:400;font-size:.8rem;color:#64748b;">(select one or more)</span></label>
-        <input type="text" id="areaSearch" class="cfi" placeholder="🔍 Search area path…"
-          oninput="filterBox('areaBox', this.value)"
-          style="padding:8px 12px;font-size:.82rem;margin-bottom:6px;">
-        <div id="areaBox" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;"></div>
-        <div id="areaSelCount" style="font-size:.7rem;color:#60a5fa;margin-top:5px"></div>
-      </div>
-
-      <!-- Sprint / Iteration multi-select -->
-      <div class="cfg-field" id="iterField" style="display:none">
-        <label class="cfl">Sprint / Iteration <span style="font-weight:400;font-size:.8rem;color:#64748b;">(select one or more)</span></label>
-        <input type="text" id="iterSearch" class="cfi" placeholder="🔍 Search sprint / iteration…"
-          oninput="filterBox('iterBox', this.value)"
-          style="padding:8px 12px;font-size:.82rem;margin-bottom:6px;">
-        <div id="iterBox" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;"></div>
-        <div id="iterSelCount" style="font-size:.7rem;color:#60a5fa;margin-top:5px"></div>
+    <div class="cfg-auth-info" id="cfgAuthInfo">
+      <div class="auth-row">
+        <span class="auth-ok">✅ Authenticated as:</span>
+        <span class="auth-name" id="cfgAuthName"></span>
+        <span class="auth-email" id="cfgAuthEmail"></span>
       </div>
     </div>
+    <div id="patStatus" style="font-size:.72rem;margin-top:5px;color:#94a3b8"></div>
+  </div>
 
-    <button id="cfgGenBtn" onclick="generateReport()" disabled>📊 Generate Report</button>
+  <div class="cfg-field" id="areaField" style="display:none">
+    <label class="cfl">Project</label>
+    <select class="cfi" id="cfgProject">
+      <option value="">-- Select Project --</option>
+    </select>
+  </div>
 
-    <div class="cfg-manual-toggle" id="manualHint" style="display:none">
-      <a onclick="toggleManualConfig()">⚙️ Edit connection settings</a>
+  <div style="margin-top:6px;">
+    <button type="button" id="cfgNextBtn" class="btn btn-primary" onclick="cfgGoToStep2()" disabled>Next →</button>
+  </div>
+</div>
+
+<!-- ═══ FILTER PANEL (Step 2: Area + Iteration) ════════ -->
+<div class="filter-panel" id="filterPanel" style="max-width: 1100px;">
+  <h3>📁 Select Area &amp; Sprint</h3>
+  <div id="cfgStep2ProjPill" class="cfg-step-sub-pill" style="display:none"></div>
+
+  <div class="filter-row" style="align-items: flex-start;">
+
+    <div class="filter-field" id="areaPathField" style="flex: 1.2; min-width: 280px;">
+      <label>Area Path <span style="font-size: 0.7rem; color: #94a3b8;">(Select one or more)</span></label>
+      <input type="text" id="areaSearch" placeholder="🔍 Search area path…"
+        oninput="filterBox('areaBox', this.value)"
+        style="width:100%;padding:8px 12px;font-size:.82rem;margin-bottom:6px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(0,0,0,0.3);color:#fff;font-family:inherit;outline:none;">
+      <div id="areaBox" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px; max-height: 400px; overflow-y: auto;">
+        <div style="color: #94a3b8; font-size: 0.85rem;">-- Loading areas --</div>
+      </div>
+      <div id="areaSelCount" style="font-size: 0.75rem; margin-top: 6px; color: #60a5fa;"></div>
+    </div>
+
+    <div class="filter-field" id="iterField" style="flex: 1.5; min-width: 400px;">
+      <label>Sprint / Iteration <span style="font-size: 0.7rem; color: #94a3b8;">(Select one or more sprints)</span></label>
+      <input type="text" id="iterSearch" placeholder="🔍 Search sprint / iteration…"
+        oninput="filterBox('iterBox', this.value)"
+        style="width:100%;padding:8px 12px;font-size:.82rem;margin-bottom:6px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(0,0,0,0.3);color:#fff;font-family:inherit;outline:none;">
+      <div id="iterBox" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px; max-height: 400px; overflow-y: auto;">
+        <div style="color: #94a3b8; font-size: 0.85rem;">-- Loading iterations --</div>
+      </div>
+      <div id="iterSelCount" style="font-size: 0.75rem; margin-top: 6px; color: #60a5fa;"></div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 20px;">
+      <button id="cfgGenBtn" class="btn btn-success" onclick="generateReport()" disabled>📊 Load Data</button>
+      <button class="btn btn-secondary" onclick="cfgGoToStep1()">🔙 Back</button>
     </div>
 
   </div>
+
+  <div id="cfgStep2LoadHint" style="display:none;font-size:.72rem;color:#94a3b8;margin-top:8px;">⏳ Loading scope…</div>
+</div>
+
+<div class="cfg-manual-toggle" id="manualHint" style="display:none">
+  <a onclick="toggleManualConfig()">⚙️ Edit connection settings</a>
 </div>
 
 <!-- ═══ LOADING OVERLAY ════════════════════════════════ -->
@@ -610,15 +618,23 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;"></div>
 <div id="rptPopupBox"
   style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-         z-index:9001;width:min(92vw,860px);max-height:82vh;overflow:hidden;
+         z-index:9001;width:min(96vw,1180px);max-height:86vh;overflow:hidden;
          background:#0f172a;border:1px solid rgba(56,189,248,.3);border-radius:12px;
-         box-shadow:0 24px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;">
+         box-shadow:0 24px 60px rgba(0,0,0,.7);flex-direction:column;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;
-              background:rgba(30,58,138,.8);border-bottom:1px solid rgba(56,189,248,.2);flex-shrink:0;">
-    <span id="rptPopupTitle" style="font-size:.82rem;font-weight:700;color:#e2e8f0;"></span>
+              background:rgba(30,58,138,.8);border-bottom:1px solid rgba(56,189,248,.2);flex-shrink:0;gap:10px;">
+    <span id="rptPopupTitle" style="font-size:.82rem;font-weight:700;color:#e2e8f0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    <div id="rptPopupToolbar" style="display:none;gap:6px;align-items:center;flex-shrink:0;">
+      <button onclick="setPopupTaskView('expand')"  id="popupBtnExpand"
+        title="Expand all tasks"
+        style="background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;cursor:pointer;font-size:.66rem;padding:5px 10px;border-radius:6px;font-weight:600;white-space:nowrap;">▼ Expand all</button>
+      <button onclick="setPopupTaskView('collapse')" id="popupBtnCollapse"
+        title="Collapse all tasks"
+        style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#cbd5e1;cursor:pointer;font-size:.66rem;padding:5px 10px;border-radius:6px;font-weight:600;white-space:nowrap;">▲ Collapse all</button>
+    </div>
     <button onclick="closeRptPopup()"
       style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;
-             padding:0 4px;line-height:1;">✕</button>
+             padding:0 4px;line-height:1;flex-shrink:0;">✕</button>
   </div>
   <div id="rptPopupBody" style="overflow-y:auto;flex:1;padding:0;"></div>
 </div>
@@ -731,7 +747,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
       <table class="rpt-tbl">
         <thead><tr>
           <th>Category</th><th>Total Items</th><th>Closed</th><th>Resolved</th>
-          <th>Open</th><th>OnHold</th><th>Adhoc</th><th>Delivery %</th>
+          <th>Open</th><th>OnHold</th><th>Adhoc</th>
         </tr></thead>
         <tbody id="rpt-deliverySummaryBody"></tbody>
       </table>
@@ -756,64 +772,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     </div>
     </div>
 
-    <!-- Section 5: Team B / Adhoc Support -->
-    <div class="rpt-section-title" style="margin-top:16px">🅱️ Team B — Adhoc Support</div>
-    <div id="rpt-teamBWrap">
-      <!-- Header: ticket count + status pills -->
-      <div class="tb-header" id="tb-header" style="display:none">
-        <span class="tb-header-title">🅱️ Adhoc Support</span>
-        <span class="tb-header-count" id="tb-total-count">0 Tickets</span>
-        <div class="tb-header-pills" id="tb-header-pills"></div>
-      </div>
-      <!-- Discipline table -->
-      <table class="tb-disc-tbl" id="tb-disc-tbl" style="display:none">
-        <thead><tr>
-          <th>Discipline</th>
-          <th>Planned (h)</th>
-          <th>Completed (h)</th>
-          <th>Remaining (h)</th>
-        </tr></thead>
-        <tbody id="tb-disc-body"></tbody>
-        <tfoot id="tb-disc-foot"></tfoot>
-      </table>
-      <div id="rpt-teamBEmpty" style="display:none;text-align:center;padding:12px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No Adhoc Support tickets this sprint.</div>
-    </div>
-    <!-- hidden table for email/readTbl compatibility -->
-    <table style="display:none"><thead><tr><th>Discipline</th><th>Planned (h)</th><th>Completed (h)</th><th>Remaining (h)</th></tr></thead>
-      <tbody id="rpt-teamBBody"></tbody><tfoot id="rpt-teamBFoot"></tfoot></table>
-
-    <!-- Section 7: Defect Summary -->
-    <div class="rpt-section-title" style="margin-top:16px">🐛 Bug Report — Sprint Quality Analysis</div>
-    <div id="rpt-bugTotalEffortBar" style="display:none;margin-bottom:6px;padding:6px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:7px;font-size:.7rem;color:#94a3b8;cursor:pointer;"
-         onclick="showRptPopup('All Bug Tasks',window._rpt_allBugs,'tasks')">
-      🕐 Total Task Hours on All Bugs: <strong id="rpt-bugTotalEffortVal" style="color:#fbbf24;font-size:.8rem;"></strong>
-      <span style="color:#475569;margin-left:8px;">(click to view all tasks)</span>
-    </div>
-    <div style="overflow-x:auto;margin-bottom:2px">
-      <table class="rpt-tbl rpt-bug-tbl">
-        <thead><tr>
-          <th>Ownership</th><th>CS (Sprint)</th>
-          <th>Proposed</th><th>Open</th><th>Closed</th><th>Resolved</th>
-          <th>Effort Taken (h)</th>
-        </tr></thead>
-        <tbody id="rpt-bugBody"></tbody>
-        <tfoot id="rpt-bugFoot"></tfoot>
-      </table>
-    </div>
-
-    <!-- Bug Type Classification -->
-    <div class="rpt-section-title" style="margin-top:16px">🏷️ Bug Type Classification</div>
-    <div style="overflow-x:auto;margin-bottom:2px">
-      <table class="rpt-tbl rpt-bug-tbl">
-        <thead><tr>
-          <th>Type</th><th>Total</th><th>Proposed</th><th>Open</th><th>Closed</th><th>Resolved</th><th>Effort Taken (h)</th>
-        </tr></thead>
-        <tbody id="rpt-bugTypeBody"></tbody>
-      </table>
-    </div>
-
-    <!-- Section 9: AI Data -->
-    <div class="rpt-section-title" style="margin-top:16px">🤖 AI Data — Dev &amp; QA Adoption Summary</div>
+    <!-- Section 9: AI Data (moved here from below) -->
+    <div class="rpt-section-title" style="margin-top:16px">🤖 AI Adoption Data Summary</div>
     <div style="overflow-x:auto;margin-bottom:2px">
       <table class="rpt-tbl" id="rpt-aiDataTable">
         <thead><tr>
@@ -826,6 +786,51 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
       </table>
       <div id="rpt-aiDataEmpty" style="display:none;text-align:center;padding:8px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No AI task data found for this sprint.</div>
     </div>
+
+    <!-- Section 7: Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) -->
+    <div class="rpt-section-title" style="margin-top:16px">🐛 Bug Report — Sprint Quality Analysis</div>
+    <div id="rpt-bugTotalEffortBar" style="display:none;margin-bottom:6px;padding:6px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:7px;font-size:.7rem;color:#94a3b8;cursor:pointer;"
+         onclick="showRptPopup('All Bug Tasks',window._rpt_allBugs,'tasks')">
+      🕐 Total Task Hours on All Bugs: <strong id="rpt-bugTotalEffortVal" style="color:#fbbf24;font-size:.8rem;"></strong>
+      <span style="color:#475569;margin-left:8px;">(click to view all tasks)</span>
+    </div>
+    <div style="overflow-x:auto;margin-bottom:2px">
+      <table class="rpt-tbl rpt-bug-tbl">
+        <thead><tr>
+          <th>Type</th><th>Total</th><th>Open</th><th>Closed</th><th>Resolved</th><th>Dev Owned</th><th>QA Owned</th><th>Effort Taken (h)</th>
+        </tr></thead>
+        <tbody id="rpt-bugTypeBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Section 5: Team B / Adhoc Support (moved here from above) -->
+    <div class="rpt-section-title" style="margin-top:16px">🅱️ Adhoc Support Summary</div>
+    <div id="rpt-teamBWrap" style="width:100%;">
+      <!-- Header: ticket count + status pills -->
+      <div class="tb-header" id="tb-header" style="display:none">
+        <span class="tb-header-title">🅱️ Adhoc Support</span>
+        <span class="tb-header-count" id="tb-total-count">0 Tickets</span>
+        <div class="tb-header-pills" id="tb-header-pills"></div>
+      </div>
+      <!-- Discipline table -->
+      <div style="overflow-x:auto;margin-bottom:2px;width:100%;">
+        <table class="tb-disc-tbl" id="tb-disc-tbl" style="display:none;width:100%;">
+          <thead><tr>
+            <th>Discipline</th>
+            <th title="Sum of Original Estimate as it stood on planning day (sprint start). Double-click any cell to view tasks.">Original Planned</th>
+            <th>Used Hours</th>
+            <th>Completed</th>
+            <th>Remaining</th>
+          </tr></thead>
+          <tbody id="tb-disc-body"></tbody>
+          <tfoot id="tb-disc-foot"></tfoot>
+        </table>
+      </div>
+      <div id="rpt-teamBEmpty" style="display:none;text-align:center;padding:12px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No Adhoc Support tickets this sprint.</div>
+    </div>
+    <!-- hidden table for email/readTbl compatibility -->
+    <table style="display:none"><thead><tr><th>Discipline</th><th>Original Planned</th><th>Used Hours</th><th>Completed</th><th>Remaining</th></tr></thead>
+      <tbody id="rpt-teamBBody"></tbody><tfoot id="rpt-teamBFoot"></tfoot></table>
 
     <!-- hidden JS stubs for renderAll compatibility -->
     <span style="display:none" id="goalBox"></span><span style="display:none" id="goalText"></span>
@@ -925,6 +930,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 /* ══ Runtime state ═════════════════════════════════════ */
 let tfsUrl='', pat='', project='', selectedIterPaths=[], selectedAreaPaths=[];
 let requirements=[], bugs=[], tasks=[], taskLookup={}, reqTasksMap={}, bugTasksMap={};
+// Per-adhoc-task historical Original Estimate as of planning day (sprint start).
+// Shape: { [taskId]: { oe: hours, asOfDate: Date|null } }
+let taskOrigPlanMap={};
 let sprintStartDate=null, sprintEndDate=null;
 let teamCapacity=0;
 let devCapacity=0, qaCapacity=0;
@@ -970,6 +978,67 @@ async function batchFetch(ids,fields){
     apiFetch(`${tfsUrl}/_apis/wit/workitems?ids=${b.join(',')}&fields=${fStr}&api-version=5.0`).then(r=>r.json())
   ));
   return results.flatMap(r=>r.value||[]);
+}
+
+/* ══ Load Original Estimate at planning day for adhoc tasks ═════════════════
+   For each task ID, fetch /revisions and find the latest revision whose
+   System.ChangedDate is on/before sprintStartDate end-of-day. Read
+   Microsoft.VSTS.Scheduling.OriginalEstimate from that revision.
+   - Tasks created after sprint start contribute 0 (didn't exist on planning day).
+   - If sprintStartDate is unknown, falls back to the task's current OE.
+   Concurrency-limited (6 parallel) to avoid hammering TFS. */
+async function loadOrigPlannedForAdhoc(taskIds){
+  taskOrigPlanMap = {};
+  if(!taskIds || !taskIds.length) return;
+
+  const cutoff = sprintStartDate ? new Date(sprintStartDate) : null;
+  if(cutoff) cutoff.setHours(20,0,0,0); // 8:00 PM on planning day — captures post-planning state
+
+  const concurrency = 6;
+  let idx = 0;
+  const workers = Array.from({length: Math.min(concurrency, taskIds.length)}, async () => {
+    while(idx < taskIds.length){
+      const myIdx = idx++;
+      const tid = taskIds[myIdx];
+      try{
+        const r = await apiFetch(`${tfsUrl}/_apis/wit/workitems/${tid}/revisions?api-version=5.0`);
+        if(!r.ok){ taskOrigPlanMap[tid] = { oe: 0, asOfDate: null }; continue; }
+        const j = await r.json();
+        const revs = (j.value || []).slice().sort((a,b)=>{
+          const ad = new Date(a.fields?.['System.ChangedDate'] || 0).getTime();
+          const bd = new Date(b.fields?.['System.ChangedDate'] || 0).getTime();
+          return ad - bd;
+        });
+
+        let chosen = null;
+        if(cutoff){
+          // Pick latest revision with ChangedDate <= cutoff
+          for(const rv of revs){
+            const cd = new Date(rv.fields?.['System.ChangedDate'] || 0);
+            if(cd.getTime() <= cutoff.getTime()) chosen = rv;
+            else break;
+          }
+        } else {
+          // No sprint start known → take latest revision
+          chosen = revs[revs.length - 1] || null;
+        }
+
+        if(!chosen){
+          // Task didn't exist on planning day
+          taskOrigPlanMap[tid] = { oe: 0, asOfDate: null };
+        } else {
+          const oe = Number(chosen.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0;
+          taskOrigPlanMap[tid] = {
+            oe,
+            asOfDate: chosen.fields?.['System.ChangedDate'] || null
+          };
+        }
+      } catch(e){
+        taskOrigPlanMap[tid] = { oe: 0, asOfDate: null };
+      }
+    }
+  });
+  await Promise.all(workers);
 }
 
 /* ══ Batch fetch with relations ════════════════════════ */
@@ -1048,15 +1117,14 @@ function init(){
     if(!project && selectedIterPaths.length)
       project = selectedIterPaths[0].path.split('\\')[0];
 
-    // Show a slim "auto-loading" banner instead of the overlay
-    const overlay = document.getElementById('cfgOverlay');
-    overlay.style.display = 'none';
+    // Hide the config panels and show the report area
+    showCfgStep(3);
 
     // Show loading immediately and fire report generation
     showLoading('Auto-loading from URL parameters…', 10);
     setTimeout(()=> fetchAndRender().catch(err=>{
       hideLoading();
-      overlay.style.display = 'flex';
+      showCfgStep(1);
       // Pre-fill form fields so user can correct
       document.getElementById('cfgTfsUrl').value = qs.url;
       document.getElementById('cfgPat').value    = qs.pat;
@@ -1079,23 +1147,6 @@ function init(){
     if(lsPat)    { document.getElementById('cfgPat').value=lsPat; scrAutoVerifyPat(); }
 
     if(lsTfsUrl && lsPat && lsIters.length && lsAreas.length){
-      const banner=document.getElementById('detectedBanner');
-      banner.style.display='block';
-      const details=document.getElementById('detectedDetails');
-      details.innerHTML='';
-      if(lsSprint.name){
-        const sp=document.createElement('span');sp.className='det-item';
-        sp.textContent='🏃 '+lsSprint.name;details.appendChild(sp);
-      }
-      if(lsSprint.areaName){
-        const ar=document.createElement('span');ar.className='det-item';
-        ar.textContent='📁 '+lsSprint.areaName;details.appendChild(ar);
-      }
-      lsIters.forEach(i=>{
-        const it=document.createElement('span');it.className='det-item';
-        it.textContent='📅 '+(i.path||'').split('\\').pop();details.appendChild(it);
-      });
-
       tfsUrl=lsTfsUrl; pat=lsPat; project=lsProj||'';
       selectedIterPaths=lsIters;
       selectedAreaPaths=lsAreas;
@@ -1108,8 +1159,24 @@ function init(){
 
       const btn=document.getElementById('cfgGenBtn');
       btn.disabled=false;
-      btn.textContent='📊 Generate Report';
+      btn.textContent='📊 Load Data';
       document.getElementById('manualHint').style.display='block';
+
+      // Pre-fill step 1 project dropdown + enable Next, and pre-show project pill on step 2
+      const projSel = document.getElementById('cfgProject');
+      if(projSel && lsProj){
+        // Ensure option exists (project list not fetched yet in this path)
+        if(![...projSel.options].some(o=>o.value===lsProj)){
+          const o = document.createElement('option'); o.value=lsProj; o.textContent=lsProj;
+          projSel.appendChild(o);
+        }
+        projSel.value = lsProj;
+        document.getElementById('areaField').style.display='block';
+      }
+      const nextBtn = document.getElementById('cfgNextBtn');
+      if(nextBtn) nextBtn.disabled = !(lsTfsUrl && lsPat && lsProj);
+      const pill = document.getElementById('cfgStep2ProjPill');
+      if(pill && lsProj){ pill.textContent = '📁 Project: ' + lsProj; pill.style.display = 'inline-block'; }
     } else if(lsTfsUrl && lsPat){
       loadProjectsAndIters();
     }
@@ -1147,10 +1214,55 @@ async function scrAutoVerifyPat(){
     }
   }catch(e){/* silently fail */}
 }
-/* ══ Toggle manual config section ═══════════════════════ */
-function toggleManualConfig(){
-  const s=document.getElementById('cfgManualSection');
-  s.style.display=s.style.display==='none'?'block':'none';
+/* ══ Edit connection — go back to Step 1 ═══════════════ */
+function toggleManualConfig(){ showCfgStep(1); }
+
+/* ══ Step wizard navigation ═════════════════════════════ */
+function showCfgStep(n){
+  const cp  = document.getElementById('configPanel');
+  const fp  = document.getElementById('filterPanel');
+  const wrap= document.getElementById('rptWrap');
+  const brand=document.getElementById('cfgBrand');
+
+  if(cp) cp.style.display = (n===1) ? 'block' : 'none';
+  if(fp) fp.style.display = (n===2) ? 'block' : 'none';
+  if(wrap && n!==3) wrap.style.display = 'none';
+  // Hide brand on the report screen, show on Step 1 / Step 2
+  if(brand) brand.style.display = (n===3) ? 'none' : 'block';
+}
+function cfgGoToStep1(){ showCfgStep(1); }
+async function cfgGoToStep2(){
+  const urlVal = (document.getElementById('cfgTfsUrl').value||'').trim();
+  const patVal = (document.getElementById('cfgPat').value||'').trim();
+  const proj   = document.getElementById('cfgProject').value;
+  const ps     = document.getElementById('patStatus');
+  if(!urlVal || !patVal){
+    if(ps){ ps.textContent='⚠️ Enter TFS URL and PAT first'; ps.style.color='#dc2626'; }
+    return;
+  }
+  if(!proj){
+    if(ps){ ps.textContent='⚠️ Select a project'; ps.style.color='#dc2626'; }
+    return;
+  }
+  // Make sure TFS URL and PAT are captured (user may have skipped the "Load Sprints" click)
+  tfsUrl = urlVal.replace(/\/$/,''); pat = patVal; project = proj;
+
+  // Show a "project: X" pill on step 2
+  const pill = document.getElementById('cfgStep2ProjPill');
+  if(pill){ pill.textContent = '📁 Project: ' + proj; pill.style.display = 'inline-block'; }
+
+  // Ensure area + iteration boxes are populated before switching
+  const areaHasItems = document.querySelectorAll('#areaBox .iter-item').length > 0;
+  const iterHasItems = document.querySelectorAll('#iterBox .iter-item').length > 0;
+  if(!areaHasItems || !iterHasItems){
+    const hint = document.getElementById('cfgStep2LoadHint');
+    if(hint) hint.style.display = 'block';
+    try { await loadAreaAndIter(proj); }
+    catch(e){ console.warn('cfgGoToStep2 load error:', e); }
+    if(hint) hint.style.display = 'none';
+  }
+
+  showCfgStep(2);
 }
 
 /* ══ Load projects + iterations from TFS ═══════════════ */
@@ -1177,17 +1289,31 @@ async function loadProjectsAndIters(){
     projects.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;projSel.appendChild(o);});
 
     document.getElementById('areaField').style.display='block';
-    st.textContent='✅ Connected — select a project then load iterations';
+    st.textContent='✅ Connected — select a project, then click Next';
     st.style.color='#34d399';
 
-    projSel.onchange=()=>loadAreaAndIter(projSel.value);
+    projSel.onchange = () => {
+      const v = projSel.value;
+      const nextBtn = document.getElementById('cfgNextBtn');
+      if(v){
+        loadAreaAndIter(v);                 // preload in background
+        if(nextBtn) nextBtn.disabled = false;
+      } else {
+        if(nextBtn) nextBtn.disabled = true;
+      }
+    };
 
     // Auto-select: exact match "Project" (case-insensitive) → else first project
     const savedProj = safeLS.get('scr_project') || '';
     const defaultProj = projects.find(p => p === savedProj)
       || projects.find(p => p.toLowerCase() === 'project')
       || (projects.length === 1 ? projects[0] : null);
-    if (defaultProj) { projSel.value = defaultProj; loadAreaAndIter(defaultProj); }
+    if (defaultProj) {
+      projSel.value = defaultProj;
+      loadAreaAndIter(defaultProj);
+      const nextBtn = document.getElementById('cfgNextBtn');
+      if(nextBtn) nextBtn.disabled = false;
+    }
   }catch(e){
     st.textContent='❌ '+e.message;st.style.color='#dc2626';
   }
@@ -1229,7 +1355,6 @@ async function loadAreaAndIter(proj){
         cb.onchange=updateAreaSel;
         const l=document.createElement('span');
         l.textContent=ar.name;
-        l.style.fontSize='.74rem';
         if(depth===0) l.style.fontWeight='600';
         d.appendChild(cb); d.appendChild(l);
         d.onclick=e=>{if(e.target!==cb)cb.click();};
@@ -1297,7 +1422,7 @@ function updateIterSel(){
   const areaChecks=document.querySelectorAll('#areaBox input:checked').length;
   const btn=document.getElementById('cfgGenBtn');
   btn.disabled=!(tfsUrl&&pat&&selectedIterPaths.length);
-  if(!btn.disabled)btn.textContent='📊 Generate Report';
+  if(!btn.disabled)btn.textContent='📊 Load Data';
 }
 
 /* ══ Search filter for area / iter boxes ════════════════ */
@@ -1334,15 +1459,15 @@ async function generateReport(){
   if(!tfsUrl||!pat){xtoast('⚠️ TFS URL and PAT required');return;}
   if(!selectedIterPaths.length){xtoast('⚠️ Select at least one sprint');return;}
 
-  // Hide config overlay + show loading
-  document.getElementById('cfgOverlay').style.display='none';
+  // Hide config panels + show loading
+  showCfgStep(3);
   showLoading('Phase 1/3 — Querying work items…',15);
 
   try{
     await fetchAndRender();
   }catch(err){
     hideLoading();
-    document.getElementById('cfgOverlay').style.display='flex';
+    showCfgStep(1);
     document.getElementById('patStatus').textContent='❌ Error: '+err.message;
     document.getElementById('patStatus').style.color='#dc2626';
     console.error(err);
@@ -1379,7 +1504,7 @@ async function fetchAndRender(){
   const FIELDS=[
     'System.Id','System.Title','System.State','System.WorkItemType',
     'System.Tags','System.IterationPath','System.AreaPath','System.AssignedTo',
-    'System.Reason','System.CreatedDate',
+    'System.Reason','System.CreatedDate','System.Parent',
     'Microsoft.VSTS.Scheduling.OriginalEstimate',
     'Microsoft.VSTS.Scheduling.CompletedWork',
     'Microsoft.VSTS.Scheduling.RemainingWork',
@@ -1392,7 +1517,8 @@ async function fetchAndRender(){
     'Casepoint.TFS.CustomFields.ActualCompletedHours',
     'Casepoint.TFS.CustomFields.CompletedEffort',
     'Casepoint.TFS.CustomFields.TaskExecutionType',
-    'Microsoft.VSTS.Common.StateChangeDate'
+    'Microsoft.VSTS.Common.StateChangeDate',
+    'Microsoft.VSTS.CMMI.FoundInEnvironment'
   ];
   const allItems=await batchFetch(allIds,FIELDS);
 
@@ -1472,13 +1598,30 @@ async function fetchAndRender(){
     reqTasksMap[req.id]=childIds;
   });
 
-  // Build bugTasksMap — child tasks of bugs
-  const bugTasksMap={};
-  bugsRel.forEach(bug=>{
-    const childIds=(bug.relations||[])
-      .filter(r=>r.rel==='System.LinkTypes.Hierarchy-Forward')
-      .map(r=>parseInt(r.url.split('/').pop()));
-    bugTasksMap[bug.id]=childIds;
+  // Build bugTasksMap — map each bug ID to its child task IDs.
+  // Primary source: Task's System.Parent field. For every task whose
+  // System.Parent matches a bug ID, add that task under the bug.
+  // Fallback: bug's Hierarchy-Forward relations (covers tasks whose
+  // System.Parent might be missing or point elsewhere in edge cases).
+  bugTasksMap = {};
+  const bugIdSet = new Set(bugIds);
+  bugIds.forEach(bid => { bugTasksMap[bid] = []; });
+
+  taskData.forEach(t => {
+    const pid = t.fields['System.Parent'];
+    if (pid != null && bugIdSet.has(pid)) {
+      bugTasksMap[pid].push(t.id);
+    }
+  });
+
+  bugsRel.forEach(bug => {
+    const childIds = (bug.relations||[])
+      .filter(r => r.rel === 'System.LinkTypes.Hierarchy-Forward')
+      .map(r => parseInt(r.url.split('/').pop()));
+    if (!bugTasksMap[bug.id]) bugTasksMap[bug.id] = [];
+    childIds.forEach(tid => {
+      if (!bugTasksMap[bug.id].includes(tid)) bugTasksMap[bug.id].push(tid);
+    });
   });
 
   // Fetch any bug child tasks that were NOT returned by the WIQL (different iteration/area)
@@ -1527,6 +1670,23 @@ async function fetchAndRender(){
   // ── Fetch sprint dates + team capacity ───────────────
   showLoading('Phase 3/3 — Loading team capacity…',82);
   await fetchCapacity();
+
+  // ── Fetch task revisions for tasks under "Ticket Handling" / "Ticket Support" reqs
+  // Scope: ANY requirement whose title starts with "Ticket Handling" or
+  // "Ticket Support" (case-insensitive). No tag constraint — the requirement
+  // does NOT need to be tagged "Adhoc Support" (e.g. "Team B Support" qualifies).
+  try {
+    const titleMatches = (req) => {
+      const t = (req.fields?.['System.Title'] || '').trim().toLowerCase();
+      return t.startsWith('ticket handling') || t.startsWith('ticket support');
+    };
+    const ticketReqIds = requirements.filter(titleMatches).map(r => r.id);
+    const ticketTaskIds = ticketReqIds.flatMap(rid => reqTasksMap[rid] || []);
+    if(ticketTaskIds.length){
+      showLoading('Loading task history (Original Planned)…',90);
+      await loadOrigPlannedForAdhoc(ticketTaskIds);
+    }
+  } catch(e){ console.warn('Original Planned history fetch failed:', e); }
 
   // ── Render ───────────────────────────────────────────
   showLoading('Rendering report…',95);
@@ -1699,7 +1859,7 @@ async function fetchCapacity(){
 }
 
 /* ══ Fetch velocity — previous 2 sibling iterations ════ */
-/* ══ Change Sprint — show config overlay again ══════════ */
+/* ══ Change Sprint — show config panel again ══════════ */
 function changeSprint(){
   document.querySelectorAll('#iterBox input:checked').forEach(cb=>cb.checked=false);
   document.querySelectorAll('#areaBox input:checked').forEach(cb=>cb.checked=false);
@@ -1708,10 +1868,8 @@ function changeSprint(){
   document.getElementById('iterSelCount').textContent='';
   const ac=document.getElementById('areaSelCount'); if(ac) ac.textContent='';
   document.getElementById('cfgGenBtn').disabled=true;
-  document.getElementById('cfgGenBtn').textContent='📊 Generate Report';
-  document.getElementById('cfgOverlay').style.display='flex';
-  const wrap=document.getElementById('rptWrap');
-  if(wrap) wrap.style.display='none';
+  document.getElementById('cfgGenBtn').textContent='📊 Load Data';
+  showCfgStep(1);
   const csBtn=document.getElementById('changeSprintBtn');
   if(csBtn) csBtn.style.display='none';
   const expBar=document.getElementById('scrExportBar');
@@ -1764,11 +1922,35 @@ function scrBuildReport(){
       .map(tr=>Array.from(tr.cells).map(td=>td.textContent.trim())) : [];
     return{rows,foot};
   };
-  const delivery  = readTbl('rpt-deliverySummaryBody');
-  const teamB     = readTbl('rpt-teamBBody','rpt-teamBFoot');
-  const bugData    = readTbl('rpt-bugBody');
-  const bugTypeData = readTbl('rpt-bugTypeBody');
-  const aiData    = readTbl('rpt-aiDataBody','rpt-aiDataFoot');
+  // Strip leading icons / pictograms / variation-selectors from the first cell of each row.
+  // Used so the preview/email tables show plain text labels (e.g. "Current Sprint"
+  // instead of "📅 Current Sprint"). Sprint Goal section title is not a table and
+  // is preserved separately. We slice from the first ASCII alphanumeric character —
+  // this handles ALL emoji / pictogram variants without needing a maintained list.
+  const stripIcon = s => {
+    const str = (s || '').toString();
+    const m = str.match(/[A-Za-z0-9]/);
+    return m ? str.slice(m.index).trim() : str.trim();
+  };
+  const stripFirstColIcons = data => ({
+    rows: data.rows.map(r => r.length ? [stripIcon(r[0]), ...r.slice(1)] : r),
+    foot: data.foot.map(r => r.length ? [stripIcon(r[0]), ...r.slice(1)] : r),
+  });
+  const delivery    = stripFirstColIcons(readTbl('rpt-deliverySummaryBody'));
+  const teamB       = stripFirstColIcons(readTbl('rpt-teamBBody','rpt-teamBFoot'));
+  const bugTypeData = stripFirstColIcons(readTbl('rpt-bugTypeBody'));
+  const aiData      = stripFirstColIcons(readTbl('rpt-aiDataBody','rpt-aiDataFoot'));
+
+  // Adhoc Support: pull the "(N tickets · Closed:X Resolved:Y Open:Z)" descriptor
+  // out of the Total footer cell and render it as a caption above the table.
+  let adhocSubtitle = '';
+  if (teamB.foot.length && teamB.foot[0].length) {
+    const m = teamB.foot[0][0].match(/^Total\s*\((.+)\)\s*$/);
+    if (m) {
+      adhocSubtitle = '(' + m[1] + ')';
+      teamB.foot[0][0] = 'Total';
+    }
+  }
   const insights  = Array.from(document.querySelectorAll('#scrInsightList li')).map(li=>{
     const c=li.cloneNode(true); c.querySelector('button')?.remove(); return c.textContent.trim();
   }).filter(Boolean);
@@ -1786,44 +1968,73 @@ function scrBuildReport(){
   const rowBgGrn = i => i%2===0 ? '#f0fdf4' : '#ffffff';
 
   // ── Cell builders ────────────────────────────────────────────────
-  // Default (blue header/footer)
-  const TH  =(t,ex='')=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #1e3a5f;text-align:center;white-space:nowrap;${ex}">${t}</th>`;
-  const THL =(t)=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #1e3a5f;text-align:left;">${t}</th>`;
-  const TD  =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:center;background:${rowBg(i)};${ex}">${t}</td>`;
-  const TDL =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBg(i)};${ex}">${t}</td>`;
-  const TF  =(t,ex='')=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #93c5fd;text-align:center;${ex}">${t}</td>`;
-  const TFL =(t)=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #93c5fd;text-align:left;">${t}</td>`;
+  // First-column body cells: NEVER wrap — column auto-sizes via autoWidths() to fit content.
+  // Footer left cells keep word-wrap so very long total descriptions can break.
+  const TH  =(t,ex='')=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #1e3a5f;text-align:center;white-space:nowrap;line-height:1.2;${ex}">${t}</th>`;
+  const THL =(t)=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #1e3a5f;text-align:left;white-space:nowrap;line-height:1.2;">${t}</th>`;
+  const TD  =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 4px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:center;background:${rowBg(i)};white-space:nowrap;${ex}">${t}</td>`;
+  const TDL =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 6px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBg(i)};white-space:nowrap;${ex}">${t}</td>`;
+  const TF  =(t,ex='')=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 4px;border:1px solid #93c5fd;text-align:center;white-space:nowrap;${ex}">${t}</td>`;
+  const TFL =(t)=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 6px;border:1px solid #93c5fd;text-align:left;word-wrap:break-word;">${t}</td>`;
   // Green header/footer (Team B / AI Data)
-  const THG =(t,ex='')=>`<th style="${F}background:#14532d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #14532d;text-align:center;white-space:nowrap;${ex}">${t}</th>`;
-  const THLG=(t)=>`<th style="${F}background:#14532d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #14532d;text-align:left;">${t}</th>`;
-  const TDG =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #d1fae5;color:#1a1a1a;text-align:center;background:${rowBgGrn(i)};${ex}">${t}</td>`;
-  const TDLG=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #d1fae5;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgGrn(i)};${ex}">${t}</td>`;
-  const TFG =(t,ex='')=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #6ee7b7;text-align:center;${ex}">${t}</td>`;
-  const TFLG=(t)=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #6ee7b7;text-align:left;">${t}</td>`;
+  const THG =(t,ex='')=>`<th style="${F}background:#14532d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #14532d;text-align:center;white-space:nowrap;line-height:1.2;${ex}">${t}</th>`;
+  const THLG=(t)=>`<th style="${F}background:#14532d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #14532d;text-align:left;white-space:nowrap;line-height:1.2;">${t}</th>`;
+  const TDG =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 4px;border:1px solid #d1fae5;color:#1a1a1a;text-align:center;background:${rowBgGrn(i)};white-space:nowrap;${ex}">${t}</td>`;
+  const TDLG=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 6px;border:1px solid #d1fae5;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgGrn(i)};white-space:nowrap;${ex}">${t}</td>`;
+  const TFG =(t,ex='')=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 4px;border:1px solid #6ee7b7;text-align:center;white-space:nowrap;${ex}">${t}</td>`;
+  const TFLG=(t)=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 6px;border:1px solid #6ee7b7;text-align:left;word-wrap:break-word;">${t}</td>`;
   // Red header/footer (Defect)
-  const THR =(t,ex='')=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #7f1d1d;text-align:center;white-space:nowrap;${ex}">${t}</th>`;
-  const THLR=(t)=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #7f1d1d;text-align:left;">${t}</th>`;
-  const TDR =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #fee2e2;color:#1a1a1a;text-align:center;background:${rowBgRed(i)};${ex}">${t}</td>`;
-  const TDLR=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 8px;border:1px solid #fee2e2;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgRed(i)};${ex}">${t}</td>`;
-  const TFR =(t,ex='')=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #fca5a5;text-align:center;${ex}">${t}</td>`;
-  const TFLR=(t)=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 8px;border:1px solid #fca5a5;text-align:left;">${t}</td>`;
+  const THR =(t,ex='')=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #7f1d1d;text-align:center;white-space:nowrap;line-height:1.2;${ex}">${t}</th>`;
+  const THLR=(t)=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #7f1d1d;text-align:left;white-space:nowrap;line-height:1.2;">${t}</th>`;
+  const TDR =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 4px;border:1px solid #fee2e2;color:#1a1a1a;text-align:center;background:${rowBgRed(i)};white-space:nowrap;${ex}">${t}</td>`;
+  const TDLR=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 6px;border:1px solid #fee2e2;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgRed(i)};white-space:nowrap;${ex}">${t}</td>`;
+  const TFR =(t,ex='')=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 4px;border:1px solid #fca5a5;text-align:center;white-space:nowrap;${ex}">${t}</td>`;
+  const TFLR=(t)=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 6px;border:1px solid #fca5a5;text-align:left;word-wrap:break-word;">${t}</td>`;
 
   const SECH=(label)=>`<tr><td colspan="10" style="background:#1e3a8a;padding:8px 12px;border-bottom:2px solid #3b82f6;">
     <span style="${F}font-size:10pt;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.05em;">${label}</span></td></tr>`;
 
+  // Column widths are computed automatically per-table from the header text length,
+  // with the first column boosted to fit the longest data label so it never wraps,
+  // and given a visual-balance boost (~1.4×) so label columns like Type/Discipline
+  // read comfortably wider than the numeric columns next to them.
+  // Headers are uppercase + letter-spaced, so they count ~1.5× per char visually.
+  const autoWidths = (cols, rows) => {
+    const headerWeight = h => Math.max((h || '').length, 3) * 1.5 + 4;
+    const cellWeight   = c => (c || '').length + 4;
+    const w = cols.map((h, i) => {
+      let weight = headerWeight(h);
+      if (i === 0) {
+        for (const r of rows) {
+          const cw = cellWeight(r && r[i]);
+          if (cw > weight) weight = cw;
+        }
+        weight *= 1.4; // visual-balance boost for the label column
+      }
+      return weight;
+    });
+    const total = w.reduce((a, b) => a + b, 0) || 1;
+    return w.map(x => ((x / total) * 100).toFixed(2) + '%');
+  };
+
   // Generic table builder
-  const _buildTbl=(cols,rows,foot,H,HL,D,DL,Ft,FtL)=>{
+  // (uses table-layout:fixed only inside <colgroup>'s width directive — auto-layout
+  //  on the table itself, so cells use the colgroup widths but content can grow within)
+  const _buildTbl=(cols,rows,foot,H,HL,D,DL,Ft,FtL,widths)=>{
+    const w    = widths || autoWidths(cols, rows);
+    const cg   = `<colgroup>${w.map(c=>`<col style="width:${c}">`).join('')}</colgroup>`;
     const hdr  = cols.map((c,i)=>i===0?HL(c):H(c)).join('');
     const body = rows.map((r,i)=>`<tr>${r.map((c,j)=>j===0?DL(c,'',i):D(c,'',i)).join('')}</tr>`).join('');
     const ftr  = foot.map(r=>`<tr>${r.map((c,j)=>j===0?FtL(c):Ft(c)).join('')}</tr>`).join('');
-    return`<table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;margin-bottom:14px;">
+    return`<table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;table-layout:fixed;margin-bottom:14px;">
+      ${cg}
       <thead><tr>${hdr}</tr></thead>
       <tbody>${body}</tbody>${ftr?`<tfoot>${ftr}</tfoot>`:''}
     </table>`;
   };
-  const tbl      = (cols,rows,foot)=>_buildTbl(cols,rows,foot, TH, THL, TD, TDL, TF, TFL);
-  const tblGreen = (cols,rows,foot)=>_buildTbl(cols,rows,foot, THG,THLG,TDG,TDLG,TFG,TFLG);
-  const tblRed   = (cols,rows,foot)=>_buildTbl(cols,rows,foot, THR,THLR,TDR,TDLR,TFR,TFLR);
+  const tbl      = (cols,rows,foot,widths)=>_buildTbl(cols,rows,foot, TH, THL, TD, TDL, TF, TFL, widths);
+  const tblGreen = (cols,rows,foot,widths)=>_buildTbl(cols,rows,foot, THG,THLG,TDG,TDLG,TFG,TFLG, widths);
+  const tblRed   = (cols,rows,foot,widths)=>_buildTbl(cols,rows,foot, THR,THLR,TDR,TDLR,TFR,TFLR, widths);
 
   // Badge for sprint goal
   const badgeEl  = document.getElementById('rpt-goalBadge');
@@ -1888,7 +2099,7 @@ function scrBuildReport(){
 
     <!-- Sprint Goal -->
     <table border="0" cellpadding="0" cellspacing="0" width="732"
-      style="border-collapse:collapse;margin-bottom:16px;border:1px solid #bfdbfe;">
+      style="border-collapse:collapse;width:732px;max-width:732px;margin-bottom:16px;border:1px solid #bfdbfe;">
       <!-- Header row: icon + title + badge -->
       <tr bgcolor="#1e3a8a">
         <td style="background:#1e3a8a;padding:10px 14px;vertical-align:middle;border-bottom:2px solid #3b82f6;">
@@ -1907,35 +2118,32 @@ function scrBuildReport(){
     </table>
 
     <!-- Delivery Summary -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:0 0 5px;">📊 Delivery Summary</p>
-    ${tbl(['Category','Total','Closed','Resolved','Open','OnHold','Adhoc','Delivery %'], delivery.rows, delivery.foot)}
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:0 0 5px;">Delivery Summary</p>
+    ${tbl(['Category','Total Items','Closed','Resolved','Open','OnHold','Adhoc'], delivery.rows, delivery.foot, ['22%','20%','12%','15%','9%','12%','10%'])}
 
     <!-- Sprint Insight -->
-    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;margin-top:14px;margin-bottom:14px;">
-      ${SECH('💡 Sprint Insight')}
+    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;margin-top:14px;margin-bottom:14px;">
+      ${SECH('Sprint Insight')}
       <tr><td colspan="10" style="padding:0;">
-        <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;background:#eff6ff;border:1px solid #bfdbfe;">${insightHtml}</table>
+        <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;background:#eff6ff;border:1px solid #bfdbfe;">${insightHtml}</table>
       </td></tr>
     </table>
 
-    <!-- Team B -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🅱️ Team B / Adhoc Support — Discipline Summary</p>
-    ${tblGreen(['Discipline','Planned (h)','Completed (h)','Remaining (h)'], teamB.rows, teamB.foot)}
+    <!-- AI Data (moved up) -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">AI Adoption Data Summary</p>
+    ${tbl(['Discipline','Total Tasks','AI Tasks','Manual Tasks','AI Efficiency','Manual Efficiency','Saved Hours'], aiData.rows, aiData.foot)}
 
-    <!-- Defect Summary -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🐛 Bug Report — Sprint Quality Analysis</p>
-    ${tblRed(['Ownership','CS (Sprint)','Proposed','Open','Closed','Resolved','Effort Taken (h)'], bugData.rows, [])}
+    <!-- Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">Bug Report — Sprint Quality Analysis</p>
+    ${tblRed(['Type','Total','Open','Closed','Resolved','Dev Owned','QA Owned','Effort Taken'], bugTypeData.rows, [])}
 
-    <!-- Bug Type -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🏷️ Bug Type Classification</p>
-    ${tblRed(['Type','Total','Proposed','Open','Closed','Resolved','Effort Taken (h)'], bugTypeData.rows, [])}
-
-    <!-- AI Data -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">🤖 AI Data — Dev &amp; QA Adoption Summary</p>
-    ${tbl(['Discipline','Total Tasks','AI Tasks','Manual Tasks','AI Efficiency %','Manual Efficiency %','Saved Hours'], aiData.rows, aiData.foot)}
+    <!-- Team B (moved down) -->
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">Adhoc Support Summary</p>
+    ${adhocSubtitle ? `<p style="${F}font-size:7.5pt;color:#64748b;margin:0 0 6px;font-weight:500;">${adhocSubtitle}</p>` : ''}
+    ${tblGreen(['Discipline','Original Planned','Used Hours','Completed','Remaining'], teamB.rows, teamB.foot)}
 
     <!-- Footer -->
-    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;border-top:1px solid #e2e8f0;margin-top:18px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;table-layout:fixed;border-top:1px solid #e2e8f0;margin-top:18px;">
       <tr>
         <td style="${F}padding:7px 0 0;font-size:7.5pt;color:#94a3b8;">Sprint Closing Report &bull; ${sprint}</td>
         <td style="${F}padding:7px 0 0;font-size:7.5pt;color:#94a3b8;text-align:right;">Generated ${today}</td>
@@ -2082,18 +2290,74 @@ function _renderPopupTable() {
       ${col}<span class="sort-arrow">${arrow}</span></th>`;
   }).join('');
 
+  // Each row gets its own <tbody> so master toolbar / chevron can hide just the task block
+  // without affecting alternation of bug rows.
   const trs = sorted.map((row,i)=> {
-    const bugRow = `<tr style="background:${i%2===0?'rgba(255,255,255,.03)':'transparent'}">
+    const bg = i%2===0?'rgba(255,255,255,.03)':'transparent';
+    const rowKey = row._rowKey || '';
+    const bugRowTbody = `<tbody class="bug-main-row" data-row-key="${rowKey}"><tr style="background:${bg}">
       ${(row._htmlCells||[]).join('')}
-    </tr>`;
+    </tr></tbody>`;
     const taskRows = row._taskSubRows || '';
-    return bugRow + taskRows;
+    return bugRowTbody + taskRows;
   }).join('');
 
   body.innerHTML = summaryBar + `<table style="width:100%;border-collapse:collapse;font-size:.72rem;">
     <thead><tr>${ths}</tr></thead>
-    <tbody>${trs}</tbody>
+    ${trs}
   </table>`;
+
+  // Show the master expand/collapse toolbar only for bug popups that include task sub-rows
+  const tb = document.getElementById('rptPopupToolbar');
+  if (tb) {
+    const showToolbar = (_popupType === 'bugs') && _popupRows.some(r => r._hasExpandedTasks);
+    tb.style.display = showToolbar ? 'flex' : 'none';
+    if (showToolbar) _refreshPopupToolbarState('expand');
+  }
+}
+
+/* Set the master view: 'expand' shows all task rows, 'collapse' hides them */
+function setPopupTaskView(mode){
+  const body = document.getElementById('rptPopupBody');
+  if (!body) return;
+  body.querySelectorAll('tbody.bug-task-rows').forEach(tb => {
+    tb.style.display = (mode === 'collapse') ? 'none' : '';
+  });
+  // Sync each chevron's state + glyph
+  body.querySelectorAll('button[data-state]').forEach(btn => {
+    btn.dataset.state = (mode === 'collapse') ? 'closed' : 'open';
+    btn.textContent   = (mode === 'collapse') ? '▶' : '▼';
+  });
+  _refreshPopupToolbarState(mode);
+}
+
+/* Per-row chevron toggle */
+function togglePopupTaskRow(rowKey, btn){
+  const body = document.getElementById('rptPopupBody');
+  if (!body) return;
+  const tb = body.querySelector(`tbody.bug-task-rows[data-row-key="${rowKey}"]`);
+  if (!tb) return;
+  const isOpen = tb.style.display !== 'none';
+  tb.style.display = isOpen ? 'none' : '';
+  btn.dataset.state = isOpen ? 'closed' : 'open';
+  btn.textContent   = isOpen ? '▶' : '▼';
+}
+
+/* Reflect the current view state on the toolbar buttons (active vs inactive look) */
+function _refreshPopupToolbarState(activeMode){
+  const exp = document.getElementById('popupBtnExpand');
+  const col = document.getElementById('popupBtnCollapse');
+  if (!exp || !col) return;
+  const active = 'background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;';
+  const idle   = 'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#cbd5e1;';
+  const common = 'cursor:pointer;font-size:.66rem;padding:5px 10px;border-radius:6px;font-weight:600;white-space:nowrap;';
+  if (activeMode === 'collapse') {
+    exp.style.cssText = idle + common;
+    col.style.cssText = active + common;
+  } else {
+    exp.style.cssText = active + common;
+    col.style.cssText = idle + common;
+  }
 }
 /* ══ DRILL-DOWN POPUP ═══════════════════════════════════ */
 function closeRptPopup(){
@@ -2108,6 +2372,10 @@ function showRptPopup(title, itemsArr, type){
   const tfsBase = tfsUrl && project ? `${tfsUrl}/${project}/_workitems/edit/` : null;
 
   _popupSortCol = -1; _popupSortDir = 1; _popupType = type;
+
+  // Reset toolbar — _renderPopupTable will re-show it for bug popups with sub-tasks
+  const _tb = document.getElementById('rptPopupToolbar');
+  if (_tb) _tb.style.display = 'none';
 
   if(!itemsArr || itemsArr.length === 0){
     body.innerHTML = `<p style="color:#64748b;padding:20px;text-align:center;font-size:.75rem;">No items found.</p>`;
@@ -2136,20 +2404,35 @@ function showRptPopup(title, itemsArr, type){
       };
     });
   } else if(type === 'bugs') {
-    _popupCols = ['ID','Title','State','Reason','Effort Taken (h)'];
-    _popupRows = itemsArr.map(b => {
+    _popupCols = ['', 'ID','Title','State','Reason','Tags','Found in Env','Created Date','Effort Taken (h)'];
+    _popupRows = itemsArr.map((b,bi) => {
       const st    = b.fields['System.State']||'';
       const stC   = st==='Closed'?'#34d399':st==='Resolved'?'#60a5fa':'#fbbf24';
       const reason= b.fields['System.Reason']||'—';
+      const tagsRaw  = (b.fields['System.Tags']||'').split(';').map(t=>t.trim()).filter(Boolean);
+      const tagsHtml = tagsRaw.length
+        ? tagsRaw.map(t=>`<span style="display:inline-block;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:10px;padding:1px 7px;font-size:.6rem;margin:1px 2px 1px 0;">${t}</span>`).join('')
+        : '<span style="color:#475569;">—</span>';
+      const foundEnvRaw = b.fields['Microsoft.VSTS.CMMI.FoundInEnvironment']
+                       || b.fields['_foundInEnv']
+                       || b.fields['Casepoint.TFS.CustomFields.FoundInEnvironment']
+                       || b.fields['Microsoft.VSTS.Build.FoundIn']
+                       || '—';
+      const cdRaw  = b.fields['System.CreatedDate'];
+      const cdDate = cdRaw ? new Date(cdRaw) : null;
+      const cdStr  = cdDate ? cdDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      const cdSort = cdDate ? cdDate.getTime() : 0;
       const childIds = bugTasksMap[b.id]||[];
-      const compWork = childIds.reduce((s,tid)=>{const t=taskLookup[tid];return s+(t?t.fields['Casepoint.TFS.CustomFields.CompletedWork']||t.fields['Microsoft.VSTS.Scheduling.CompletedWork']||0:0);},0);
+      const compWork = childIds.reduce((s,tid)=>{const t=taskLookup[tid];return s+(t?t.fields['Microsoft.VSTS.Scheduling.CompletedWork']||0:0);},0);
       const cw = compWork>0 ? fmtH(compWork)+'h' : '—';
       const link= tfsBase?`<a href="${tfsBase}${b.id}" target="_blank" style="color:#f87171;">${b.id}</a>`:`${b.id}`;
+      const rowKey = `bug_${b.id}_${bi}`;
 
-      // Task sub-rows — shown inline under each bug
+      // Task sub-rows — wrapped in a tbody we can show/hide with the master toolbar or per-row chevron
       const taskSubRows = childIds.length === 0 ? '' :
-        `<tr style="background:rgba(15,23,42,.6);">
-          <td colspan="5" style="padding:0;">
+        `<tbody class="bug-task-rows" data-row-key="${rowKey}">
+        <tr style="background:rgba(15,23,42,.6);">
+          <td colspan="9" style="padding:0;">
             <table style="width:100%;border-collapse:collapse;font-size:.67rem;">
               <thead>
                 <tr style="background:rgba(99,102,241,.18);">
@@ -2195,19 +2478,29 @@ function showRptPopup(title, itemsArr, type){
               </tbody>
             </table>
           </td>
-        </tr>`;
+        </tr></tbody>`;
+
+      // Chevron in column 1 — present only when this bug has tasks
+      const chevron = childIds.length > 0
+        ? `<button onclick="event.stopPropagation();togglePopupTaskRow('${rowKey}',this)" data-state="open" title="Toggle tasks" style="background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;cursor:pointer;width:20px;height:20px;border-radius:4px;font-size:.7rem;font-weight:700;line-height:1;padding:0;">▼</button>`
+        : `<span style="color:#475569;font-size:.7rem;">—</span>`;
 
       return {
-        _cells: [String(b.id), b.fields['System.Title']||'', st, reason, String(compWork)],
+        _cells: [String(b.id), String(b.id), b.fields['System.Title']||'', st, reason, tagsRaw.join(' '), foundEnvRaw, String(cdSort), String(compWork)],
         _htmlCells: [
+          `<td style="padding:7px 8px;text-align:center;width:30px;">${chevron}</td>`,
           `<td style="padding:7px 12px;">${link}</td>`,
           `<td style="padding:7px 12px;color:#e2e8f0;font-weight:600;">${b.fields['System.Title']||''}</td>`,
           `<td style="padding:7px 12px;color:${stC};font-weight:600;">${st}</td>`,
           `<td style="padding:7px 12px;color:#94a3b8;font-size:.68rem;">${reason}</td>`,
+          `<td style="padding:7px 12px;font-size:.68rem;">${tagsHtml}</td>`,
+          `<td style="padding:7px 12px;color:#fbbf24;font-size:.68rem;">${foundEnvRaw}</td>`,
+          `<td style="padding:7px 12px;color:#94a3b8;font-size:.68rem;white-space:nowrap;">${cdStr}</td>`,
           `<td style="padding:7px 12px;text-align:center;color:#fbbf24;font-weight:600;">${cw}${childIds.length?` <span style="color:#475569;font-size:.6rem;">(${childIds.length} task${childIds.length>1?'s':''})</span>`:''}</td>`
         ],
         _taskSubRows: taskSubRows,
-        _hasExpandedTasks: childIds.length > 0
+        _hasExpandedTasks: childIds.length > 0,
+        _rowKey: rowKey
       };
     });
 
@@ -2253,11 +2546,112 @@ function showRptPopup(title, itemsArr, type){
         ]
       };
     });
+  } else if(type === 'tbAdhocTasks') {
+    // Team B → Adhoc Support tasks: shows historical OE at planning day vs current OE
+    _popupCols = ['Task ID','Title','Discipline','State','Assigned To','Original Planned (h)','Used Hours (h)','Completed (h)','Remaining (h)'];
+    _popupRows = itemsArr.map(t => {
+      const tState  = t.fields['System.State'] || '';
+      const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
+      const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
+      const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
+      const tCurOE  = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+      const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+      const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
+      const histRec = taskOrigPlanMap[t.id] || { oe: 0, asOfDate: null };
+      const tOrigP  = histRec.oe;
+      const asOf    = histRec.asOfDate ? new Date(histRec.asOfDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
+      return {
+        _cells: [String(t.id), t.fields['System.Title']||'', tDisc, tState, tAssign, String(tOrigP), String(tCurOE), String(tComp), String(tRem)],
+        _htmlCells: [
+          `<td style="padding:7px 10px;">${tLink}</td>`,
+          `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}</td>`,
+          `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
+          `<td style="padding:7px 10px;color:${tStateC};font-weight:600;">${tState}</td>`,
+          `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#a78bfa;font-weight:600;" title="As of ${asOf}">${tOrigP>0?fmtH(tOrigP)+'h':'0h'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#fbbf24;">${tCurOE>0?fmtH(tCurOE)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#f87171;">${tRem>0?fmtH(tRem)+'h':'—'}</td>`
+        ]
+      };
+    });
+  } else if(type === 'aiTasks') {
+    // AI Adoption Data — contributing tasks (Closed/Resolved, eff>0, exec set)
+    _popupCols = ['Task ID','Title','Discipline','State','Assigned To','Execution','Original Est','Revised Est','Completed','Effort'];
+    _popupRows = itemsArr.map(t => {
+      const tState  = t.fields['System.State'] || '';
+      const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
+      const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
+      const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
+      const tExec   = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '—';
+      const execColor = tExec.startsWith('AI-') ? '#34d399'
+                      : tExec === 'Manual-AI-Ineffective' ? '#fca5a5'
+                      : tExec === 'Manual' ? '#94a3b8' : '#64748b';
+      const tOrig   = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+      const tRev    = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
+      const tEff    = tRev > 0 ? tRev : tOrig;
+      const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+      const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
+      return {
+        _cells: [String(t.id), t.fields['System.Title']||'', tDisc, tState, tAssign, tExec, String(tOrig), String(tRev), String(tComp), String(tEff)],
+        _htmlCells: [
+          `<td style="padding:7px 10px;">${tLink}</td>`,
+          `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}</td>`,
+          `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
+          `<td style="padding:7px 10px;color:${tStateC};font-weight:600;">${tState}</td>`,
+          `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
+          `<td style="padding:7px 10px;color:${execColor};font-size:.65rem;font-weight:600;">${tExec}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#fbbf24;">${tOrig>0?fmtH(tOrig)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#a78bfa;">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#22d3ee;font-weight:700;">${tEff>0?fmtH(tEff)+'h':'—'}</td>`
+        ]
+      };
+    });
   }
 
   _renderPopupTable();
   document.getElementById('rptPopupOverlay').style.display='block';
   document.getElementById('rptPopupBox').style.display='flex';
+}
+
+/* Open Team B → Adhoc tasks popup. Pass discipline label or '__all__' */
+function showTbAdhocTasksPopup(disc){
+  const map = window._tbAdhocTaskMap || {};
+  const ids = (disc === '__all__')
+    ? (window._tbAdhocAllTaskIds || [])
+    : (map[disc] || []);
+  const tasksArr = ids.map(id => taskLookup[id]).filter(Boolean);
+  const titleSuffix = disc === '__all__' ? 'All Adhoc Tasks' : `${disc} — Adhoc Tasks`;
+  showRptPopup(`🅱️ ${titleSuffix}`, tasksArr, 'tbAdhocTasks');
+}
+
+/* Open Team B → Original Planned popup (Ticket Handling / Ticket Support only). */
+function showTbTicketTasksPopup(disc){
+  const map = window._tbTicketTaskMap || {};
+  const ids = (disc === '__all__')
+    ? (window._tbTicketAllTaskIds || [])
+    : (map[disc] || []);
+  const tasksArr = ids.map(id => taskLookup[id]).filter(Boolean);
+  const titleSuffix = disc === '__all__'
+    ? 'All Ticket Handling / Ticket Support Tasks'
+    : `${disc} — Ticket Handling / Ticket Support Tasks`;
+  showRptPopup(`🎟️ ${titleSuffix}`, tasksArr, 'tbAdhocTasks');
+}
+
+/* Open AI Adoption Data popup. Pass discipline key ('development' / 'test') or '__all__' */
+function showAiAdoptionPopup(disc){
+  const map = window._aiAdoptionTaskMap || {};
+  const ids = (disc === '__all__')
+    ? (window._aiAdoptionAllTaskIds || [])
+    : (map[disc] || []);
+  const tasksArr = ids.map(id => taskLookup[id]).filter(Boolean);
+  const titleMap = { development: '💻 Development', test: '🧪 Test' };
+  const titleSuffix = disc === '__all__'
+    ? 'All Contributing Tasks'
+    : `${titleMap[disc] || disc} — Contributing Tasks`;
+  showRptPopup(`🤖 AI Adoption — ${titleSuffix}`, tasksArr, 'aiTasks');
 }
 
 
@@ -2353,18 +2747,19 @@ function renderReport(){
     window[`_rpt_${key}_open`]    = openItems;
     window[`_rpt_${key}_onhold`]  = onholdItems;
     window[`_rpt_${key}_adhoc`]   = adhocItems;
-    const rate=pct(row.closed, row.items.length||1);
-    const rateHtml=rate>=80?`<span class="rpt-ok">${rate}%</span>`:rate>=50?`<span class="rpt-neutral">${rate}%</span>`:`<span class="rpt-over">${rate}%</span>`;
+
+    // For Non-Deliverable row, hide Closed / Resolved / Open values — show "—"
+    const isNonDel = row.label.includes('Non-Deliverable');
     const D=(val,arr,label)=>arr.length?`<td class="rpt-edit rpt-drill" contenteditable="true" onclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'reqs')">${val}</td>`:`<td class="rpt-edit" contenteditable="true">${val}</td>`;
+    const dash = `<td class="rpt-edit" contenteditable="true" style="color:#94a3b8">—</td>`;
     return`<tr onclick="showRptPopup('${row.label} — All Items',window['_rpt_${key}_all'],'reqs')" style="cursor:pointer;" title="Click to view all items">
       <td>${row.label}</td>
       ${D(row.items.length, row.items, 'all')}
-      ${D(row.closed, closedItems, 'closed')}
-      ${D(row.resolved, resolvedItems, 'resolved')}
-      ${D(row.open, openItems, 'open')}
+      ${isNonDel ? dash : D(row.closed, closedItems, 'closed')}
+      ${isNonDel ? dash : D(row.resolved, resolvedItems, 'resolved')}
+      ${isNonDel ? dash : D(row.open, openItems, 'open')}
       ${D(row.onhold, onholdItems, 'onhold')}
       ${D(row.adhoc, adhocItems, 'adhoc')}
-      <td>${rateHtml}</td>
     </tr>`;
   }).join('');
 
@@ -2432,25 +2827,56 @@ function renderReport(){
     }
 
     // ── Table: aggregate task hours by discipline ───────────────────
-    // Source: actual TASKS of each adhoc req, grouped by task discipline
-    const discData = {};  // { disciplineLabel → { plan, comp, rem } }
+    // Two sets:
+    //  • discData      = ALL adhoc tasks, used for Used Hours / Completed / Remaining
+    //  • discTicketData = subset whose parent req title starts with
+    //                     "Ticket Handling" or "Ticket Support", used for Original Planned
+    const discData       = {};  // { disciplineLabel → { plan, comp, rem, taskIds[] } }
+    const discTicketData = {};  // { disciplineLabel → { origPlan, taskIds[] } }
 
+    const titleMatchesTicket = (req) => {
+      const t = (req.fields?.['System.Title'] || '').trim().toLowerCase();
+      return t.startsWith('ticket handling') || t.startsWith('ticket support');
+    };
+
+    // ── Pass 1: All-adhoc accumulator (Used / Completed / Remaining + row popup)
     adhoc.forEach(r => {
       const childIds   = reqTasksMap[r.id] || [];
       const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean);
 
       childTasks.forEach(t => {
         const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
-        if (!discData[disc]) discData[disc] = { plan: 0, comp: 0, rem: 0 };
+        if (!discData[disc]) discData[disc] = { plan: 0, comp: 0, rem: 0, taskIds: [] };
         discData[disc].plan += t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate']  || 0;
         discData[disc].comp += t.fields['Microsoft.VSTS.Scheduling.CompletedWork']     || 0;
         discData[disc].rem  += t.fields['Microsoft.VSTS.Scheduling.RemainingWork']     || 0;
+        discData[disc].taskIds.push(t.id);
       });
     });
 
+    // ── Pass 2: Ticket Handling / Ticket Support accumulator (Original Planned + OP popup)
+    // Iterate ALL requirements — tag is NOT considered, only the title prefix.
+    requirements.forEach(r => {
+      if (!titleMatchesTicket(r)) return;
+      const childIds   = reqTasksMap[r.id] || [];
+      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean);
+
+      childTasks.forEach(t => {
+        const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
+        if (!discTicketData[disc]) discTicketData[disc] = { origPlan: 0, taskIds: [] };
+        const histOE = (taskOrigPlanMap[t.id] && taskOrigPlanMap[t.id].oe) || 0;
+        discTicketData[disc].origPlan += histOE;
+        discTicketData[disc].taskIds.push(t.id);
+      });
+    });
+
+    // Union of disciplines from both sets (so a Test row shows even if no
+    // Test ticket matched, etc.)
+    const allDiscs = new Set([...Object.keys(discData), ...Object.keys(discTicketData)]);
+
     // Sort: Development first, Test second, rest alphabetically
     const ORDER = ['development', 'test'];
-    const sortedDiscs = Object.keys(discData).sort((a, b) => {
+    const sortedDiscs = [...allDiscs].sort((a, b) => {
       const ai = ORDER.indexOf(a.toLowerCase()), bi = ORDER.indexOf(b.toLowerCase());
       if (ai !== -1 && bi !== -1) return ai - bi;
       if (ai !== -1) return -1;
@@ -2458,18 +2884,32 @@ function renderReport(){
       return a.localeCompare(b);
     });
 
-    let totP = 0, totC = 0, totR = 0;
+    let totOP = 0, totP = 0, totC = 0, totR = 0;
     const DISC_COLOR = { development: '#93c5fd', test: '#6ee7b7' };
 
+    // Stash per-discipline task lists for popup access
+    window._tbAdhocTaskMap   = {};   // all-adhoc tasks (row dbl-click)
+    window._tbTicketTaskMap  = {};   // Ticket Handling/Support tasks only (OP cell dbl-click)
+    sortedDiscs.forEach(disc => {
+      window._tbAdhocTaskMap[disc]  = (discData[disc]       && discData[disc].taskIds)       || [];
+      window._tbTicketTaskMap[disc] = (discTicketData[disc] && discTicketData[disc].taskIds) || [];
+    });
+    window._tbAdhocAllTaskIds  = sortedDiscs.flatMap(d => window._tbAdhocTaskMap[d]);
+    window._tbTicketAllTaskIds = sortedDiscs.flatMap(d => window._tbTicketTaskMap[d]);
+
     const tableRows = sortedDiscs.map(disc => {
-      const d = discData[disc];
-      totP += d.plan; totC += d.comp; totR += d.rem;
+      const d  = discData[disc]       || { plan: 0, comp: 0, rem: 0, taskIds: [] };
+      const dt = discTicketData[disc] || { origPlan: 0, taskIds: [] };
+      totOP += dt.origPlan; totP += d.plan; totC += d.comp; totR += d.rem;
       const clr = DISC_COLOR[disc.toLowerCase()] || '#cbd5e1';
       const discLabel = disc.toLowerCase() === 'development' ? '💻 Development'
                       : disc.toLowerCase() === 'test'        ? '🧪 Test'
                       : disc;
-      return `<tr>
+      const safeDisc = disc.replace(/'/g,"\\'");
+      const opTitle = `Double-click to view ${discLabel} tasks under "Ticket Handling" / "Ticket Support" requirements`;
+      return `<tr ondblclick="showTbAdhocTasksPopup('${safeDisc}')" title="Double-click to view all ${discLabel} adhoc tasks" style="cursor:pointer;">
         <td style="color:${clr}">${discLabel}</td>
+        <td style="color:#a78bfa;font-weight:600" ondblclick="event.stopPropagation();showTbTicketTasksPopup('${safeDisc}')" title="${opTitle}">${fmtH(dt.origPlan)}h</td>
         <td style="color:#fbbf24;font-weight:600">${fmtH(d.plan)}h</td>
         <td style="color:#34d399;font-weight:600">${fmtH(d.comp)}h</td>
         <td style="color:#f87171;font-weight:600">${fmtH(d.rem)}h</td>
@@ -2477,8 +2917,9 @@ function renderReport(){
     });
 
     if (tbDBody) tbDBody.innerHTML = tableRows.join('');
-    if (tbDFoot) tbDFoot.innerHTML = `<tr>
+    if (tbDFoot) tbDFoot.innerHTML = `<tr ondblclick="showTbAdhocTasksPopup('__all__')" title="Double-click to view all adhoc tasks" style="cursor:pointer;">
       <td>Total</td>
+      <td style="color:#a78bfa" ondblclick="event.stopPropagation();showTbTicketTasksPopup('__all__')" title="Double-click to view all Ticket Handling / Ticket Support tasks">${fmtH(totOP)}h</td>
       <td style="color:#fbbf24">${fmtH(totP)}h</td>
       <td style="color:#34d399">${fmtH(totC)}h</td>
       <td style="color:#f87171">${fmtH(totR)}h</td>
@@ -2486,13 +2927,14 @@ function renderReport(){
 
     // Populate hidden table for email/readTbl (discipline rows)
     if (tbbodyEl) tbbodyEl.innerHTML = sortedDiscs.map(disc => {
-      const d = discData[disc];
+      const d  = discData[disc]       || { plan: 0, comp: 0, rem: 0 };
+      const dt = discTicketData[disc] || { origPlan: 0 };
       const lbl = disc.toLowerCase()==='development'?'💻 Development':disc.toLowerCase()==='test'?'🧪 Test':disc;
-      return `<tr><td>${lbl}</td><td>${fmtH(d.plan)}h</td><td>${fmtH(d.comp)}h</td><td>${fmtH(d.rem)}h</td></tr>`;
+      return `<tr><td>${lbl}</td><td>${fmtH(dt.origPlan)}h</td><td>${fmtH(d.plan)}h</td><td>${fmtH(d.comp)}h</td><td>${fmtH(d.rem)}h</td></tr>`;
     }).join('');
     if (tbfootEl) tbfootEl.innerHTML = `<tr>
       <td>Total (${adhoc.length} tickets · Closed:${closed} Resolved:${resolved} Open:${open})</td>
-      <td>${fmtH(totP)}h</td><td>${fmtH(totC)}h</td><td>${fmtH(totR)}h</td>
+      <td>${fmtH(totOP)}h</td><td>${fmtH(totP)}h</td><td>${fmtH(totC)}h</td><td>${fmtH(totR)}h</td>
     </tr>`;
   }
 
@@ -2532,7 +2974,11 @@ function renderReport(){
     'production','production-azure','production-azure dod'
   ]);
   const isProductionBug = b => {
-    const env = (b.fields['_foundInEnv'] || '').toLowerCase().trim();
+    const env = (b.fields['Microsoft.VSTS.CMMI.FoundInEnvironment']
+              || b.fields['_foundInEnv']
+              || b.fields['Casepoint.TFS.CustomFields.FoundInEnvironment']
+              || b.fields['Microsoft.VSTS.Build.FoundIn']
+              || '').toLowerCase().trim();
     return PROD_ENVS.has(env);
   };
 
@@ -2547,6 +2993,23 @@ function renderReport(){
     return resolvedRsn === 'cannot reproduce'
         || tags.includes('cannot reproduce')
         || tags.includes('cannot reproduced');
+  };
+  // "Forced Other": bugs that should ONLY appear in the Other bucket and be
+  // excluded from every other category (Current Sprint / Rejected / Cannot
+  // Reproduce / Production Bug / Carry Forward).
+  // Triggers when ANY of the following is true:
+  //   • System.Reason = "Duplicate"
+  //   • Microsoft.VSTS.Common.ResolvedReason = "Deferred"
+  //   • Tag contains "Deployment Error"
+  //   • Tag contains "Third party library Error"
+  const isForcedOther = b => {
+    const reason         = (b.fields['System.Reason'] || '').toLowerCase().trim();
+    const resolvedReason = (b.fields['Microsoft.VSTS.Common.ResolvedReason'] || '').toLowerCase().trim();
+    const tags           = (b.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
+    return reason === 'duplicate'
+        || resolvedReason === 'deferred'
+        || tags.includes('deployment error')
+        || tags.includes('third party library error');
   };
   const qaBugs  = bugs.filter(b =>  isAfterSprintStart(b) &&  hasQAOwnedTag(b) && !prodBugIds.has(b.id) && !isRejectedBug(b) && !isCannotReproduce(b));
   const devBugs = bugs.filter(b =>  isAfterSprintStart(b) && !hasQAOwnedTag(b) && !prodBugIds.has(b.id) && !isRejectedBug(b) && !isCannotReproduce(b));
@@ -2564,14 +3027,6 @@ function renderReport(){
     });
     return [...names].join(', ')||'—';
   };
-
-  const bugOwnerRows=[
-    {label:'🔧 Development', bugsArr:devBugs, members:buckMembers(devBugs)},
-    {label:'🧪 Test',         bugsArr:qaBugs,  members:buckMembers(qaBugs)},
-  ];
-  const bugbody=document.getElementById('rpt-bugBody');
-  const bugfoot=document.getElementById('rpt-bugFoot');
-
 
   // Sum a specific field directly from bug work items
   const bugFieldSum = (arr, fieldName) => {
@@ -2591,23 +3046,16 @@ function renderReport(){
   };
   // Sum CompletedWork from child tasks (bug task map)
   const bugTaskCompWork = arr => bugTaskFieldSum(arr, 'Microsoft.VSTS.Scheduling.CompletedWork');
-  // Helper: sum Actual Completed Hours directly from bug work items
-  //  Primary: Casepoint.TFS.CustomFields.CompletedWork on the bug itself
-  //  Fallback: sum Microsoft.VSTS.Scheduling.CompletedWork from child tasks
+  // Effort Taken (h): sum of Microsoft.VSTS.Scheduling.CompletedWork
+  // across all tasks whose System.Parent == bug.id (mapped into bugTasksMap).
   const bugEffort = arr => {
     let total = 0;
     arr.forEach(b => {
-      const direct = b.fields['Casepoint.TFS.CustomFields.CompletedWork'];
-      if (direct != null && direct > 0) {
-        total += direct;
-      } else {
-        // fallback: sum CompletedWork from child tasks
-        const childIds = bugTasksMap[b.id] || [];
-        childIds.forEach(tid => {
-          const t = taskLookup[tid];
-          if (t) total += t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
-        });
-      }
+      const childIds = bugTasksMap[b.id] || [];
+      childIds.forEach(tid => {
+        const t = taskLookup[tid];
+        if (t) total += t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+      });
     });
     return total;
   };
@@ -2622,88 +3070,104 @@ function renderReport(){
     effortBar.style.display = 'block';
   }
 
-  if(bugbody) bugbody.innerHTML=bugOwnerRows.map((row,ri)=>{
-    const cs     =csFn(row.bugsArr);
-    const openArr=row.bugsArr.filter(b=>['Active','Open','New'].includes(b.fields['System.State']));
-    const closedArr=row.bugsArr.filter(b=>b.fields['System.State']==='Closed');
-    const resolvedArr=row.bugsArr.filter(b=>b.fields['System.State']==='Resolved');
-    const effort =bugEffort(row.bugsArr);
-    const key=`bug_${ri}`;
-    window[`_rpt_${key}_all`]     = row.bugsArr;
-    window[`_rpt_${key}_open`]    = openArr;
-    window[`_rpt_${key}_closed`]  = closedArr;
-    const proposedArr=row.bugsArr.filter(b=>['Proposed','New','Design'].includes(b.fields['System.State']));
-    window[`_rpt_${key}_proposed`]  = proposedArr;
-    window[`_rpt_${key}_resolved`]= resolvedArr;
-    const B=(val,arr,label,style='')=>arr.length
-      ?`<td class="rpt-edit rpt-drill" contenteditable="true" ${style?`style="${style}"`:''}
-          onclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'bugs')">${val}</td>`
-      :`<td class="rpt-edit" contenteditable="true" ${style?`style="${style}"`:''}>${val}</td>`;
-    // CS count = proposed + open + closed + resolved
-    const csCount = proposedArr.length + openArr.length + closedArr.length + resolvedArr.length;
-    return`<tr onclick="showRptPopup('${row.label}',window['_rpt_${key}_all'],'bugs')" style="cursor:pointer;" title="Click to view bugs">
-      <td>${row.label}</td>
-      ${B(csCount, row.bugsArr, 'all', 'color:#34d399')}
-      ${B(proposedArr.length, proposedArr, 'proposed', 'color:#c084fc')}
-      ${B(openArr.length,     openArr,     'open',     'color:#f87171')}
-      ${B(closedArr.length,   closedArr,   'closed',   'color:#34d399')}
-      ${B(resolvedArr.length, resolvedArr, 'resolved', 'color:#60a5fa')}
-      <td class="rpt-edit rpt-drill" contenteditable="true" style="color:#fbbf24;font-weight:600"
-          onclick="event.stopPropagation();showRptPopup('${row.label} — Task Effort',window['_rpt_${key}_all'],'tasks')">${(()=>{const v=bugEffort(row.bugsArr);return v?fmtH(v)+'h':'—';})()}</td>
-    </tr>`;
-  }).join('');
-
-  // ── Bug Type Classification ──────────────────────────────────────────────
+  // ── Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) ──
   const bugTypeBodyEl = document.getElementById('rpt-bugTypeBody');
   if (bugTypeBodyEl) {
+    // ── Priority cascade (mutually exclusive) ─────────────────────────
+    //   0. Forced Other — bugs with Reason=Duplicate, ResolvedReason=Deferred,
+    //                     or tag "Deployment Error"/"Third party library Error".
+    //                     Claimed FIRST so they cannot appear in any other row.
+    //   1. Rejected
+    //   2. Cannot Reproduce
+    //   3. Production Bug
+    //   4. Carry Forward    (created before sprint start)
+    //   5. Current Sprint   (created on/after sprint start)
+    //   6. Other            (forced-Other + edge cases not matched above)
+    // Each bug is counted in exactly ONE row.
+    const claimed = new Set();
+
+    // Step 0: pre-claim "forced Other" bugs so they're excluded from every
+    // other category. They're combined into otherArr at the end.
+    const otherForcedArr = bugs.filter(b => isForcedOther(b));
+    otherForcedArr.forEach(b => claimed.add(b.id));
+
+    const rejectedArr = bugs.filter(b => {
+      if (claimed.has(b.id)) return false;
+      return (b.fields['System.Reason'] || '').toLowerCase() === 'rejected';
+    });
+    rejectedArr.forEach(b => claimed.add(b.id));
+
+    const cannotReproArr = bugs.filter(b => {
+      if (claimed.has(b.id)) return false;
+      const tags = (b.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
+      const resolvedRsn = (b.fields['Microsoft.VSTS.Common.ResolvedReason'] || '').toLowerCase().trim();
+      return resolvedRsn === 'cannot reproduce'
+          || tags.includes('cannot reproduce')
+          || tags.includes('cannot reproduced');
+    });
+    cannotReproArr.forEach(b => claimed.add(b.id));
+
+    const productionArr = prodBugs.filter(b => !claimed.has(b.id));
+    productionArr.forEach(b => claimed.add(b.id));
+
+    const carryForwardArr = bugs.filter(b => {
+      if (claimed.has(b.id)) return false;
+      if (!sprintStartDate) return false;
+      const cd = b.fields['System.CreatedDate'];
+      return cd && new Date(cd) < sprintStartDate;
+    });
+    carryForwardArr.forEach(b => claimed.add(b.id));
+
+    // Current Sprint = bugs created on/after sprint start (with a known date)
+    const currentSprintArr = bugs.filter(b => {
+      if (claimed.has(b.id)) return false;
+      if (!sprintStartDate) return false;
+      const cd = b.fields['System.CreatedDate'];
+      return cd && new Date(cd) >= sprintStartDate;
+    });
+    currentSprintArr.forEach(b => claimed.add(b.id));
+
+    // Other = forced-Other bugs + remaining unclaimed edge cases
+    // (e.g. bugs without sprint info or CreatedDate).
+    const otherArr = [...otherForcedArr, ...bugs.filter(b => !claimed.has(b.id))];
+
+    // Display order: Current Sprint first (most prominent), Other last (catch-all).
     const bugTypeRows = [
-      {
-        label: '🚀 Production Bug',
-        bugsArr: prodBugs
-      },
-      {
-        label: '↩️ Carry Forward',
-        bugsArr: bugs.filter(b => {
-          if (!sprintStartDate) return false;
-          const cd = b.fields['System.CreatedDate'];
-          return cd && new Date(cd) < sprintStartDate;
-        })
-      },
-      {
-        label: '❓ Cannot Reproduce',
-        bugsArr: bugs.filter(b => {
-          const tags = (b.fields['System.Tags']||'').split(';').map(t=>t.trim().toLowerCase());
-          return tags.includes('cannot reproduce') || tags.includes('cannot reproduced');
-        })
-      },
-      {
-        label: '🚫 Rejected',
-        bugsArr: bugs.filter(b => (b.fields['System.Reason']||'').toLowerCase() === 'rejected')
-      },
+      { label: '📅 Current Sprint',    bugsArr: currentSprintArr },
+      { label: '🚫 Rejected',          bugsArr: rejectedArr      },
+      { label: '❓ Cannot Reproduce',  bugsArr: cannotReproArr   },
+      { label: '🚀 Production Bug',    bugsArr: productionArr    },
+      { label: '↩️ Carry Forward',     bugsArr: carryForwardArr  },
+      { label: '📋 Other',             bugsArr: otherArr         },
     ];
     bugTypeBodyEl.innerHTML = bugTypeRows.map((row,ri) => {
       const eff = bugEffort(row.bugsArr);
       const key = `bugtype_${ri}`;
-      const propArr = row.bugsArr.filter(b=>['Proposed','New','Design'].includes(b.fields['System.State']));
-      const openArr = row.bugsArr.filter(b=>['Active','Open'].includes(b.fields['System.State']));
+      // Open = Proposed + Active/Open (Proposed/New/Design states folded into Open)
+      const openArr    = row.bugsArr.filter(b=>['Proposed','New','Design','Active','Open'].includes(b.fields['System.State']));
       const closedArr  = row.bugsArr.filter(b=>b.fields['System.State']==='Closed');
       const resolvedArr= row.bugsArr.filter(b=>b.fields['System.State']==='Resolved');
+      // Ownership split based on the "QA Owned" tag
+      const qaOwnedArr  = row.bugsArr.filter(b => hasQAOwnedTag(b));
+      const devOwnedArr = row.bugsArr.filter(b => !hasQAOwnedTag(b));
       window[`_rpt_${key}_all`]      = row.bugsArr;
-      window[`_rpt_${key}_proposed`] = propArr;
       window[`_rpt_${key}_open`]     = openArr;
       window[`_rpt_${key}_closed`]   = closedArr;
-      window[`_rpt_${key}_resolved`] = resolvedArr;
+      window[`_rpt_${key}_resolved` ]= resolvedArr;
+      window[`_rpt_${key}_devowned`] = devOwnedArr;
+      window[`_rpt_${key}_qaowned`]  = qaOwnedArr;
       const BT=(val,arr,lbl,style='')=>arr.length
         ?`<td class="rpt-edit rpt-drill" contenteditable="true" ${style?`style="${style}"`:''}
-             onclick="event.stopPropagation();showRptPopup('${row.label} — ${lbl}',window['_rpt_${key}_${lbl}'],'bugs')">${val}</td>`
+             onclick="event.stopPropagation();showRptPopup('${row.label} — ${lbl}',window['_rpt_${key}_${lbl.toLowerCase().replace(/\s+/g,'')}'],'bugs')">${val}</td>`
         :`<td class="rpt-edit" contenteditable="true" ${style?`style="${style}"`:''}>${val}</td>`;
       return `<tr onclick="showRptPopup('${row.label}',window['_rpt_${key}_all'],'bugs')" style="cursor:pointer;" title="Click to view bugs">
         <td style="text-align:left">${row.label}</td>
-        ${BT(propArr.length+openArr.length+closedArr.length+resolvedArr.length, row.bugsArr, 'all', 'font-weight:700')}
-        ${BT(propArr.length,    propArr,    'proposed', 'color:#c084fc;font-weight:600')}
-        ${BT(openArr.length,    openArr,    'open',     'color:#f87171;font-weight:600')}
-        ${BT(closedArr.length,  closedArr,  'closed',   'color:#34d399;font-weight:600')}
-        ${BT(resolvedArr.length,resolvedArr,'resolved', 'color:#60a5fa;font-weight:600')}
+        ${BT(openArr.length+closedArr.length+resolvedArr.length, row.bugsArr, 'all', 'font-weight:700')}
+        ${BT(openArr.length,     openArr,     'Open',      'color:#f87171;font-weight:600')}
+        ${BT(closedArr.length,   closedArr,   'Closed',    'color:#34d399;font-weight:600')}
+        ${BT(resolvedArr.length, resolvedArr, 'Resolved',  'color:#60a5fa;font-weight:600')}
+        ${BT(devOwnedArr.length, devOwnedArr, 'Dev Owned', 'color:#38bdf8;font-weight:600')}
+        ${BT(qaOwnedArr.length,  qaOwnedArr,  'QA Owned',  'color:#a78bfa;font-weight:600')}
         <td class="rpt-edit rpt-drill" contenteditable="true" style="color:#fbbf24;font-weight:600"
             onclick="event.stopPropagation();showRptPopup('${row.label} — Task Effort Detail',window['_rpt_${key}_all'],'tasks')">${eff ? fmtH(eff)+'h' : '—'}</td>
       </tr>`;
@@ -2748,6 +3212,7 @@ function renderReport(){
       let aiOrig=0, aiRev=0, aiTot=0, aiComp=0;
       let manOrig=0, manComp=0;
       let maiOrig=0, maiComp=0;
+      const matched = []; // tasks that contributed to this discipline's stats
 
       tasks.forEach(t => {
         if (!t.fields) return;
@@ -2777,6 +3242,8 @@ function renderReport(){
         if (isAI)  { aiTasks++;  if (revEst <= 0) aiOrig += origEst; aiRev += revEst; aiTot += eff; aiComp += comp; }
         else if (isMAI) { maiTasks++; maiOrig += eff; maiComp += comp; }
         else            { manTasks++;  manOrig += eff; manComp += comp; }
+
+        matched.push(t.id);
       });
 
       const totalTasks  = aiTasks + maiTasks + manTasks;
@@ -2798,7 +3265,7 @@ function renderReport(){
 
       return { totalTasks, aiTasks, manTasks, maiTasks, adoptionPct,
                aiOrig, aiTot, aiComp, effPct, manualEffPct, savedHrs,
-               manOrig, maiOrig };  // needed for overall adoption calc
+               manOrig, maiOrig, taskIds: matched };  // taskIds for popup; manOrig/maiOrig for overall
     }
 
     const DISCIPLINES = [
@@ -2809,8 +3276,14 @@ function renderReport(){
     let totTasks=0, totAI=0, totMan=0, totSaved=0, hasData=false;
     let totAiTot=0, totAiComp=0, totAllHrs=0;
 
+    // Stash per-discipline contributing-task IDs for double-click popup
+    window._aiAdoptionTaskMap   = {};
+    window._aiAdoptionAllTaskIds= [];
+
     const rows = DISCIPLINES.map(d => {
       const s = calcAI(d.key);
+      window._aiAdoptionTaskMap[d.key] = s.taskIds;
+      window._aiAdoptionAllTaskIds.push(...s.taskIds);
       if (s.totalTasks > 0) hasData = true;
       totTasks  += s.totalTasks;
       totAI     += s.aiTasks;
@@ -2824,7 +3297,7 @@ function renderReport(){
       const manEffColor = s.manualEffPct >= 0 ? '#a78bfa' : '#f87171';
       const savedColor  = s.savedHrs >= 0 ? '#f472b6' : '#f87171';
 
-      return `<tr>
+      return `<tr ondblclick="showAiAdoptionPopup('${d.key}')" title="Double-click to view contributing tasks for ${d.label}" style="cursor:pointer;">
         <td style="text-align:left;font-weight:600;color:${d.clr}">${d.label}</td>
         <td style="font-weight:700">${s.totalTasks}</td>
         <td style="color:#60a5fa">${s.aiTasks}</td>
@@ -2851,7 +3324,7 @@ function renderReport(){
     const savColor = totSaved >= 0 ? '#f472b6' : '#f87171';
     const adColor  = ovAdop >= 70 ? '#34d399' : ovAdop >= 40 ? '#fbbf24' : '#f87171';
 
-    if (aiFoot) aiFoot.innerHTML = `<tr>
+    if (aiFoot) aiFoot.innerHTML = `<tr ondblclick="showAiAdoptionPopup('__all__')" title="Double-click to view all contributing tasks" style="cursor:pointer;">
       <td style="text-align:left;font-weight:700">Overall</td>
       <td style="font-weight:700">${totTasks}</td>
       <td style="color:#60a5fa;font-weight:700">${totAI}</td>
@@ -3259,7 +3732,7 @@ function buildExportClone(){
   document.querySelectorAll('.sec').forEach((s,i)=>{if(!states[i])s.classList.remove('on')});
 
   clone.querySelectorAll('.sec').forEach(s=>{s.style.display='block';s.classList.add('on')});
-  clone.querySelectorAll('.snav,#cfgOverlay,#ldgOverlay,#xtoast').forEach(el=>el.style.display='none');
+  clone.querySelectorAll('.snav,#cfgBrand,#configPanel,#filterPanel,#manualHint,#ldgOverlay,#xtoast').forEach(el=>el.style.display='none');
 
   // No canvases to snapshot
   return clone;
@@ -3294,7 +3767,7 @@ function doCopyEmail(){
 
       /* ── 2. Strip scripts & chrome UI ── */
       clone.querySelectorAll('script,link[rel="preconnect"]').forEach(s=>s.remove());
-      ['cfgOverlay','ldgOverlay','xtoast','changeSprintBtn','scrollTop'].forEach(id=>{
+      ['cfgBrand','configPanel','filterPanel','manualHint','ldgOverlay','xtoast','changeSprintBtn','scrollTop'].forEach(id=>{
         const el=clone.querySelector('#'+id);if(el)el.remove();
       });
       clone.querySelectorAll('.snav,.ldg-spinner').forEach(el=>el.remove());
