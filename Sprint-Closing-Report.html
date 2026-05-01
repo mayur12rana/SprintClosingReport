@@ -756,6 +756,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
         <thead><tr>
           <th>Category</th><th>Total Items</th><th>Closed</th><th>Resolved</th>
           <th>Open</th><th>OnHold</th><th>Adhoc</th>
+          <th title="Sum of all child tasks' estimate (Revised when > 0, else Original) captured on Planning Day evening (sprint start, 11:00 PM). Click to view tasks.">Planning Day (h)</th>
+          <th title="Sum of all child tasks' estimate (Revised when > 0, else Original) at sprint end — no state filter. Click to view tasks.">Review Day (h)</th>
         </tr></thead>
         <tbody id="rpt-deliverySummaryBody"></tbody>
       </table>
@@ -989,19 +991,27 @@ async function batchFetch(ids,fields){
   return results.flatMap(r=>r.value||[]);
 }
 
-/* ══ Load Original Estimate at planning day for adhoc tasks ═════════════════
-   For each task ID, fetch /revisions and find the latest revision whose
-   System.ChangedDate is on/before sprintStartDate end-of-day. Read
-   Microsoft.VSTS.Scheduling.OriginalEstimate from that revision.
-   - Tasks created after sprint start contribute 0 (didn't exist on planning day).
-   - If sprintStartDate is unknown, falls back to the task's current OE.
+/* ══ Load Original Estimate snapshots for tasks ═════════════════════
+   For each task ID, fetch /revisions and find:
+     • planningOE: latest revision with ChangedDate ≤ sprintStart 23:00
+                   (planning day evening — captures post-planning state)
+     • reviewOE:   latest revision with ChangedDate ≤ sprintEnd 23:59:59
+                   (review day — sprint last day)
+     • reviewState: System.State on that review-day snapshot (used by
+                   Delivery Summary to count "Closed at sprint end" tasks)
+   - Tasks created after sprint start contribute planningOE = 0.
+   - If sprint dates are unknown, falls back to the task's current OE.
    Concurrency-limited (6 parallel) to avoid hammering TFS. */
 async function loadOrigPlannedForAdhoc(taskIds){
   taskOrigPlanMap = {};
   if(!taskIds || !taskIds.length) return;
 
-  const cutoff = sprintStartDate ? new Date(sprintStartDate) : null;
-  if(cutoff) cutoff.setHours(20,0,0,0); // 8:00 PM on planning day — captures post-planning state
+  // Planning cutoff: sprint start day at 23:00 (11 PM).
+  const planCutoff = sprintStartDate ? new Date(sprintStartDate) : null;
+  if(planCutoff) planCutoff.setHours(23,0,0,0);
+  // Review cutoff: sprint end day at 23:59:59.
+  const reviewCutoff = sprintEndDate ? new Date(sprintEndDate) : null;
+  if(reviewCutoff) reviewCutoff.setHours(23,59,59,999);
 
   const concurrency = 6;
   let idx = 0;
@@ -1011,7 +1021,7 @@ async function loadOrigPlannedForAdhoc(taskIds){
       const tid = taskIds[myIdx];
       try{
         const r = await apiFetch(`${tfsUrl}/_apis/wit/workitems/${tid}/revisions?api-version=5.0`);
-        if(!r.ok){ taskOrigPlanMap[tid] = { oe: 0, asOfDate: null }; continue; }
+        if(!r.ok){ taskOrigPlanMap[tid] = { oe: 0, asOfDate: null, reviewOE: 0, reviewState: '', reviewAsOfDate: null }; continue; }
         const j = await r.json();
         const revs = (j.value || []).slice().sort((a,b)=>{
           const ad = new Date(a.fields?.['System.ChangedDate'] || 0).getTime();
@@ -1019,31 +1029,41 @@ async function loadOrigPlannedForAdhoc(taskIds){
           return ad - bd;
         });
 
-        let chosen = null;
-        if(cutoff){
-          // Pick latest revision with ChangedDate <= cutoff
-          for(const rv of revs){
-            const cd = new Date(rv.fields?.['System.ChangedDate'] || 0);
-            if(cd.getTime() <= cutoff.getTime()) chosen = rv;
-            else break;
-          }
-        } else {
-          // No sprint start known → take latest revision
-          chosen = revs[revs.length - 1] || null;
+        // Find the latest revision at or before each cutoff.
+        // Single forward pass — `revs` is sorted ascending by ChangedDate.
+        let planChosen = null, reviewChosen = null;
+        for(const rv of revs){
+          const cdMs = new Date(rv.fields?.['System.ChangedDate'] || 0).getTime();
+          if(planCutoff   && cdMs <= planCutoff.getTime())   planChosen   = rv;
+          if(reviewCutoff && cdMs <= reviewCutoff.getTime()) reviewChosen = rv;
         }
+        if(!planCutoff)   planChosen   = revs[revs.length - 1] || null;
+        if(!reviewCutoff) reviewChosen = revs[revs.length - 1] || null;
 
-        if(!chosen){
-          // Task didn't exist on planning day
-          taskOrigPlanMap[tid] = { oe: 0, asOfDate: null };
-        } else {
-          const oe = Number(chosen.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0;
-          taskOrigPlanMap[tid] = {
-            oe,
-            asOfDate: chosen.fields?.['System.ChangedDate'] || null
-          };
-        }
+        // Effective estimate per snapshot:
+        //   if Casepoint.TFS.CustomFields.RevisedEstimate > 0 → use Revised
+        //   else fall back to Microsoft.VSTS.Scheduling.OriginalEstimate
+        // This matches the rest of the report (e.g. AI Adoption section)
+        // where Revised supersedes Original whenever a re-estimate has happened.
+        const _effEst = rv => {
+          if (!rv) return 0;
+          const rev  = Number(rv.fields?.['Casepoint.TFS.CustomFields.RevisedEstimate']) || 0;
+          const orig = Number(rv.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0;
+          return rev > 0 ? rev : orig;
+        };
+        const planOE   = _effEst(planChosen);
+        const revOE    = _effEst(reviewChosen);
+        const revState = reviewChosen ? (reviewChosen.fields?.['System.State'] || '') : '';
+
+        taskOrigPlanMap[tid] = {
+          oe: planOE,
+          asOfDate: planChosen?.fields?.['System.ChangedDate'] || null,
+          reviewOE: revOE,
+          reviewState: revState,
+          reviewAsOfDate: reviewChosen?.fields?.['System.ChangedDate'] || null
+        };
       } catch(e){
-        taskOrigPlanMap[tid] = { oe: 0, asOfDate: null };
+        taskOrigPlanMap[tid] = { oe: 0, asOfDate: null, reviewOE: 0, reviewState: '', reviewAsOfDate: null };
       }
     }
   });
@@ -1784,10 +1804,15 @@ async function fetchAndRender(){
   showLoading('Phase 3/3 — Loading team capacity…',82);
   await fetchCapacity();
 
-  // ── Fetch task revisions for tasks under "Ticket Handling" / "Ticket Support" reqs
-  // Scope: ANY requirement whose title starts with "Ticket Handling" or
-  // "Ticket Support" (case-insensitive). No tag constraint — the requirement
-  // does NOT need to be tagged "Adhoc Support" (e.g. "Team B Support" qualifies).
+  // ── Fetch task revisions for Planning Day / Review Day snapshots ───
+  // Loads /revisions for:
+  //   1. Tasks under "Ticket Handling" / "Ticket Support" requirements
+  //      (used by the Adhoc Support Summary's Original Planned column).
+  //   2. ALL tasks under deliverable AND non-deliverable requirements
+  //      (used by the Delivery Summary's new Planning Day / Review Day
+  //      columns to capture historical Original Estimate snapshots).
+  // The same revision response answers both questions, so we de-dupe
+  // task IDs into a single concurrent fetch pass.
   try {
     const titleMatches = (req) => {
       const t = (req.fields?.['System.Title'] || '').trim().toLowerCase();
@@ -1795,11 +1820,19 @@ async function fetchAndRender(){
     };
     const ticketReqIds = requirements.filter(titleMatches).map(r => r.id);
     const ticketTaskIds = ticketReqIds.flatMap(rid => reqTasksMap[rid] || []);
-    if(ticketTaskIds.length){
-      showLoading('Loading task history (Original Planned)…',90);
-      await loadOrigPlannedForAdhoc(ticketTaskIds);
+
+    // Delivery Summary scope: every requirement with category 'deliverable'
+    // or 'nonDeliverable' contributes its child tasks.
+    const delTaskIds = requirements
+      .filter(r => r.category === 'deliverable' || r.category === 'nonDeliverable')
+      .flatMap(r => reqTasksMap[r.id] || []);
+
+    const allHistoryIds = Array.from(new Set([...ticketTaskIds, ...delTaskIds]));
+    if(allHistoryIds.length){
+      showLoading(`Loading task history (Planning / Review Day) — ${allHistoryIds.length} tasks…`,90);
+      await loadOrigPlannedForAdhoc(allHistoryIds);
     }
-  } catch(e){ console.warn('Original Planned history fetch failed:', e); }
+  } catch(e){ console.warn('Task history fetch failed:', e); }
 
   // ── Render ───────────────────────────────────────────
   showLoading('Rendering report…',95);
@@ -2232,7 +2265,7 @@ function scrBuildReport(){
 
     <!-- Delivery Summary -->
     <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:0 0 5px;">Delivery Summary</p>
-    ${tbl(['Category','Total Items','Closed','Resolved','Open','OnHold','Adhoc'], delivery.rows, delivery.foot, ['22%','20%','12%','15%','9%','12%','10%'])}
+    ${tbl(['Category','Total Items','Closed','Resolved','Open','OnHold','Adhoc','Planning Day','Review Day'], delivery.rows, delivery.foot)}
 
     <!-- Sprint Insight -->
     <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;margin-top:14px;margin-bottom:14px;">
@@ -2950,6 +2983,64 @@ function renderReport(){
       onhold:0, adhoc:0 },
   ];
   const dsbody=document.getElementById('rpt-deliverySummaryBody');
+
+  // ── Planning Day / Review Day computation ─────────────────────────
+  // For each Delivery Summary row, sum child-task hours from the historical
+  // revisions snapshot loaded at fetch time (taskOrigPlanMap):
+  //   • Planning Day = sum of OriginalEstimate as it stood on sprint-start
+  //                    evening (11:00 PM cutoff) for ALL child tasks.
+  //   • Review Day:
+  //       Deliverable  → sum of OriginalEstimate at sprint-end for tasks
+  //                      whose state was 'Closed' on that snapshot.
+  //       Non-Deliverable → sum of OriginalEstimate at sprint-end for ALL
+  //                      child tasks (any state).
+  //       Adhoc Support → blank (per spec, only the 2 hour-columns shown).
+  // Total denominators (sum of Planning across Deliverable + Non-Deliverable)
+  // power the percentages displayed alongside each value.
+  function _sumTaskHours(reqRows, mode){
+    let h = 0;
+    const taskIds = [];
+    reqRows.forEach(req => {
+      const cIds = reqTasksMap[req.id] || [];
+      cIds.forEach(tid => {
+        const rec = taskOrigPlanMap[tid];
+        if (!rec) return;
+        if (mode === 'planning') {
+          h += rec.oe || 0;
+          taskIds.push(tid);
+        } else if (mode === 'reviewClosed') {
+          if ((rec.reviewState || '').toLowerCase() === 'closed') {
+            h += rec.reviewOE || 0;
+            taskIds.push(tid);
+          }
+        } else if (mode === 'reviewAll') {
+          h += rec.reviewOE || 0;
+          taskIds.push(tid);
+        }
+      });
+    });
+    return { hours: h, taskIds };
+  }
+  // Review Day uses the sprint-end snapshot for ALL child tasks regardless
+  // of state — there is no Closed-only filter. Estimate value comes from the
+  // helper, which prefers Casepoint.TFS.CustomFields.RevisedEstimate (>0)
+  // over Microsoft.VSTS.Scheduling.OriginalEstimate.
+  const delPlan   = _sumTaskHours(deliverables, 'planning');
+  const delRev    = _sumTaskHours(deliverables, 'reviewAll');
+  const ndPlan    = _sumTaskHours(nonDel,       'planning');
+  const ndRev     = _sumTaskHours(nonDel,       'reviewAll');
+  const adhocPlan = _sumTaskHours(adhoc,        'planning');
+  const adhocRev  = _sumTaskHours(adhoc,        'reviewAll');
+  const totalPlan = delPlan.hours + ndPlan.hours;
+  const totalRev  = delRev.hours  + ndRev.hours;
+  const _pct = (n, d) => d > 0 ? Math.round((n/d)*100) : 0;
+
+  const rowMetrics = {
+    '📦 Deliverable':     { plan: delPlan,   rev: delRev   },
+    '📋 Non-Deliverable': { plan: ndPlan,    rev: ndRev    },
+    '🅱️ Adhoc Support':   { plan: adhocPlan, rev: adhocRev }
+  };
+
   if(dsbody) dsbody.innerHTML=delivRows.map((row,ri)=>{
     // Store item slices on window for popup access
     const closedItems   = row.items.filter(r=>r.fields['System.State']==='Closed');
@@ -2965,10 +3056,26 @@ function renderReport(){
     window[`_rpt_${key}_onhold`]  = onholdItems;
     window[`_rpt_${key}_adhoc`]   = adhocItems;
 
+    // Hour-column data for this row
+    const rm        = rowMetrics[row.label] || { plan:{hours:0,taskIds:[]}, rev:{hours:0,taskIds:[]} };
+    const planHrs   = rm.plan.hours;
+    const revHrs    = rm.rev.hours;
+    const planPct   = _pct(planHrs, totalPlan);
+    const revPct    = _pct(revHrs,  totalRev);
+    // Save task arrays for click-through popups
+    window[`_rpt_${key}_planTasks`] = rm.plan.taskIds.map(tid => taskLookup[tid]).filter(Boolean);
+    window[`_rpt_${key}_revTasks`]  = rm.rev.taskIds .map(tid => taskLookup[tid]).filter(Boolean);
+    const fmtHours = (h, p) => h > 0
+      ? `${fmtH(h)}h <span style="color:#94a3b8;font-weight:400;font-size:.65rem;">(${p}%)</span>`
+      : `<span style="color:#475569;">—</span>`;
+
     // For Non-Deliverable row, hide Closed / Resolved / Open values — show "—"
     const isNonDel = row.label.includes('Non-Deliverable');
     const D=(val,arr,label)=>arr.length?`<td class="rpt-edit rpt-drill" contenteditable="true" ondblclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'reqs')">${val}</td>`:`<td class="rpt-edit" contenteditable="true">${val}</td>`;
     const dash = `<td class="rpt-edit" contenteditable="true" style="color:#94a3b8">—</td>`;
+    const planCell   = `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#a78bfa;font-weight:600;" title="Sum of all child tasks' Original Estimate as of sprint start (11:00 PM). Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Planning Day Tasks',window['_rpt_${key}_planTasks'],'tbAdhocTasks')">${fmtHours(planHrs, planPct)}</td>`;
+    const revCell    = `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#34d399;font-weight:600;" title="Sum of all child tasks' Original Estimate at sprint end. Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Review Day Tasks',window['_rpt_${key}_revTasks'],'tbAdhocTasks')">${fmtHours(revHrs, revPct)}</td>`;
+
     return`<tr ondblclick="showRptPopup('${row.label} — All Items',window['_rpt_${key}_all'],'reqs')" style="cursor:pointer;" title="Double-click to view all items">
       <td>${row.label}</td>
       ${D(row.items.length, row.items, 'all')}
@@ -2977,6 +3084,8 @@ function renderReport(){
       ${isNonDel ? dash : D(row.open, openItems, 'open')}
       ${D(row.onhold, onholdItems, 'onhold')}
       ${D(row.adhoc, adhocItems, 'adhoc')}
+      ${planCell}
+      ${revCell}
     </tr>`;
   }).join('');
 
