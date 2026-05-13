@@ -790,6 +790,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
           <th style="text-align:left;min-width:90px">Discipline</th>
           <th>Total Tasks</th><th>AI Tasks</th><th>Manual Tasks</th>
           <th>AI Efficiency %</th><th>Manual Efficiency %</th><th>Saved Hours</th>
+          <th title="(AI Saved + Manual Saved) / (Total Orig / 1.4) × 100&#10;where AI Saved = AI Orig − AI Comp, Manual Saved = (Manual Orig + MAI Orig) − (Manual Comp + MAI Comp), Total Orig = AI Orig + Manual Orig + MAI Orig">Productivity Gain %</th>
         </tr></thead>
         <tbody id="rpt-aiDataBody"></tbody>
         <tfoot id="rpt-aiDataFoot"></tfoot>
@@ -814,12 +815,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
       </table>
     </div>
 
-    <!-- Section 5: Team B / Adhoc Support (moved here from above) -->
-    <div class="rpt-section-title" style="margin-top:16px">🅱️ Adhoc Support Summary</div>
+    <!-- Section 5: Team B Summary (moved here from above) -->
+    <div class="rpt-section-title" style="margin-top:16px">🅱️ Team B Summary</div>
     <div id="rpt-teamBWrap" style="width:100%;">
       <!-- Header: ticket count + status pills -->
       <div class="tb-header" id="tb-header" style="display:none">
-        <span class="tb-header-title">🅱️ Adhoc Support</span>
+        <span class="tb-header-title">🅱️ Team B</span>
         <span class="tb-header-count" id="tb-total-count">0 Tickets</span>
         <div class="tb-header-pills" id="tb-header-pills"></div>
       </div>
@@ -829,18 +830,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
           <thead><tr>
             <th>Discipline</th>
             <th title="Sum of Original Estimate as it stood on planning day (sprint start). Double-click any cell to view tasks.">Original Planned</th>
-            <th>Used Hours</th>
-            <th>Completed</th>
+            <th>Team B Utilized</th>
+            <th>Team B Completed</th>
             <th>Remaining</th>
           </tr></thead>
           <tbody id="tb-disc-body"></tbody>
           <tfoot id="tb-disc-foot"></tfoot>
         </table>
       </div>
-      <div id="rpt-teamBEmpty" style="display:none;text-align:center;padding:12px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No Adhoc Support tickets this sprint.</div>
+      <div id="rpt-teamBEmpty" style="display:none;text-align:center;padding:12px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No Team B tickets this sprint.</div>
     </div>
     <!-- hidden table for email/readTbl compatibility -->
-    <table style="display:none"><thead><tr><th>Discipline</th><th>Original Planned</th><th>Used Hours</th><th>Completed</th><th>Remaining</th></tr></thead>
+    <table style="display:none"><thead><tr><th>Discipline</th><th>Original Planned</th><th>Team B Utilized</th><th>Team B Completed</th><th>Remaining</th></tr></thead>
       <tbody id="rpt-teamBBody"></tbody><tfoot id="rpt-teamBFoot"></tfoot></table>
 
     <!-- hidden JS stubs for renderAll compatibility -->
@@ -1021,7 +1022,7 @@ async function loadOrigPlannedForAdhoc(taskIds){
       const tid = taskIds[myIdx];
       try{
         const r = await apiFetch(`${tfsUrl}/_apis/wit/workitems/${tid}/revisions?api-version=5.0`);
-        if(!r.ok){ taskOrigPlanMap[tid] = { oe: 0, asOfDate: null, reviewOE: 0, reviewState: '', reviewAsOfDate: null }; continue; }
+        if(!r.ok){ taskOrigPlanMap[tid] = { oe: 0, oeOriginal: 0, asOfDate: null, reviewOE: 0, reviewOEOriginal: 0, reviewState: '', reviewAsOfDate: null }; continue; }
         const j = await r.json();
         const revs = (j.value || []).slice().sort((a,b)=>{
           const ad = new Date(a.fields?.['System.ChangedDate'] || 0).getTime();
@@ -1051,19 +1052,29 @@ async function loadOrigPlannedForAdhoc(taskIds){
           const orig = Number(rv.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0;
           return rev > 0 ? rev : orig;
         };
-        const planOE   = _effEst(planChosen);
-        const revOE    = _effEst(reviewChosen);
-        const revState = reviewChosen ? (reviewChosen.fields?.['System.State'] || '') : '';
+        // Raw OriginalEstimate from the snapshot — NEVER substitutes Revised.
+        // This is the literal Microsoft.VSTS.Scheduling.OriginalEstimate value
+        // as it stood on planning day, used by the popup's "Planning Day
+        // Original Estimate" column so reviewers can see the original number
+        // even when a Revised Estimate had already been entered.
+        const _rawOrig = rv => rv ? (Number(rv.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0) : 0;
+        const planOE         = _effEst(planChosen);
+        const planRawOrig    = _rawOrig(planChosen);
+        const revOE          = _effEst(reviewChosen);
+        const reviewRawOrig  = _rawOrig(reviewChosen);
+        const revState       = reviewChosen ? (reviewChosen.fields?.['System.State'] || '') : '';
 
         taskOrigPlanMap[tid] = {
           oe: planOE,
+          oeOriginal: planRawOrig,
           asOfDate: planChosen?.fields?.['System.ChangedDate'] || null,
           reviewOE: revOE,
+          reviewOEOriginal: reviewRawOrig,
           reviewState: revState,
           reviewAsOfDate: reviewChosen?.fields?.['System.ChangedDate'] || null
         };
       } catch(e){
-        taskOrigPlanMap[tid] = { oe: 0, asOfDate: null, reviewOE: 0, reviewState: '', reviewAsOfDate: null };
+        taskOrigPlanMap[tid] = { oe: 0, oeOriginal: 0, asOfDate: null, reviewOE: 0, reviewOEOriginal: 0, reviewState: '', reviewAsOfDate: null };
       }
     }
   });
@@ -2277,16 +2288,16 @@ function scrBuildReport(){
 
     <!-- AI Data (moved up) -->
     <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">AI Adoption Data Summary</p>
-    ${tbl(['Discipline','Total Tasks','AI Tasks','Manual Tasks','AI Efficiency','Manual Efficiency','Saved Hours'], aiData.rows, aiData.foot)}
+    ${tbl(['Discipline','Total Tasks','AI Tasks','Manual Tasks','AI Efficiency','Manual Efficiency','Saved Hours','Productivity Gain %'], aiData.rows, aiData.foot)}
 
     <!-- Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) -->
     <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">Bug Report — Sprint Quality Analysis</p>
     ${tblRed(['Type','Total','Open','Closed','Resolved','Dev Owned','QA Owned','Others','Effort Taken'], bugTypeData.rows, [])}
 
     <!-- Team B (moved down) -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">Adhoc Support Summary</p>
+    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">Team B Summary</p>
     ${adhocSubtitle ? `<p style="${F}font-size:7.5pt;color:#64748b;margin:0 0 6px;font-weight:500;">${adhocSubtitle}</p>` : ''}
-    ${tblGreen(['Discipline','Original Planned','Used Hours','Completed','Remaining'], teamB.rows, teamB.foot)}
+    ${tblGreen(['Discipline','Original Planned','Team B Utilized','Team B Completed','Remaining'], teamB.rows, teamB.foot)}
 
     <!-- Footer -->
     <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;table-layout:fixed;border-top:1px solid #e2e8f0;margin-top:18px;">
@@ -2401,6 +2412,12 @@ function scrDownloadPdf(){
 /* ══ Popup sort state ══════════════════════════════════ */
 let _popupSortCol = -1, _popupSortDir = 1;
 let _popupRows = [], _popupCols = [], _popupType = '';
+// Optional pre-computed totals row rendered as <tfoot> beneath the regular
+// rows. Each entry is an HTML string for a single <td>. Length must match
+// _popupCols. Set by the type-specific block in showRptPopup; cleared by
+// showRptPopup itself before re-population so a no-totals popup doesn't
+// inherit the previous one's footer.
+let _popupTotalRow = null;
 
 function _sortPopupBy(colIdx) {
   if (_popupSortCol === colIdx) _popupSortDir *= -1;
@@ -2448,9 +2465,17 @@ function _renderPopupTable() {
     return bugRowTbody + taskRows;
   }).join('');
 
+  // Optional totals footer — rendered only when the caller populated
+  // _popupTotalRow (e.g. tbAdhocTasks). Uses the same dark-blue header
+  // palette so it reads as a footer summary; sticks visually to the bottom.
+  const tfootHtml = (Array.isArray(_popupTotalRow) && _popupTotalRow.length === _popupCols.length)
+    ? `<tfoot><tr style="background:${hdrBg};border-top:2px solid rgba(255,255,255,.18);">${_popupTotalRow.join('')}</tr></tfoot>`
+    : '';
+
   body.innerHTML = summaryBar + `<table style="width:100%;border-collapse:collapse;font-size:.72rem;">
     <thead><tr>${ths}</tr></thead>
     ${trs}
+    ${tfootHtml}
   </table>`;
 
   // Show the master expand/collapse toolbar only for bug popups that include task sub-rows
@@ -2549,6 +2574,41 @@ function _bugPopupCriteria(title) {
   return [bucket, drill].filter(Boolean).join(' • ');
 }
 
+// ── Requirements / Delivery Summary popup criteria descriptions ──────
+// Mirrors _bugPopupCriteria: for a given popup title from the Delivery
+// Summary table or Planning/Review Day drill-downs, return a one-line
+// description of the bucket condition and the column drill so the user
+// can see exactly what was used to assemble the list.
+function _reqPopupCriteria(title) {
+  const t = (title || '').toLowerCase();
+
+  // ── Bucket criteria (Delivery Summary categories) ────────────────
+  let bucket = '';
+  if (t.includes('non-deliverable')) {
+    bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Non-Deliverable".';
+  } else if (t.includes('deliverable') && !t.includes('non-')) {
+    bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Deliverable" AND NOT "Non-Deliverable".';
+  } else if (t.includes('adhoc support')) {
+    bucket = 'All work items in the sprint WHERE Tags contain "Adhoc Support" — includes Requirements, Change Requests AND Bugs.';
+  }
+
+  // ── Drill-down qualifier (column or sub-list the user clicked) ────
+  let drill = '';
+  if (t.includes('— closed'))        drill = 'Drill: System.State = "Closed".';
+  else if (t.includes('— resolved')) drill = 'Drill: System.State = "Resolved".';
+  else if (t.includes('— open'))     drill = 'Drill: System.State NOT IN {Closed, Resolved} AND NOT tagged "Deliverables OnHold" / "Deliverables Adhoc".';
+  else if (t.includes('— onhold'))   drill = 'Drill: Tags contain "Deliverables OnHold".';
+  else if (t.includes('— adhoc') && !t.includes('adhoc support'))
+                                     drill = 'Drill: Tags contain "Deliverables Adhoc".';
+  else if (t.includes('— all items')) drill = 'Drill: every item in the bucket above (no state filter).';
+  else if (t.includes('planning day tasks'))
+    drill = 'Tasks considered: every child task under the bucket\'s requirements/CRs, scored using the historical OriginalEstimate snapshot from Planning Day (sprint start, 11:00 PM cutoff). Revised Estimate is used when > 0; else Original Estimate.';
+  else if (t.includes('review day tasks'))
+    drill = 'Tasks considered: every child task under the bucket\'s requirements/CRs, scored using the OriginalEstimate snapshot from sprint end (no state filter). Revised Estimate is used when > 0; else Original Estimate.';
+
+  return [bucket, drill].filter(Boolean).join(' • ');
+}
+
 function showRptPopup(title, itemsArr, type){
   const cnt = itemsArr ? itemsArr.length : 0;
   // Don't open the popup when there's nothing to show. Cells/rows with count
@@ -2559,14 +2619,18 @@ function showRptPopup(title, itemsArr, type){
   document.getElementById('rptPopupTitle').textContent = title + '  (' + cnt + ' items)';
 
   // ── Criteria subtitle ──────────────────────────────────────────
-  // For bug popups, render a one-line "criteria/query" description so the
-  // user can see exactly which conditions placed these bugs in the
-  // current bucket. Only shown when type === 'bugs' and the title matches
-  // a known bucket / column drill-down.
+  // Render a one-line "criteria/query" description so the user can see
+  // exactly which conditions placed these items in the current bucket.
+  // Shown for:
+  //   • type === 'bugs'  — Bug Report drill-downs
+  //   • type === 'reqs'  — Delivery Summary categories
+  //   • type === 'tbAdhocTasks' — Delivery Summary Planning/Review Day
+  //                               task drill-downs (uses same _reqPopupCriteria)
   const criteriaEl = document.getElementById('rptPopupCriteria');
   if (criteriaEl) {
     let critText = '';
     if (type === 'bugs') critText = _bugPopupCriteria(title);
+    else if (type === 'reqs' || type === 'tbAdhocTasks') critText = _reqPopupCriteria(title);
     if (critText) {
       criteriaEl.textContent = '🔎 ' + critText;
       criteriaEl.style.display = '';
@@ -2580,6 +2644,7 @@ function showRptPopup(title, itemsArr, type){
   const tfsBase = tfsUrl && project ? `${tfsUrl}/${project}/_workitems/edit/` : null;
 
   _popupSortCol = -1; _popupSortDir = 1; _popupType = type;
+  _popupTotalRow = null; // cleared per-call; type blocks below may repopulate
 
   // Reset toolbar — _renderPopupTable will re-show it for bug popups with sub-tasks
   const _tb = document.getElementById('rptPopupToolbar');
@@ -2677,6 +2742,7 @@ function showRptPopup(title, itemsArr, type){
                   <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:left;white-space:nowrap;">Assigned To</th>
                   <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Exec Type</th>
                   <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Orig Est</th>
+                  <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Revised Est</th>
                   <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Completed</th>
                   <th style="padding:4px 8px;color:#818cf8;font-weight:700;text-align:center;white-space:nowrap;">Remaining</th>
                 </tr>
@@ -2704,7 +2770,8 @@ function showRptPopup(title, itemsArr, type){
                     <td style="padding:4px 8px;color:#a5b4fc;">${tDisc}</td>
                     <td style="padding:4px 8px;color:#94a3b8;">${tAssign}</td>
                     <td style="padding:4px 8px;color:${execC};text-align:center;font-size:.62rem;">${tExec}</td>
-                    <td style="padding:4px 8px;color:#fbbf24;text-align:center;">${tOrig>0?fmtH(tRev>0?tRev:tOrig)+'h':'—'}</td>
+                    <td style="padding:4px 8px;color:#fbbf24;text-align:center;">${tOrig>0?fmtH(tOrig)+'h':'—'}</td>
+                    <td style="padding:4px 8px;color:#c084fc;text-align:center;" title="Casepoint.TFS.CustomFields.RevisedEstimate">${tRev>0?fmtH(tRev)+'h':'—'}</td>
                     <td style="padding:4px 8px;color:#34d399;text-align:center;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>
                     <td style="padding:4px 8px;color:#f87171;text-align:center;">${tRem>0?fmtH(tRem)+'h':'—'}</td>
                   </tr>`;
@@ -2754,13 +2821,14 @@ function showRptPopup(title, itemsArr, type){
         allTaskRows.push({ bug: b, task: t });
       });
     });
-    _popupCols = ['Task ID','Task Title','Bug','State','Discipline','Assigned To','Orig Est','Completed','Remaining'];
+    _popupCols = ['Task ID','Task Title','Bug','State','Discipline','Assigned To','Orig Est','Revised Est','Completed','Remaining'];
     _popupRows = allTaskRows.map(({bug, task: t}) => {
       const tState  = t.fields['System.State'] || '';
       const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
       const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
       const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
       const tOrig   = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+      const tRev    = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
       const tComp   = t.fields['Casepoint.TFS.CustomFields.CompletedWork'] || t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
       const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
       const tExec   = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '—';
@@ -2769,7 +2837,7 @@ function showRptPopup(title, itemsArr, type){
       const bLink   = tfsBase ? `<a href="${tfsBase}${bug.id}" target="_blank" style="color:#f87171;font-size:.65rem;">${bug.id}</a>` : `${bug.id}`;
       const execColor = tExec.startsWith('AI-') ? '#34d399' : tExec.includes('Manual-AI') ? '#fca5a5' : '#94a3b8';
       return {
-        _cells: [String(t.id), t.fields['System.Title']||'', bugTitle, tState, tDisc, tAssign, String(tOrig), String(tComp), String(tRem)],
+        _cells: [String(t.id), t.fields['System.Title']||'', bugTitle, tState, tDisc, tAssign, String(tOrig), String(tRev), String(tComp), String(tRem)],
         _htmlCells: [
           `<td style="padding:7px 10px;">${tLink}</td>`,
           `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}<br><span style="color:${execColor};font-size:.62rem;">${tExec}</span></td>`,
@@ -2778,41 +2846,98 @@ function showRptPopup(title, itemsArr, type){
           `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
           `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
           `<td style="padding:7px 10px;text-align:center;color:#fbbf24;">${tOrig>0?fmtH(tOrig)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#c084fc;" title="Casepoint.TFS.CustomFields.RevisedEstimate">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
           `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
           `<td style="padding:7px 10px;text-align:center;color:#f87171;">${tRem>0?fmtH(tRem)+'h':'—'}</td>`
         ]
       };
     });
   } else if(type === 'tbAdhocTasks') {
-    // Team B → Adhoc Support tasks: shows historical OE at planning day vs current OE
-    _popupCols = ['Task ID','Title','Discipline','State','Assigned To','Original Planned (h)','Used Hours (h)','Completed (h)','Remaining (h)'];
+    // Team B / Delivery-Summary task drill-down. Same popup type is reused
+    // for three different click paths:
+    //   • Team B → discipline cell           (planning context, default)
+    //   • Ticket Handling discipline cell    (planning context)
+    //   • Delivery Summary Planning Day cell (planning context)
+    //   • Delivery Summary Review Day cell   (REVIEW context — different snapshot)
+    // We branch off the title because the popup contract is already
+    // (title, items, type) and changing it would ripple through every
+    // call-site. Title check is intentional and explicit.
+    const _isReviewDay = (title || '').includes('Review Day Tasks');
+    // Snapshot field keys — which entries on the taskOrigPlanMap record
+    // we pull from. For review mode we read reviewOE / reviewOEOriginal so
+    // the column totals match the Delivery Summary Review Day cell value.
+    const _snapEffKey  = _isReviewDay ? 'reviewOE'         : 'oe';
+    const _snapRawKey  = _isReviewDay ? 'reviewOEOriginal' : 'oeOriginal';
+    const _snapDateKey = _isReviewDay ? 'reviewAsOfDate'   : 'asOfDate';
+    // Context-sensitive column headers — keep the user oriented on which
+    // snapshot the numbers came from. Effective-estimate header stays
+    // generic ("Original Planned (h)") in planning mode to match the
+    // existing Team B / Ticket Handling popup look, and switches to
+    // "Review Day Estimate (h)" in review mode for clarity.
+    const _rawColHdr   = _isReviewDay ? 'Review Day Original Estimate' : 'Planning Day Original Estimate';
+    const _effColHdr   = _isReviewDay ? 'Review Day Estimate (h)'      : 'Original Planned (h)';
+    const _snapLabel   = _isReviewDay ? 'review day'                   : 'planning day';
+
+    // Columns: removed "Used Hours (h)" (current OriginalEstimate) per
+    // user feedback — it always duplicated the Original Estimate column
+    // when no mid-sprint OE edit occurred, with no upside in the rare
+    // case it differed.
+    _popupCols = ['Task ID','Title','Iteration','Discipline','State','Assigned To',_rawColHdr,_effColHdr,'Revised Estimate (h)','Completed (h)','Remaining (h)'];
+
+    // Accumulators for the totals footer. Built during the same map pass
+    // so we don't iterate the array twice.
+    let _ttlRaw = 0, _ttlEff = 0, _ttlRev = 0, _ttlComp = 0, _ttlRem = 0;
     _popupRows = itemsArr.map(t => {
       const tState  = t.fields['System.State'] || '';
       const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
       const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
       const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
-      const tCurOE  = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+      const tRev    = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
       const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
       const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
-      const histRec = taskOrigPlanMap[t.id] || { oe: 0, asOfDate: null };
-      const tOrigP  = histRec.oe;
-      const asOf    = histRec.asOfDate ? new Date(histRec.asOfDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      // Snapshot record — defaulted shape covers both planning and review keys.
+      const histRec = taskOrigPlanMap[t.id] || { oe: 0, oeOriginal: 0, reviewOE: 0, reviewOEOriginal: 0, asOfDate: null, reviewAsOfDate: null };
+      const tRaw    = histRec[_snapRawKey] || 0;      // raw OE from chosen snapshot
+      const tEff    = histRec[_snapEffKey] || 0;      // effective OE from chosen snapshot
+      const asOf    = histRec[_snapDateKey] ? new Date(histRec[_snapDateKey]).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      // Iteration — last segment of the path; full path kept on title= for tooltip.
+      const iterFull  = t.fields['System.IterationPath'] || '';
+      const iterShort = iterFull ? (iterFull.split('\\').pop() || iterFull) : '—';
       const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
+      _ttlRaw += tRaw; _ttlEff += tEff; _ttlRev += tRev; _ttlComp += tComp; _ttlRem += tRem;
       return {
-        _cells: [String(t.id), t.fields['System.Title']||'', tDisc, tState, tAssign, String(tOrigP), String(tCurOE), String(tComp), String(tRem)],
+        _cells: [String(t.id), t.fields['System.Title']||'', iterFull, tDisc, tState, tAssign, String(tRaw), String(tEff), String(tRev), String(tComp), String(tRem)],
         _htmlCells: [
           `<td style="padding:7px 10px;">${tLink}</td>`,
           `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}</td>`,
+          `<td style="padding:7px 10px;color:#94a3b8;font-size:.67rem;white-space:nowrap;" title="${iterFull}">${iterShort}</td>`,
           `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
           `<td style="padding:7px 10px;color:${tStateC};font-weight:600;">${tState}</td>`,
           `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#a78bfa;font-weight:600;" title="As of ${asOf}">${tOrigP>0?fmtH(tOrigP)+'h':'0h'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#fbbf24;">${tCurOE>0?fmtH(tCurOE)+'h':'—'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#38bdf8;font-weight:600;" title="Raw Microsoft.VSTS.Scheduling.OriginalEstimate as of ${asOf} (${_snapLabel} snapshot)">${tRaw>0?fmtH(tRaw)+'h':'0h'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#a78bfa;font-weight:600;" title="Effective estimate (Revised when > 0, else Original) as of ${asOf} (${_snapLabel} snapshot)">${tEff>0?fmtH(tEff)+'h':'0h'}</td>`,
+          `<td style="padding:7px 10px;text-align:center;color:#c084fc;" title="Casepoint.TFS.CustomFields.RevisedEstimate (current value)">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
           `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
           `<td style="padding:7px 10px;text-align:center;color:#f87171;">${tRem>0?fmtH(tRem)+'h':'—'}</td>`
         ]
       };
     });
+    // Build the totals row — one <td> per column, matching _popupCols length.
+    // The Effective-estimate column's total is what reconciles to the
+    // Delivery Summary Planning Day / Review Day cell value.
+    _popupTotalRow = [
+      `<td style="padding:8px 10px;font-weight:700;color:#e2e8f0;border-top:2px solid rgba(255,255,255,.18);">TOTAL <span style="color:#94a3b8;font-weight:500;font-size:.66rem;">(${itemsArr.length} task${itemsArr.length!==1?'s':''})</span></td>`,
+      `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
+      `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
+      `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
+      `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
+      `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#38bdf8;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlRaw>0?fmtH(_ttlRaw)+'h':'0h'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#a78bfa;font-weight:700;border-top:2px solid rgba(255,255,255,.18);" title="Matches the Delivery Summary ${_isReviewDay?'Review':'Planning'} Day cell value">${_ttlEff>0?fmtH(_ttlEff)+'h':'0h'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#c084fc;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlRev>0?fmtH(_ttlRev)+'h':'—'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#34d399;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlComp>0?fmtH(_ttlComp)+'h':'—'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#f87171;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlRem>0?fmtH(_ttlRem)+'h':'—'}</td>`
+    ];
   } else if(type === 'aiTasks') {
     // AI Adoption Data — contributing tasks (Closed/Resolved, eff>0, exec set)
     _popupCols = ['Task ID','Title','Discipline','State','Assigned To','Execution','Original Est','Revised Est','Completed','Effort'];
@@ -2950,7 +3075,7 @@ function renderReport(){
         </td>
       </tr>`;
     }).join('');
-    const goalAchieved=sprintGoalReqs.every(r=>['Closed','Resolved'].includes(r.fields['System.State']||''));
+    const goalAchieved=sprintGoalReqs.every(r=>(r.fields['System.State']||'')==='Closed');
     const badge=document.getElementById('rpt-goalBadge');
     if(badge){
       badge.style.display='inline-block';
@@ -2976,10 +3101,14 @@ function renderReport(){
       resolved:nonDel.filter(r=>r.fields['System.State']==='Resolved').length,
       open:nonDel.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length,
       onhold:0, adhoc:0 },
-    { label:'🅱️ Adhoc Support', items:adhoc,
-      closed:adhoc.filter(r=>r.fields['System.State']==='Closed').length,
-      resolved:adhoc.filter(r=>r.fields['System.State']==='Resolved').length,
-      open:adhoc.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length,
+    // Adhoc Support row: now includes BOTH requirements/CRs with "Adhoc Support" tag
+    // AND bugs with "Adhoc Support" tag (adhocBugs). Bugs are folded into items
+    // and contribute to the state counts (closed / resolved / open) so the row
+    // reflects the full Adhoc Support workload across all work item types.
+    { label:'🅱️ Adhoc Support', items:adhocAll,
+      closed:adhocAll.filter(r=>r.fields['System.State']==='Closed').length,
+      resolved:adhocAll.filter(r=>r.fields['System.State']==='Resolved').length,
+      open:adhocAll.filter(r=>!['Closed','Resolved'].includes(r.fields['System.State'])).length,
       onhold:0, adhoc:0 },
   ];
   const dsbody=document.getElementById('rpt-deliverySummaryBody');
@@ -3003,6 +3132,18 @@ function renderReport(){
     reqRows.forEach(req => {
       const cIds = reqTasksMap[req.id] || [];
       cIds.forEach(tid => {
+        // ── Iteration-scope filter ──────────────────────────────────────
+        // reqTasksMap contains EVERY child task ID from a requirement's
+        // Hierarchy-Forward relations regardless of iteration, but the
+        // Delivery Summary represents the SELECTED sprint(s) only.
+        // taskLookup is built from `taskData` (WIQL filtered by iteration),
+        // so it acts as our in-sprint allow-list. Without this filter,
+        // tasks belonging to other iterations would be summed into the
+        // cell value but excluded from the popup task list (the popup
+        // filters via taskLookup), causing the cell-vs-popup mismatch
+        // the user observed for Deliverable and Non-Deliverable rows.
+        if (!taskLookup[tid]) return;
+
         const rec = taskOrigPlanMap[tid];
         if (!rec) return;
         if (mode === 'planning') {
@@ -3704,7 +3845,8 @@ function renderReport(){
 
       return { totalTasks, aiTasks, manTasks, maiTasks, adoptionPct,
                aiOrig, aiTot, aiComp, effPct, manualEffPct, savedHrs,
-               manOrig, maiOrig, taskIds: matched };  // taskIds for popup; manOrig/maiOrig for overall
+               manOrig, manComp, maiOrig, maiComp, prodGainPct,
+               taskIds: matched };  // taskIds for popup; manOrig/maiOrig for overall
     }
 
     const DISCIPLINES = [
@@ -3714,6 +3856,10 @@ function renderReport(){
 
     let totTasks=0, totAI=0, totMan=0, totSaved=0, hasData=false;
     let totAiTot=0, totAiComp=0, totAllHrs=0;
+    // Accumulators for the Overall (footer) Productivity Gain %.
+    // We must NOT average the per-discipline percentages — the metric is a
+    // weighted ratio and has to be recomputed from the underlying hour sums.
+    let totManOrig=0, totManComp=0, totMaiOrig=0, totMaiComp=0;
 
     // Stash per-discipline contributing-task IDs for double-click popup
     window._aiAdoptionTaskMap   = {};
@@ -3731,10 +3877,18 @@ function renderReport(){
       totAiComp += s.aiComp;
       totSaved  += s.savedHrs;
       totAllHrs += s.aiTot + s.manOrig + s.maiOrig;  // for overall adoption
+      // Roll up manual + MAI hours so the footer can compute Productivity
+      // Gain % from the same formula (it is not the average of the rows).
+      totManOrig  += s.manOrig;
+      totManComp  += s.manComp;
+      totMaiOrig  += s.maiOrig;
+      totMaiComp  += s.maiComp;
 
       const effColor    = s.effPct >= 0 ? '#22d3ee' : '#f87171';
       const manEffColor = s.manualEffPct >= 0 ? '#a78bfa' : '#f87171';
       const savedColor  = s.savedHrs >= 0 ? '#f472b6' : '#f87171';
+      // Productivity Gain %: green when positive, red when negative, grey when zero.
+      const pgColor     = s.prodGainPct > 0 ? '#34d399' : s.prodGainPct < 0 ? '#f87171' : '#94a3b8';
 
       return `<tr ondblclick="showAiAdoptionPopup('${d.key}')" title="Double-click to view contributing tasks for ${d.label}" style="cursor:pointer;">
         <td style="text-align:left;font-weight:600;color:${d.clr}">${d.label}</td>
@@ -3744,6 +3898,7 @@ function renderReport(){
         <td style="color:${effColor};font-weight:700">${s.effPct}%</td>
         <td style="color:${manEffColor};font-weight:700">${s.manualEffPct}%</td>
         <td style="color:${savedColor};font-weight:700">${fmtH(s.savedHrs)}h</td>
+        <td style="color:${pgColor};font-weight:700" title="(AI Saved + Manual Saved) / (Total Orig / 1.4) × 100">${s.prodGainPct}%</td>
       </tr>`;
     });
 
@@ -3759,9 +3914,18 @@ function renderReport(){
     // Footer — all values derived from accumulators built during the rows pass (no re-iteration)
     const totEff  = totAiTot  > 0 ? Math.round(((totAiTot - totAiComp) / totAiTot) * 100) : 0;
     const ovAdop  = totAllHrs > 0 ? Math.round((totAiTot / totAllHrs) * 100) : 0;
+    // Overall Productivity Gain % — computed from the same formula as the rows
+    // but on the rolled-up hour totals across all disciplines:
+    //   (AI Saved + Manual Saved) / (Total Orig / 1.4) × 100
+    const ovAiSaved     = totAiTot   - totAiComp;
+    const ovManSaved    = (totManOrig + totMaiOrig) - (totManComp + totMaiComp);
+    const ovTotalOrig   = totAiTot   + totManOrig + totMaiOrig;
+    const ovProdGainPct = ovTotalOrig > 0
+      ? Math.round(((ovAiSaved + ovManSaved) / (ovTotalOrig / 1.4)) * 100) : 0;
     const effColor = totEff  >= 0 ? '#22d3ee' : '#f87171';
     const savColor = totSaved >= 0 ? '#f472b6' : '#f87171';
     const adColor  = ovAdop >= 70 ? '#34d399' : ovAdop >= 40 ? '#fbbf24' : '#f87171';
+    const ovPgColor = ovProdGainPct > 0 ? '#34d399' : ovProdGainPct < 0 ? '#f87171' : '#94a3b8';
 
     if (aiFoot) aiFoot.innerHTML = `<tr ondblclick="showAiAdoptionPopup('__all__')" title="Double-click to view all contributing tasks" style="cursor:pointer;">
       <td style="text-align:left;font-weight:700">Overall</td>
@@ -3771,6 +3935,7 @@ function renderReport(){
       <td style="color:${effColor};font-weight:700">—</td>
       <td style="font-weight:700">—</td>
       <td style="color:${savColor};font-weight:700">${fmtH(totSaved)}h</td>
+      <td style="color:${ovPgColor};font-weight:700" title="(AI Saved + Manual Saved) / (Total Orig / 1.4) × 100">${ovProdGainPct}%</td>
     </tr>`;
   })();
 
@@ -3865,7 +4030,10 @@ function renderAll(){
   // ── Sprint Goal ───────────────────────────────────────
   if(sprintGoalReqs.length){
     const goalText=sprintGoalReqs.map(r=>r.fields['System.Title']).join(' | ');
-    const goalAchieved=sprintGoalReqs.every(r=>['Closed','Resolved'].includes(r.fields['System.State']));
+    // Sprint goal is only "Achieved" when every tagged requirement is in
+    // System.State = 'Closed'. Resolved / Active / Open all keep the goal
+    // in the "Not Achieved" state until the work item is formally closed.
+    const goalAchieved=sprintGoalReqs.every(r=>r.fields['System.State']==='Closed');
     document.getElementById('goalBox').style.display='flex';
     document.getElementById('goalText').textContent=goalText;
     const badge=document.getElementById('goalBadge');
