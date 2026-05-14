@@ -733,9 +733,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 
     <!-- Sprint Goal -->
     <div class="rpt-goal-block" id="rpt-goalBlock" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
         <span class="rpt-goal-title" style="margin-bottom:0;">🎯 SPRINT GOAL</span>
         <span id="rpt-goalBadge" style="display:none;"></span>
+        <!-- Build stamp: lets the user confirm the strict-closed rule code is actually loaded.
+             If you don't see this stamp under SPRINT GOAL, you're on a cached/older copy of
+             the file and need to hard-refresh (Ctrl+Shift+R / Cmd+Shift+R). -->
+        <span id="rpt-goalBuildStamp" style="margin-left:auto;font-size:.55rem;color:#475569;font-style:italic;letter-spacing:.04em;" title="Strict closure rule active: every sprint-goal requirement must be in State=Closed (Resolved is not enough).">strict-closed v2 · all reqs must be Closed</span>
       </div>
       <table id="rpt-goalTable" style="width:100%;border-collapse:collapse;font-size:.72rem;">
         <thead id="rpt-goalTableHead">
@@ -3075,12 +3079,67 @@ function renderReport(){
         </td>
       </tr>`;
     }).join('');
-    const goalAchieved=sprintGoalReqs.every(r=>(r.fields['System.State']||'')==='Closed');
+    // Sprint goal status — STRICT closure rule.
+    // Goal is "Achieved" ONLY when every requirement carrying the
+    // "sprint goal" tag is in System.State === 'Closed'.
+    // 'Resolved', 'Active', 'New', 'Open', 'On Hold', etc. all keep the
+    // goal in "Not Achieved" — even if the work has functionally finished
+    // and is awaiting verification. The intent is that nothing ships
+    // unverified.
+    //
+    // Comparison is case-insensitive and whitespace-trimmed because
+    // System.State has been observed to come back with stray spaces or
+    // varying casing in some TFS configurations (e.g. ' Closed', 'closed').
+    // Without this normalization an otherwise-closed item could fail the
+    // check OR — more importantly here — never match anything other than
+    // an exact 'Closed' literal.
+    const _normState = r => (r.fields['System.State'] || '').trim().toLowerCase();
+    const goalAchieved = sprintGoalReqs.length > 0
+      && sprintGoalReqs.every(r => _normState(r) === 'closed');
+    // Diagnostic log — lets the user verify in DevTools that this
+    // tightened rule is in effect (and what each item's state is).
+    try {
+      console.log('%c[Sprint Goal v2] strict-closed check', 'background:#1e293b;color:#34d399;padding:2px 6px;border-radius:3px;font-weight:bold',
+        sprintGoalReqs.map(r => ({ id: r.id, title: r.fields['System.Title'], state: r.fields['System.State'] })),
+        '→ achieved=', goalAchieved);
+    } catch(e){}
     const badge=document.getElementById('rpt-goalBadge');
     if(badge){
-      badge.style.display='inline-block';
-      badge.className=goalAchieved?'rpt-ok':'rpt-over';
-      badge.textContent=goalAchieved?'✅ Goal Achieved':'⚠️ Goal Not Achieved';
+      // ── Helper that owns ALL writes to the badge. Calling it again
+      // is idempotent and always reflects the strict closure rule.
+      const _applyBadge = () => {
+        badge.style.display='inline-block';
+        badge.className=goalAchieved?'rpt-ok':'rpt-over';
+        badge.textContent=goalAchieved?'✅ Goal Achieved':'⚠️ Goal Not Achieved';
+      };
+      _applyBadge();
+
+      // ── MutationObserver watchdog ─────────────────────────────────
+      // Belt-and-suspenders against any external mutation of the badge
+      // (browser-extension theming, downstream code, leftover legacy
+      // handlers, stale cached scripts). If anything flips the badge to
+      // "Goal Achieved" while a non-Closed sprint-goal item still
+      // exists, the observer reverts the change to the strict result
+      // and logs the offending mutation for diagnosis.
+      // We only install once per render and only when the strict rule
+      // determined the goal is NOT achieved — there's nothing to defend
+      // against in the happy path.
+      if (!goalAchieved && !badge.__sgObserverInstalled) {
+        try {
+          const obs = new MutationObserver(muts => {
+            const txt = (badge.textContent || '').toLowerCase();
+            const cls = (badge.className   || '').toLowerCase();
+            const looksAchieved = txt.includes('achieved') && !txt.includes('not achieved');
+            const colorAchieved = cls.includes('rpt-ok');
+            if (looksAchieved || colorAchieved) {
+              try { console.warn('[Sprint Goal v2] watchdog detected unauthorised "Achieved" mutation — reverting', muts); } catch(e){}
+              _applyBadge();
+            }
+          });
+          obs.observe(badge, { attributes: true, attributeFilter: ['class', 'style'], childList: true, characterData: true, subtree: true });
+          badge.__sgObserverInstalled = true;
+        } catch(e) { /* MutationObserver unavailable — fall through */ }
+      }
     }
   }
 
@@ -4030,10 +4089,14 @@ function renderAll(){
   // ── Sprint Goal ───────────────────────────────────────
   if(sprintGoalReqs.length){
     const goalText=sprintGoalReqs.map(r=>r.fields['System.Title']).join(' | ');
-    // Sprint goal is only "Achieved" when every tagged requirement is in
-    // System.State = 'Closed'. Resolved / Active / Open all keep the goal
-    // in the "Not Achieved" state until the work item is formally closed.
-    const goalAchieved=sprintGoalReqs.every(r=>r.fields['System.State']==='Closed');
+    // STRICT closure rule — matches renderReport(). Goal is "Achieved"
+    // ONLY when EVERY sprint-goal-tagged requirement has
+    // System.State === 'Closed'. Resolved / Active / New / Open / On Hold
+    // all keep the goal at "Not Achieved" until the work item is
+    // formally closed. State comparison is whitespace-trimmed and
+    // case-insensitive to absorb minor TFS field-value variance.
+    const _normState = r => (r.fields['System.State'] || '').trim().toLowerCase();
+    const goalAchieved = sprintGoalReqs.every(r => _normState(r) === 'closed');
     document.getElementById('goalBox').style.display='flex';
     document.getElementById('goalText').textContent=goalText;
     const badge=document.getElementById('goalBadge');
