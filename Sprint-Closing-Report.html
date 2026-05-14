@@ -462,6 +462,44 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
            a word first. The cells stay contenteditable for inline edits when
            the user actually clicks into one. */
         .rpt-tbl tr[ondblclick], .rpt-tbl td[ondblclick]{ user-select:none; -webkit-user-select:none; }
+
+        /* ── Manual-input cell ─────────────────────────────────────────
+           Used for cells where the user types the value themselves
+           (e.g. Deliverable / Non-Deliverable Planning Day). Amber
+           palette + dashed border deliberately reads as "form field"
+           — distinct from auto-calculated cells (indigo focus) and
+           drillable cells (popup-on-dblclick). No popup wiring on these.
+           data-placeholder shown via :empty::before when the cell has
+           no content. */
+        .rpt-manual-input{
+          background:rgba(251,191,36,.12)!important;
+          border:1px dashed rgba(251,191,36,.5)!important;
+          border-radius:4px;
+          padding:4px 8px!important;
+          cursor:text;
+          font-weight:600;
+          color:#fbbf24!important;
+          outline:none;
+          min-width:90px;
+          transition:background .15s, border-color .15s, box-shadow .15s;
+        }
+        .rpt-manual-input:hover{
+          background:rgba(251,191,36,.22)!important;
+          border-color:rgba(251,191,36,.75)!important;
+        }
+        .rpt-manual-input:focus{
+          background:rgba(251,191,36,.3)!important;
+          border-color:rgba(251,191,36,.9)!important;
+          box-shadow:0 0 0 2px rgba(251,191,36,.35);
+        }
+        .rpt-manual-input:empty::before{
+          content:attr(data-placeholder);
+          color:rgba(251,191,36,.5);
+          font-style:italic;
+          font-weight:400;
+          pointer-events:none;
+        }
+        .rpt-manual-input:focus:empty::before{ content:''; }
 .rpt-tbl{width:100%;border-collapse:collapse;font-size:.68rem;}
 .rpt-tbl th{
   background:rgba(0,0,0,0.45);color:#e2e8f0;font-weight:700;
@@ -644,7 +682,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
       style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;
              padding:0 4px;line-height:1;flex-shrink:0;">✕</button>
   </div>
-  <div id="rptPopupBody" style="overflow-y:auto;flex:1;padding:0;"></div>
+  <div id="rptPopupBody" style="overflow:auto;flex:1;padding:0;"></div>
 </div>
 
 
@@ -760,7 +798,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
         <thead><tr>
           <th>Category</th><th>Total Items</th><th>Closed</th><th>Resolved</th>
           <th>Open</th><th>OnHold</th><th>Adhoc</th>
-          <th title="Sum of all child tasks' estimate (Revised when > 0, else Original) captured on Planning Day evening (sprint start, 11:00 PM). Click to view tasks.">Planning Day (h)</th>
+          <th title="Planning Day commitment. Deliverable and Non-Deliverable rows are MANUAL — type the value (e.g. 609h (84%)) into the amber textbox. Adhoc Support is auto-calculated (sum of child tasks' OE at sprint start, Revised when > 0; click to view tasks).">Planning Day (h)</th>
           <th title="Sum of all child tasks' estimate (Revised when > 0, else Original) at sprint end — no state filter. Click to view tasks.">Review Day (h)</th>
         </tr></thead>
         <tbody id="rpt-deliverySummaryBody"></tbody>
@@ -2432,22 +2470,47 @@ function _sortPopupBy(colIdx) {
 function _renderPopupTable() {
   const body = document.getElementById('rptPopupBody');
   if (!body || !_popupRows.length) return;
+  // ── Group-header awareness ────────────────────────────────────
+  // Rows tagged `_isGroupHeader:true` are tree-mode parent rows (e.g. the
+  // requirement banner above its child tasks in the Delivery Summary
+  // Planning/Review Day popup). They span all columns, must NOT be sorted
+  // or counted as "items", and must not participate in zebra striping.
   // Build sort indicator on headers
+  const itemCount = _popupRows.filter(r => !r._isGroupHeader).length;
+  const itemNoun  = (_popupRows.some(r => r._isGroupHeader)) ? 'task' : 'item';
   const summaryBar = `<div style="padding:6px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);font-size:.68rem;color:#64748b;">
-    Showing <strong style="color:#e2e8f0">${_popupRows.length}</strong> item${_popupRows.length!==1?'s':''}</div>`;
+    Showing <strong style="color:#e2e8f0">${itemCount}</strong> ${itemNoun}${itemCount!==1?'s':''}</div>`;
 
   const isRed = _popupType === 'bugs';
   const hdrBg  = isRed ? 'rgba(127,29,29,.5)' : 'rgba(30,58,138,.6)';
   const hdrClr = isRed ? '#fca5a5' : '#93c5fd';
 
-  const sorted = [..._popupRows].sort((a,b)=>{
-    if(_popupSortCol<0) return 0;
+  // Sort: when group headers are present, sort tasks WITHIN each group
+  // and keep the group headers anchored in their original position. When
+  // there are no group headers, behave exactly as before (global sort).
+  const _cmp = (a, b) => {
     const av = (a._cells||[])[_popupSortCol]||'';
     const bv = (b._cells||[])[_popupSortCol]||'';
     const an = parseFloat(av), bn = parseFloat(bv);
     if(!isNaN(an)&&!isNaN(bn)) return (an-bn)*_popupSortDir;
     return av.toString().localeCompare(bv.toString())*_popupSortDir;
-  });
+  };
+  let sorted;
+  if (_popupSortCol < 0) {
+    sorted = [..._popupRows];
+  } else if (_popupRows.some(r => r._isGroupHeader)) {
+    // Group-aware sort: header stays put, tasks under each header sort by selected column.
+    sorted = [];
+    let bucket = [];
+    const flush = () => { if (bucket.length) { bucket.sort(_cmp); sorted.push(...bucket); bucket = []; } };
+    _popupRows.forEach(row => {
+      if (row._isGroupHeader) { flush(); sorted.push(row); }
+      else bucket.push(row);
+    });
+    flush();
+  } else {
+    sorted = [..._popupRows].sort(_cmp);
+  }
 
   const ths = _popupCols.map((col,i)=>{
     const arrow = _popupSortCol===i ? (_popupSortDir===1?'▲':'▼') : '⇅';
@@ -2459,10 +2522,26 @@ function _renderPopupTable() {
 
   // Each row gets its own <tbody> so master toolbar / chevron can hide just the task block
   // without affecting alternation of bug rows.
-  const trs = sorted.map((row,i)=> {
-    const bg = i%2===0?'rgba(255,255,255,.03)':'transparent';
+  // Zebra-stripe counter resets at every group header so tasks within a
+  // group have predictable, contained alternation.
+  let zebra = 0;
+  const trs = sorted.map(row => {
+    if (row._isGroupHeader) {
+      zebra = 0;
+      // Banner tbody carries data-group-id so it can be matched to its
+      // child task rows. The chevron button inside the banner toggles
+      // visibility of all task tbodies with the same group id.
+      const gid = row._groupId != null ? String(row._groupId) : '';
+      return `<tbody class="popup-group-header" data-group-id="${gid}"><tr>${(row._htmlCells||[]).join('')}</tr></tbody>`;
+    }
+    const bg = (zebra++) % 2 === 0 ? 'rgba(255,255,255,.03)' : 'transparent';
     const rowKey = row._rowKey || '';
-    const bugRowTbody = `<tbody class="bug-main-row" data-row-key="${rowKey}"><tr style="background:${bg}">
+    // Task rows in tree mode get an additional class (tree-task-row) AND a
+    // data-group-id matching their parent banner. setPopupTaskView and the
+    // per-group toggle both look these up by selector.
+    const treeClass = row._groupId != null ? ' tree-task-row' : '';
+    const treeGroup = row._groupId != null ? ` data-group-id="${row._groupId}"` : '';
+    const bugRowTbody = `<tbody class="bug-main-row${treeClass}" data-row-key="${rowKey}"${treeGroup}><tr style="background:${bg}">
       ${(row._htmlCells||[]).join('')}
     </tr></tbody>`;
     const taskRows = row._taskSubRows || '';
@@ -2482,10 +2561,14 @@ function _renderPopupTable() {
     ${tfootHtml}
   </table>`;
 
-  // Show the master expand/collapse toolbar only for bug popups that include task sub-rows
+  // Show the master expand/collapse toolbar when:
+  //   • bug popups that include task sub-rows (legacy), OR
+  //   • tree-mode popups (tbAdhocTasks with at least one group header)
   const tb = document.getElementById('rptPopupToolbar');
   if (tb) {
-    const showToolbar = (_popupType === 'bugs') && _popupRows.some(r => r._hasExpandedTasks);
+    const hasBugSubRows  = (_popupType === 'bugs') && _popupRows.some(r => r._hasExpandedTasks);
+    const hasTreeGroups  = _popupRows.some(r => r._isGroupHeader);
+    const showToolbar    = hasBugSubRows || hasTreeGroups;
     tb.style.display = showToolbar ? 'flex' : 'none';
     if (showToolbar) _refreshPopupToolbarState('expand');
   }
@@ -2495,13 +2578,22 @@ function _renderPopupTable() {
 function setPopupTaskView(mode){
   const body = document.getElementById('rptPopupBody');
   if (!body) return;
-  body.querySelectorAll('tbody.bug-task-rows').forEach(tb => {
+  // Bug popups have task sub-rows inside <tbody.bug-task-rows>; tree-mode
+  // popups (tbAdhocTasks) have task tbodies tagged <tbody.tree-task-row>.
+  // The master toolbar must toggle BOTH so the buttons feel consistent
+  // across popup types.
+  body.querySelectorAll('tbody.bug-task-rows, tbody.tree-task-row').forEach(tb => {
     tb.style.display = (mode === 'collapse') ? 'none' : '';
   });
-  // Sync each chevron's state + glyph
+  // Sync each chevron's state + glyph — covers both per-row bug chevrons
+  // (data-state) and per-group banner chevrons (data-group-state).
   body.querySelectorAll('button[data-state]').forEach(btn => {
     btn.dataset.state = (mode === 'collapse') ? 'closed' : 'open';
     btn.textContent   = (mode === 'collapse') ? '▶' : '▼';
+  });
+  body.querySelectorAll('button[data-group-state]').forEach(btn => {
+    btn.dataset.groupState = (mode === 'collapse') ? 'closed' : 'open';
+    btn.textContent        = (mode === 'collapse') ? '▶' : '▼';
   });
   _refreshPopupToolbarState(mode);
 }
@@ -2516,6 +2608,27 @@ function togglePopupTaskRow(rowKey, btn){
   tb.style.display = isOpen ? 'none' : '';
   btn.dataset.state = isOpen ? 'closed' : 'open';
   btn.textContent   = isOpen ? '▶' : '▼';
+}
+
+/* Per-group banner chevron — toggles all tree-mode task tbodies that
+   share the banner's data-group-id. Lives next to togglePopupTaskRow so
+   future expand/collapse mechanics stay in one place. */
+function togglePopupTreeGroup(groupId, btn){
+  const body = document.getElementById('rptPopupBody');
+  if (!body) return;
+  // CSS attribute selector: pick every task tbody under this group.
+  // groupId is templated into HTML via String(reqId) so we escape it for
+  // querySelector to handle the rare 'orphan' / numeric mix safely.
+  const sel = `tbody.tree-task-row[data-group-id="${String(groupId).replace(/"/g,'\\"')}"]`;
+  const rows = body.querySelectorAll(sel);
+  if (!rows.length) return;
+  const firstOpen = rows[0].style.display !== 'none';
+  rows.forEach(tb => { tb.style.display = firstOpen ? 'none' : ''; });
+  btn.dataset.groupState = firstOpen ? 'closed' : 'open';
+  btn.textContent        = firstOpen ? '▶' : '▼';
+  // Stop event from reaching the banner cell (which has its own onclick
+  // alias for the same toggle for convenience).
+  if (window.event && window.event.stopPropagation) window.event.stopPropagation();
 }
 
 /* Reflect the current view state on the toolbar buttons (active vs inactive look) */
@@ -2587,11 +2700,25 @@ function _reqPopupCriteria(title) {
   const t = (title || '').toLowerCase();
 
   // ── Bucket criteria (Delivery Summary categories) ────────────────
+  // The Deliverable bucket has TWO variants for the tree-mode popups:
+  //   • Planning Day Tasks: excludes "Adhoc Support" — those items aren't
+  //     part of the sprint's planning commitment (per user spec).
+  //   • Review Day Tasks: keeps "Adhoc Support" — by sprint end, adhoc
+  //     work has materialised and counts toward the delivery picture.
+  // All other Deliverable drills (Closed / Resolved / Open / OnHold /
+  // Adhoc columns) use the standard bucket text since they're about the
+  // requirement-level state breakdown, not the planning/review snapshot.
   let bucket = '';
   if (t.includes('non-deliverable')) {
     bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Non-Deliverable".';
   } else if (t.includes('deliverable') && !t.includes('non-')) {
-    bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Deliverable" AND NOT "Non-Deliverable".';
+    if (t.includes('planning day tasks')) {
+      bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Deliverable" — including the "Deliverables OnHold" and "Deliverables Adhoc" variants — AND NOT "Non-Deliverable" AND NOT "Adhoc Support".';
+    } else if (t.includes('review day tasks')) {
+      bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Deliverable" — including the "Deliverables OnHold" and "Deliverables Adhoc" variants — AND NOT "Non-Deliverable". "Adhoc Support" items are included.';
+    } else {
+      bucket = 'Requirements / Change Requests in the sprint WHERE Tags contain "Deliverable" AND NOT "Non-Deliverable".';
+    }
   } else if (t.includes('adhoc support')) {
     bucket = 'All work items in the sprint WHERE Tags contain "Adhoc Support" — includes Requirements, Change Requests AND Bugs.';
   }
@@ -2609,6 +2736,16 @@ function _reqPopupCriteria(title) {
     drill = 'Tasks considered: every child task under the bucket\'s requirements/CRs, scored using the historical OriginalEstimate snapshot from Planning Day (sprint start, 11:00 PM cutoff). Revised Estimate is used when > 0; else Original Estimate.';
   else if (t.includes('review day tasks'))
     drill = 'Tasks considered: every child task under the bucket\'s requirements/CRs, scored using the OriginalEstimate snapshot from sprint end (no state filter). Revised Estimate is used when > 0; else Original Estimate.';
+
+  // Discipline scope note — appended only for the Deliverable row's
+  // Planning Day / Review Day popups. The same popup type renders for
+  // Non-Deliverable and Adhoc-Support clicks too, but those are NOT
+  // scoped to Dev/Test, so we don't show the filter note for them.
+  const _isDelTaskPopup = (t.includes('planning day tasks') || t.includes('review day tasks'))
+    && t.includes('deliverable') && !t.includes('non-deliverable');
+  if (_isDelTaskPopup) {
+    drill += ' Discipline scope: ONLY tasks with Microsoft.VSTS.Common.Discipline ∈ {Development, Test}; all other disciplines are excluded from both the task list and the cell hours.';
+  }
 
   return [bucket, drill].filter(Boolean).join(' • ');
 }
@@ -2868,79 +3005,254 @@ function showRptPopup(title, itemsArr, type){
     // call-site. Title check is intentional and explicit.
     const _isReviewDay = (title || '').includes('Review Day Tasks');
     // Snapshot field keys — which entries on the taskOrigPlanMap record
-    // we pull from. For review mode we read reviewOE / reviewOEOriginal so
-    // the column totals match the Delivery Summary Review Day cell value.
-    const _snapEffKey  = _isReviewDay ? 'reviewOE'         : 'oe';
+    // we pull from. For review mode we read reviewOEOriginal so the
+    // "Review Day Original Estimate" column reflects what the OE field
+    // looked like at sprint end (not now).
     const _snapRawKey  = _isReviewDay ? 'reviewOEOriginal' : 'oeOriginal';
     const _snapDateKey = _isReviewDay ? 'reviewAsOfDate'   : 'asOfDate';
-    // Context-sensitive column headers — keep the user oriented on which
-    // snapshot the numbers came from. Effective-estimate header stays
-    // generic ("Original Planned (h)") in planning mode to match the
-    // existing Team B / Ticket Handling popup look, and switches to
-    // "Review Day Estimate (h)" in review mode for clarity.
+    // Cutoff date for the "created-after-snapshot" red-highlight rule.
+    // Planning cutoff: sprint start + 23:00 local. Review cutoff: sprint
+    // end + 23:59:59.999 local. Matches the bounds used by
+    // loadOrigPlannedForAdhoc(), so a task is flagged "late" here iff
+    // it has no revision at or before that cutoff (i.e., didn't exist).
+    let _cutoffMs = null;
+    if (_isReviewDay && sprintEndDate) {
+      const c = new Date(sprintEndDate); c.setHours(23,59,59,999);
+      _cutoffMs = c.getTime();
+    } else if (!_isReviewDay && sprintStartDate) {
+      const c = new Date(sprintStartDate); c.setHours(23,0,0,0);
+      _cutoffMs = c.getTime();
+    }
+    // Context-sensitive header for the snapshot OE column. The second OE
+    // column ("Original Planned (h)") now always shows the CURRENT
+    // OriginalEstimate field value, regardless of mode — per user request.
     const _rawColHdr   = _isReviewDay ? 'Review Day Original Estimate' : 'Planning Day Original Estimate';
-    const _effColHdr   = _isReviewDay ? 'Review Day Estimate (h)'      : 'Original Planned (h)';
     const _snapLabel   = _isReviewDay ? 'review day'                   : 'planning day';
 
-    // Columns: removed "Used Hours (h)" (current OriginalEstimate) per
-    // user feedback — it always duplicated the Original Estimate column
-    // when no mid-sprint OE edit occurred, with no upside in the rare
-    // case it differed.
-    _popupCols = ['Task ID','Title','Iteration','Discipline','State','Assigned To',_rawColHdr,_effColHdr,'Revised Estimate (h)','Completed (h)','Remaining (h)'];
+    // Column order (12 total):
+    //   Task ID | Title | Iteration | Discipline | State | Assigned To
+    //   | Created Date | [Planning/Review] Day Original Estimate
+    //   | Original Planned (h) ← now = CURRENT OE
+    //   | Revised Estimate (h) | Completed (h) | Remaining (h)
+    _popupCols = ['Task ID','Title','Iteration','Discipline','State','Assigned To','Created Date',_rawColHdr,'Original Planned (h)','Revised Estimate (h)','Completed (h)','Remaining (h)'];
 
-    // Accumulators for the totals footer. Built during the same map pass
-    // so we don't iterate the array twice.
-    let _ttlRaw = 0, _ttlEff = 0, _ttlRev = 0, _ttlComp = 0, _ttlRem = 0;
-    _popupRows = itemsArr.map(t => {
-      const tState  = t.fields['System.State'] || '';
-      const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
-      const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
-      const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
-      const tRev    = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
-      const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
-      const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
-      // Snapshot record — defaulted shape covers both planning and review keys.
-      const histRec = taskOrigPlanMap[t.id] || { oe: 0, oeOriginal: 0, reviewOE: 0, reviewOEOriginal: 0, asOfDate: null, reviewAsOfDate: null };
-      const tRaw    = histRec[_snapRawKey] || 0;      // raw OE from chosen snapshot
-      const tEff    = histRec[_snapEffKey] || 0;      // effective OE from chosen snapshot
-      const asOf    = histRec[_snapDateKey] ? new Date(histRec[_snapDateKey]).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-      // Iteration — last segment of the path; full path kept on title= for tooltip.
-      const iterFull  = t.fields['System.IterationPath'] || '';
-      const iterShort = iterFull ? (iterFull.split('\\').pop() || iterFull) : '—';
-      const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
-      _ttlRaw += tRaw; _ttlEff += tEff; _ttlRev += tRev; _ttlComp += tComp; _ttlRem += tRem;
-      return {
-        _cells: [String(t.id), t.fields['System.Title']||'', iterFull, tDisc, tState, tAssign, String(tRaw), String(tEff), String(tRev), String(tComp), String(tRem)],
-        _htmlCells: [
-          `<td style="padding:7px 10px;">${tLink}</td>`,
-          `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}</td>`,
-          `<td style="padding:7px 10px;color:#94a3b8;font-size:.67rem;white-space:nowrap;" title="${iterFull}">${iterShort}</td>`,
-          `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
-          `<td style="padding:7px 10px;color:${tStateC};font-weight:600;">${tState}</td>`,
-          `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#38bdf8;font-weight:600;" title="Raw Microsoft.VSTS.Scheduling.OriginalEstimate as of ${asOf} (${_snapLabel} snapshot)">${tRaw>0?fmtH(tRaw)+'h':'0h'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#a78bfa;font-weight:600;" title="Effective estimate (Revised when > 0, else Original) as of ${asOf} (${_snapLabel} snapshot)">${tEff>0?fmtH(tEff)+'h':'0h'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#c084fc;" title="Casepoint.TFS.CustomFields.RevisedEstimate (current value)">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#f87171;">${tRem>0?fmtH(tRem)+'h':'—'}</td>`
-        ]
-      };
+    // ─── Tree mode: group tasks under their parent requirement ───────
+    // Builds a one-time reverse index from `reqTasksMap` (req → tasks[])
+    // into `taskToReqMap` (task → first parent req id). Tasks in TFS
+    // typically have exactly one parent via Hierarchy-Reverse; if a task
+    // appears under multiple requirements we keep the first match for
+    // grouping purposes (the popup's totals still account for the task
+    // exactly once because we iterate `itemsArr`, not the map).
+    const _reqLookup = {};
+    requirements.forEach(r => { _reqLookup[r.id] = r; });
+    const _taskToReqMap = {};
+    Object.keys(reqTasksMap).forEach(rid => {
+      (reqTasksMap[rid] || []).forEach(tid => {
+        if (_taskToReqMap[tid] == null) _taskToReqMap[tid] = parseInt(rid, 10);
+      });
     });
-    // Build the totals row — one <td> per column, matching _popupCols length.
-    // The Effective-estimate column's total is what reconciles to the
-    // Delivery Summary Planning Day / Review Day cell value.
+
+    // Partition itemsArr into per-requirement buckets; tasks without a
+    // resolvable parent fall into an "orphan" group rendered last.
+    const _groups = {};   // reqId → { req, tasks: [] }
+    const _orphan = { req: null, tasks: [] };
+    itemsArr.forEach(t => {
+      const pid = _taskToReqMap[t.id];
+      if (pid != null && _reqLookup[pid]) {
+        if (!_groups[pid]) _groups[pid] = { req: _reqLookup[pid], tasks: [] };
+        _groups[pid].tasks.push(t);
+      } else {
+        _orphan.tasks.push(t);
+      }
+    });
+    // Deterministic ordering: alphabetic by requirement title; orphans last.
+    const _groupList = Object.values(_groups).sort((a,b) =>
+      (a.req.fields['System.Title']||'').localeCompare(b.req.fields['System.Title']||''));
+    if (_orphan.tasks.length) _groupList.push(_orphan);
+
+    // Small helper to format a Date-ish value into "dd MMM yyyy".
+    // Returns "—" for missing/invalid dates.
+    const _fmtDate = d => {
+      if (!d) return '—';
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return '—';
+      return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    };
+
+    // ─── Build interleaved rows: [groupHeader, ...tasks, groupHeader, ...] ───
+    // Accumulators for the GRAND totals footer (one across all groups).
+    let _ttlRaw = 0, _ttlCurOE = 0, _ttlRev = 0, _ttlComp = 0, _ttlRem = 0;
+    _popupRows = [];
+    _groupList.forEach(grp => {
+      // Stable group id used for chevron/tbody pairing. Real requirement
+      // → its TFS id; orphan bucket → string sentinel that won't collide.
+      const groupId = grp.req ? grp.req.id : '__orphan__';
+      // Per-group accumulators — go into the group header banner so the
+      // user sees the bucket's planning-day / review-day total at a glance
+      // without having to mentally sum the child rows.
+      let _gRaw = 0, _gCurOE = 0, _gRev = 0, _gComp = 0, _gRem = 0;
+      const taskRows = grp.tasks.map(t => {
+        const tState  = t.fields['System.State'] || '';
+        const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
+        const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
+        const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
+        const tRev    = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
+        const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
+        const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
+        // Current OE — live value of Microsoft.VSTS.Scheduling.OriginalEstimate.
+        // Goes into the "Original Planned (h)" column (semantics per latest
+        // user spec: "Original Estimate hours what actual current day").
+        const tCurOE  = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+        const histRec = taskOrigPlanMap[t.id] || { oe: 0, oeOriginal: 0, reviewOE: 0, reviewOEOriginal: 0, asOfDate: null, reviewAsOfDate: null };
+        const asOf    = histRec[_snapDateKey] ? _fmtDate(histRec[_snapDateKey]) : '—';
+        // Created date — used for both the new column AND the "task created
+        // after snapshot" detection that drives the red highlight.
+        const createdRaw = t.fields['System.CreatedDate'] || null;
+        const createdMs  = createdRaw ? new Date(createdRaw).getTime() : NaN;
+        const createdStr = _fmtDate(createdRaw);
+        const _isLate    = _cutoffMs != null && !isNaN(createdMs) && createdMs > _cutoffMs;
+        // Raw OE at the snapshot: stored value if the task existed back then,
+        // forced to 0 (and red-highlighted) for tasks created AFTER the
+        // snapshot — those tasks were not part of the plan/review baseline.
+        const tRaw = _isLate ? 0 : (histRec[_snapRawKey] || 0);
+
+        const iterFull  = t.fields['System.IterationPath'] || '';
+        const iterShort = iterFull ? (iterFull.split('\\').pop() || iterFull) : '—';
+        const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
+        _gRaw += tRaw; _gCurOE += tCurOE; _gRev += tRev; _gComp += tComp; _gRem += tRem;
+        _ttlRaw += tRaw; _ttlCurOE += tCurOE; _ttlRev += tRev; _ttlComp += tComp; _ttlRem += tRem;
+
+        // Cell styling for the snapshot OE column. When _isLate, paint the
+        // cell red and add a "Created after snapshot" tooltip so the user
+        // understands why it's 0 rather than wondering if data is missing.
+        const lateBg  = _isLate ? 'background:rgba(239,68,68,.18);' : '';
+        const lateClr = _isLate ? '#fca5a5' : '#38bdf8';
+        const rawTip  = _isLate
+          ? `Created ${createdStr} — AFTER the ${_snapLabel} cutoff. Task wasn't part of the snapshot, so its Planning/Review Day Original Estimate counts as 0.`
+          : `Raw Microsoft.VSTS.Scheduling.OriginalEstimate as of ${asOf} (${_snapLabel} snapshot).`;
+
+        return {
+          _groupId: groupId,
+          // _cells drives sort. Created-Date uses the raw ISO string
+          // (e.g. "2026-05-13T08:30:00Z") because string-sort on ISO 8601
+          // is the same as chronological sort. createdStr (the display
+          // form) would have sorted alphabetically — wrong.
+          _cells: [String(t.id), t.fields['System.Title']||'', iterFull, tDisc, tState, tAssign, (createdRaw || ''), String(tRaw), String(tCurOE), String(tRev), String(tComp), String(tRem)],
+          _htmlCells: [
+            // Task ID column is left-padded to visually indent the row
+            // under its requirement banner (tree-style hierarchy cue).
+            `<td style="padding:7px 10px 7px 28px;position:relative;white-space:nowrap;"><span style="color:#475569;position:absolute;left:14px;top:7px;font-size:.7rem;">└</span>${tLink}</td>`,
+            // Title gets min-width so it doesn't get squeezed to three lines
+            // by the other columns; wraps gracefully if very long.
+            `<td style="padding:7px 10px;color:#e2e8f0;min-width:240px;line-height:1.4;">${t.fields['System.Title']||''}</td>`,
+            `<td style="padding:7px 10px;color:#94a3b8;font-size:.67rem;white-space:nowrap;" title="${iterFull}">${iterShort}</td>`,
+            `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;white-space:nowrap;">${tDisc}</td>`,
+            `<td style="padding:7px 10px;color:${tStateC};font-weight:600;white-space:nowrap;">${tState}</td>`,
+            `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${tAssign.replace(/"/g,'&quot;')}">${tAssign}</td>`,
+            `<td style="padding:7px 10px;color:${_isLate?'#fca5a5':'#cbd5e1'};font-size:.67rem;white-space:nowrap;" title="System.CreatedDate${_isLate?` — AFTER the ${_snapLabel} cutoff`:''}">${createdStr}</td>`,
+            `<td style="padding:7px 10px;text-align:center;color:${lateClr};font-weight:600;white-space:nowrap;${lateBg}" title="${rawTip}">${tRaw>0?fmtH(tRaw)+'h':'0h'}</td>`,
+            `<td style="padding:7px 10px;text-align:center;color:#a78bfa;font-weight:600;white-space:nowrap;" title="Microsoft.VSTS.Scheduling.OriginalEstimate (current value)">${tCurOE>0?fmtH(tCurOE)+'h':'0h'}</td>`,
+            `<td style="padding:7px 10px;text-align:center;color:#c084fc;white-space:nowrap;" title="Casepoint.TFS.CustomFields.RevisedEstimate (current value)">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
+            `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;white-space:nowrap;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
+            `<td style="padding:7px 10px;text-align:center;color:#f87171;white-space:nowrap;">${tRem>0?fmtH(tRem)+'h':'—'}</td>`
+          ]
+        };
+      });
+
+      // Build the parent-requirement banner row. Uses a single colspan'd
+      // <td> so it spans the whole popup width regardless of column count.
+      // All sub-totals are computed BEFORE this row is pushed so the banner
+      // shows accurate per-group hours.
+      const r = grp.req;
+      const reqState   = r ? (r.fields['System.State'] || '') : '';
+      const reqStateC  = reqState==='Closed' ? '#34d399'
+                       : reqState==='Resolved' ? '#60a5fa'
+                       : reqState==='Active'||reqState==='Open' ? '#fbbf24'
+                       : '#94a3b8';
+      const reqTitle   = r ? (r.fields['System.Title'] || '(untitled requirement)') : 'Tasks without a parent requirement';
+      const reqType    = r ? (r.fields['System.WorkItemType'] || 'Requirement') : 'Orphan';
+      const reqTypeIcon= reqType === 'Change Request' ? '🔁' : reqType === 'Bug' ? '🐞' : '📋';
+      const reqLink    = r && tfsBase ? `<a href="${tfsBase}${r.id}" target="_blank" style="color:#60a5fa;font-size:.65rem;font-weight:600;" onclick="event.stopPropagation();">#${r.id}</a>` : '';
+      const reqStateBadge = r ? `<span style="background:rgba(255,255,255,.06);color:${reqStateC};padding:1px 7px;border-radius:8px;font-size:.6rem;font-weight:700;border:1px solid ${reqStateC}40;">${reqState}</span>` : '';
+
+      // ── Tags as small pills ─────────────────────────────────────────
+      // System.Tags is a semicolon-separated string in TFS (e.g. "Deliverable;
+      // Sprint Goal; AI"). We split, trim, filter empties, and render each as
+      // a compact pill. Each pill gets a stable hash-based hue so the same
+      // tag is the same color across banners — visually scannable when the
+      // same tag appears on many requirements.
+      const _tagHue = s => {
+        let h = 0;
+        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+        return ((h % 360) + 360) % 360;
+      };
+      const rawTags = r ? (r.fields['System.Tags'] || '') : '';
+      const tagList = rawTags.split(';').map(s => s.trim()).filter(Boolean);
+      const tagsHtml = tagList.length
+        ? `<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
+             <span style="color:#64748b;font-size:.58rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Tags:</span>
+             ${tagList.map(tag => {
+               const hue = _tagHue(tag.toLowerCase());
+               return `<span style="background:hsla(${hue},70%,40%,.18);color:hsl(${hue},75%,72%);border:1px solid hsla(${hue},70%,50%,.35);padding:1px 7px;border-radius:8px;font-size:.58rem;font-weight:600;white-space:nowrap;" title="Tag: ${tag.replace(/"/g,'&quot;')}">${tag}</span>`;
+             }).join('')}
+           </div>`
+        : '';
+
+      // ── Chevron expand/collapse button ─────────────────────────────
+      const chevronBtn = `<button type="button"
+        onclick="event.stopPropagation();togglePopupTreeGroup('${groupId}', this);"
+        data-group-state="open" data-group-id="${groupId}"
+        title="Expand / collapse tasks under this requirement"
+        style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#cbd5e1;width:20px;height:20px;border-radius:4px;font-size:.7rem;line-height:1;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">▼</button>`;
+
+      _popupRows.push({
+        _isGroupHeader: true,
+        _groupId: groupId,
+        _cells: [], // explicitly empty → sort comparator never sees these
+        _htmlCells: [
+          // The outer <td>'s onclick mirrors the chevron button so users
+          // can click anywhere on the banner row to toggle.
+          `<td colspan="${_popupCols.length}" onclick="togglePopupTreeGroup('${groupId}', this.querySelector('button[data-group-id]'))" style="padding:9px 14px;background:linear-gradient(90deg,rgba(59,130,246,.18) 0%, rgba(59,130,246,.04) 100%);border-top:2px solid rgba(59,130,246,.35);border-bottom:1px solid rgba(59,130,246,.15);cursor:pointer;user-select:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;flex-wrap:wrap;">
+                ${chevronBtn}
+                <span style="font-size:.85rem;flex-shrink:0;">${reqTypeIcon}</span>
+                <span style="color:#e2e8f0;font-weight:700;font-size:.74rem;line-height:1.3;" title="${reqTitle.replace(/"/g,'&quot;')}">${reqTitle}</span>
+                ${reqLink}
+                ${reqStateBadge}
+                ${tagsHtml}
+              </div>
+              <div style="display:flex;gap:14px;font-size:.62rem;color:#94a3b8;white-space:nowrap;">
+                <span title="Tasks in this group">📋 <strong style="color:#cbd5e1;">${grp.tasks.length}</strong> task${grp.tasks.length!==1?'s':''}</span>
+                <span title="${_snapLabel} raw Original Estimate (sub-total; late tasks count as 0)">${_isReviewDay?'Review':'Plan'} OE: <strong style="color:#38bdf8;">${_gRaw>0?fmtH(_gRaw)+'h':'0h'}</strong></span>
+                <span title="Current Original Estimate (sub-total)">Cur OE: <strong style="color:#a78bfa;">${_gCurOE>0?fmtH(_gCurOE)+'h':'0h'}</strong></span>
+                <span title="Completed work (sub-total)">Done: <strong style="color:#34d399;">${_gComp>0?fmtH(_gComp)+'h':'0h'}</strong></span>
+                <span title="Remaining work (sub-total)">Left: <strong style="color:#f87171;">${_gRem>0?fmtH(_gRem)+'h':'0h'}</strong></span>
+              </div>
+            </div>
+          </td>`
+        ]
+      });
+      _popupRows.push(...taskRows);
+    });
+
+    // Build the GRAND totals row — one <td> per column, matches _popupCols
+    // length (12). The two OE columns now have distinct semantics:
+    //   • snapshot raw OE total (late tasks contribute 0)
+    //   • current OE total (live field value sum)
     _popupTotalRow = [
-      `<td style="padding:8px 10px;font-weight:700;color:#e2e8f0;border-top:2px solid rgba(255,255,255,.18);">TOTAL <span style="color:#94a3b8;font-weight:500;font-size:.66rem;">(${itemsArr.length} task${itemsArr.length!==1?'s':''})</span></td>`,
+      `<td style="padding:8px 10px;font-weight:700;color:#e2e8f0;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">TOTAL <span style="color:#94a3b8;font-weight:500;font-size:.66rem;">(${itemsArr.length} task${itemsArr.length!==1?'s':''} • ${_groupList.length} req${_groupList.length!==1?'s':''})</span></td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
-      `<td style="padding:8px 10px;text-align:center;color:#38bdf8;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlRaw>0?fmtH(_ttlRaw)+'h':'0h'}</td>`,
-      `<td style="padding:8px 10px;text-align:center;color:#a78bfa;font-weight:700;border-top:2px solid rgba(255,255,255,.18);" title="Matches the Delivery Summary ${_isReviewDay?'Review':'Planning'} Day cell value">${_ttlEff>0?fmtH(_ttlEff)+'h':'0h'}</td>`,
-      `<td style="padding:8px 10px;text-align:center;color:#c084fc;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlRev>0?fmtH(_ttlRev)+'h':'—'}</td>`,
-      `<td style="padding:8px 10px;text-align:center;color:#34d399;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlComp>0?fmtH(_ttlComp)+'h':'—'}</td>`,
-      `<td style="padding:8px 10px;text-align:center;color:#f87171;font-weight:700;border-top:2px solid rgba(255,255,255,.18);">${_ttlRem>0?fmtH(_ttlRem)+'h':'—'}</td>`
+      `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#38bdf8;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;" title="Raw OE at ${_snapLabel} snapshot (tasks created later count as 0)">${_ttlRaw>0?fmtH(_ttlRaw)+'h':'0h'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#a78bfa;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;" title="Current Microsoft.VSTS.Scheduling.OriginalEstimate (live value)">${_ttlCurOE>0?fmtH(_ttlCurOE)+'h':'0h'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#c084fc;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlRev>0?fmtH(_ttlRev)+'h':'—'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#34d399;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlComp>0?fmtH(_ttlComp)+'h':'—'}</td>`,
+      `<td style="padding:8px 10px;text-align:center;color:#f87171;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlRem>0?fmtH(_ttlRem)+'h':'—'}</td>`
     ];
   } else if(type === 'aiTasks') {
     // AI Adoption Data — contributing tasks (Closed/Resolved, eff>0, exec set)
@@ -3185,7 +3497,7 @@ function renderReport(){
   //       Adhoc Support → blank (per spec, only the 2 hour-columns shown).
   // Total denominators (sum of Planning across Deliverable + Non-Deliverable)
   // power the percentages displayed alongside each value.
-  function _sumTaskHours(reqRows, mode){
+  function _sumTaskHours(reqRows, mode, disciplineFilter){
     let h = 0;
     const taskIds = [];
     reqRows.forEach(req => {
@@ -3202,6 +3514,20 @@ function renderReport(){
         // filters via taskLookup), causing the cell-vs-popup mismatch
         // the user observed for Deliverable and Non-Deliverable rows.
         if (!taskLookup[tid]) return;
+
+        // ── Discipline-scope filter ─────────────────────────────────────
+        // Optional Set of lowercase discipline strings (e.g. {'development',
+        // 'test'}). When provided, only tasks whose
+        // Microsoft.VSTS.Common.Discipline matches are counted toward both
+        // the cell hours AND the popup task list — keeping cell ↔ popup
+        // in sync. Comparison is case-insensitive + trimmed to absorb
+        // minor TFS field variance. Used by the Deliverable row per spec
+        // ("consider only Tasks with Discipline Development and Test").
+        if (disciplineFilter) {
+          const tk   = taskLookup[tid];
+          const disc = (tk.fields['Microsoft.VSTS.Common.Discipline'] || '').trim().toLowerCase();
+          if (!disciplineFilter.has(disc)) return;
+        }
 
         const rec = taskOrigPlanMap[tid];
         if (!rec) return;
@@ -3221,12 +3547,32 @@ function renderReport(){
     });
     return { hours: h, taskIds };
   }
+  // Discipline allow-list applied to the Deliverable row's Planning Day
+  // and Review Day calculations per user spec: only Development and Test
+  // tasks count; everything else (Design, Documentation, Project Mgmt,
+  // unset, etc.) is ignored from both the cell value and the popup list.
+  // Non-Deliverable and Adhoc Support rows are intentionally NOT filtered
+  // — the user scoped this change to "Deliverable —" popups only.
+  const DEL_DISC_FILTER = new Set(['development', 'test']);
   // Review Day uses the sprint-end snapshot for ALL child tasks regardless
   // of state — there is no Closed-only filter. Estimate value comes from the
   // helper, which prefers Casepoint.TFS.CustomFields.RevisedEstimate (>0)
   // over Microsoft.VSTS.Scheduling.OriginalEstimate.
-  const delPlan   = _sumTaskHours(deliverables, 'planning');
-  const delRev    = _sumTaskHours(deliverables, 'reviewAll');
+  // ── Planning Day vs Review Day scope (per user spec) ─────────────────
+  // Both popups include items tagged Deliverable / Deliverables OnHold /
+  // Deliverables Adhoc (any tag starting with "Deliverable", and NOT
+  // Non-Deliverable). This is the natural result of the existing category
+  // logic since `tags.includes('deliverable')` matches all three.
+  //
+  // ASYMMETRY: Planning Day additionally EXCLUDES items also tagged
+  // "Adhoc Support" — those are unplanned support work that wasn't part
+  // of the sprint's planning commitment. Review Day keeps them, because
+  // by sprint end any adhoc-support work has been part of the actual
+  // delivery picture.
+  const _delPlanningReqs = deliverables.filter(r => !r.isAdhocSupport);
+  const _delReviewReqs   = deliverables;
+  const delPlan   = _sumTaskHours(_delPlanningReqs, 'planning',  DEL_DISC_FILTER);
+  const delRev    = _sumTaskHours(_delReviewReqs,   'reviewAll', DEL_DISC_FILTER);
   const ndPlan    = _sumTaskHours(nonDel,       'planning');
   const ndRev     = _sumTaskHours(nonDel,       'reviewAll');
   const adhocPlan = _sumTaskHours(adhoc,        'planning');
@@ -3271,10 +3617,35 @@ function renderReport(){
 
     // For Non-Deliverable row, hide Closed / Resolved / Open values — show "—"
     const isNonDel = row.label.includes('Non-Deliverable');
+    // Deliverable row's Planning/Review hours are scoped to Dev+Test
+    // disciplines per spec; tooltip notes the filter so the user knows
+    // why the number may be smaller than the count of child tasks.
+    // Planning Day additionally excludes Adhoc Support items (see
+    // _delPlanningReqs above); Review Day keeps them. The tooltips
+    // diverge so each cell tells the truth about its own scope.
+    const isDel        = row.label.includes('Deliverable') && !isNonDel;
+    const revScopeNote  = isDel
+      ? ' Counts ONLY tasks with Discipline = Development or Test (other disciplines ignored).'
+      : '';
     const D=(val,arr,label)=>arr.length?`<td class="rpt-edit rpt-drill" contenteditable="true" ondblclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'reqs')">${val}</td>`:`<td class="rpt-edit" contenteditable="true">${val}</td>`;
     const dash = `<td class="rpt-edit" contenteditable="true" style="color:#94a3b8">—</td>`;
-    const planCell   = `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#a78bfa;font-weight:600;" title="Sum of all child tasks' Original Estimate as of sprint start (11:00 PM). Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Planning Day Tasks',window['_rpt_${key}_planTasks'],'tbAdhocTasks')">${fmtHours(planHrs, planPct)}</td>`;
-    const revCell    = `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#34d399;font-weight:600;" title="Sum of all child tasks' Original Estimate at sprint end. Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Review Day Tasks',window['_rpt_${key}_revTasks'],'tbAdhocTasks')">${fmtHours(revHrs, revPct)}</td>`;
+
+    // ── Planning Day cell ───────────────────────────────────────────
+    // Deliverable + Non-Deliverable rows: MANUAL TEXTBOX (amber, dashed).
+    // The auto-calculation and the Planning Day Tasks drill-down popup
+    // are intentionally suppressed for these two rows per user spec —
+    // teams enter the planned value (e.g. "609h (84%)") themselves from
+    // a separate planning document. ondblclick stopPropagation prevents
+    // the row's "All Items" popup from firing when the user double-clicks
+    // to select inside the textbox.
+    //
+    // Adhoc Support (and any other row): keeps the auto-calculated
+    // value + Planning Day Tasks popup drill, as before.
+    const isManualPlan = isDel || isNonDel;
+    const planCell = isManualPlan
+      ? `<td class="rpt-manual-input" contenteditable="true" title="Manual entry — type the Planning Day value for ${row.label} (e.g. 609h (84%)). No auto-calculation or popup; the value you type is what's shown and exported." ondblclick="event.stopPropagation();" onclick="event.stopPropagation();"></td>`
+      : `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#a78bfa;font-weight:600;" title="Sum of all child tasks' Original Estimate as of sprint start (11:00 PM). Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Planning Day Tasks',window['_rpt_${key}_planTasks'],'tbAdhocTasks')">${fmtHours(planHrs, planPct)}</td>`;
+    const revCell    = `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#34d399;font-weight:600;" title="Sum of all child tasks' Original Estimate at sprint end. Revised Estimate used when > 0.${revScopeNote}" ondblclick="event.stopPropagation();showRptPopup('${row.label} — Review Day Tasks',window['_rpt_${key}_revTasks'],'tbAdhocTasks')">${fmtHours(revHrs, revPct)}</td>`;
 
     return`<tr ondblclick="showRptPopup('${row.label} — All Items',window['_rpt_${key}_all'],'reqs')" style="cursor:pointer;" title="Double-click to view all items">
       <td>${row.label}</td>
