@@ -2737,13 +2737,18 @@ function _reqPopupCriteria(title) {
   else if (t.includes('review day tasks'))
     drill = 'Tasks considered: every child task under the bucket\'s requirements/CRs, scored using the OriginalEstimate snapshot from sprint end (no state filter). Revised Estimate is used when > 0; else Original Estimate.';
 
-  // Discipline scope note — appended only for the Deliverable row's
-  // Planning Day / Review Day popups. The same popup type renders for
-  // Non-Deliverable and Adhoc-Support clicks too, but those are NOT
-  // scoped to Dev/Test, so we don't show the filter note for them.
-  const _isDelTaskPopup = (t.includes('planning day tasks') || t.includes('review day tasks'))
-    && t.includes('deliverable') && !t.includes('non-deliverable');
-  if (_isDelTaskPopup) {
+  // Discipline scope note — appended for any popup whose underlying
+  // hour sum is filtered to Dev/Test:
+  //   • Deliverable — Planning Day Tasks
+  //   • Deliverable — Review Day Tasks
+  //   • Non-Deliverable — Review Day Tasks   ← added per latest user spec
+  // The same popup type renders for Adhoc-Support clicks too, but those
+  // are NOT filtered, so we don't show the note there. Non-Deliverable
+  // Planning Day no longer has a popup at all (manual textbox cell).
+  const _isFilteredTaskPopup =
+    (t.includes('planning day tasks') && t.includes('deliverable') && !t.includes('non-deliverable')) ||
+    (t.includes('review day tasks')   && t.includes('deliverable'));  // matches both "deliverable" and "non-deliverable" titles
+  if (_isFilteredTaskPopup) {
     drill += ' Discipline scope: ONLY tasks with Microsoft.VSTS.Common.Discipline ∈ {Development, Test}; all other disciplines are excluded from both the task list and the cell hours.';
   }
 
@@ -3574,7 +3579,11 @@ function renderReport(){
   const delPlan   = _sumTaskHours(_delPlanningReqs, 'planning',  DEL_DISC_FILTER);
   const delRev    = _sumTaskHours(_delReviewReqs,   'reviewAll', DEL_DISC_FILTER);
   const ndPlan    = _sumTaskHours(nonDel,       'planning');
-  const ndRev     = _sumTaskHours(nonDel,       'reviewAll');
+  // Non-Deliverable Review Day: same Dev/Test discipline filter as
+  // Deliverable Review Day (per user spec). Planning Day for
+  // Non-Deliverable is a manual textbox (no auto-calc), so its filter is
+  // moot and we leave the call unfiltered.
+  const ndRev     = _sumTaskHours(nonDel,       'reviewAll', DEL_DISC_FILTER);
   const adhocPlan = _sumTaskHours(adhoc,        'planning');
   const adhocRev  = _sumTaskHours(adhoc,        'reviewAll');
   const totalPlan = delPlan.hours + ndPlan.hours;
@@ -3624,7 +3633,10 @@ function renderReport(){
     // _delPlanningReqs above); Review Day keeps them. The tooltips
     // diverge so each cell tells the truth about its own scope.
     const isDel        = row.label.includes('Deliverable') && !isNonDel;
-    const revScopeNote  = isDel
+    // Review Day Dev/Test discipline note now applies to BOTH Deliverable
+    // and Non-Deliverable (per user spec — both Review Day calculations
+    // are scoped to Dev/Test). Adhoc Support stays unfiltered.
+    const revScopeNote  = (isDel || isNonDel)
       ? ' Counts ONLY tasks with Discipline = Development or Test (other disciplines ignored).'
       : '';
     const D=(val,arr,label)=>arr.length?`<td class="rpt-edit rpt-drill" contenteditable="true" ondblclick="event.stopPropagation();showRptPopup('${row.label} — ${label}',window['_rpt_${key}_${label.toLowerCase()}'],'reqs')">${val}</td>`:`<td class="rpt-edit" contenteditable="true">${val}</td>`;
@@ -4243,21 +4255,31 @@ function renderReport(){
         const comp    = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
         if (eff <= 0) return;
 
+        // ── Execution-type bucketing (per user spec) ───────────────────
+        // AI category : exec starts with "AI-" (AI-Generated, AI-Assisted, etc.)
+        // Manual cat  : exec === "Manual"  OR  exec === "Manual-AI-Ineffective"
+        //               Manual-AI-Ineffective used to live in its own MAI
+        //               bucket; the user reclassified it as Manual because
+        //               an "ineffective AI attempt" produced manual output
+        //               in the end. The MAI variables are kept (always 0
+        //               now) so the legacy reporting code paths still
+        //               return cleanly with no value-shape changes.
         const exec = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '';
         const isAI  = exec.startsWith('AI-');
-        const isMAI = exec === 'Manual-AI-Ineffective';
-        const isMan = exec === 'Manual';
-        if (!isAI && !isMAI && !isMan) return;
+        const isMan = exec === 'Manual' || exec === 'Manual-AI-Ineffective';
+        if (!isAI && !isMan) return;
 
         if (isAI)  { aiTasks++;  if (revEst <= 0) aiOrig += origEst; aiRev += revEst; aiTot += eff; aiComp += comp; }
-        else if (isMAI) { maiTasks++; maiOrig += eff; maiComp += comp; }
-        else            { manTasks++;  manOrig += eff; manComp += comp; }
+        else       { manTasks++; manOrig += eff; manComp += comp; }
 
         matched.push(t.id);
       });
 
       const totalTasks  = aiTasks + maiTasks + manTasks;
       const totalHrs    = aiTot + maiOrig + manOrig;
+      // AI Adoption % — share of total effort that was AI-executed.
+      // maiOrig is always 0 now (MAI merged into Manual) but kept in the
+      // formula for clarity; result simplifies to aiTot / totalHrs.
       const adoptionPct = totalHrs > 0 ? Math.round(((aiTot + maiOrig) / totalHrs) * 100) : 0;
       const effPct      = aiTot  > 0 ? Math.round(((aiTot - aiComp) / aiTot) * 100) : 0;
       const savedHrs    = aiTot  - aiComp;
