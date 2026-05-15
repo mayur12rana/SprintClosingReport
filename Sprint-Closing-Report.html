@@ -2232,24 +2232,30 @@ function scrBuildReport(){
   const rowBgGrn = i => i%2===0 ? '#f0fdf4' : '#ffffff';
 
   // ── Cell builders ────────────────────────────────────────────────
-  // First-column body cells: NEVER wrap — column auto-sizes via autoWidths() to fit content.
-  // Footer left cells keep word-wrap so very long total descriptions can break.
-  const TH  =(t,ex='')=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #1e3a5f;text-align:center;white-space:nowrap;line-height:1.2;${ex}">${t}</th>`;
-  const THL =(t)=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #1e3a5f;text-align:left;white-space:nowrap;line-height:1.2;">${t}</th>`;
+  // Headers: `word-break:normal` lets long headers wrap to a second line
+  //   (e.g. "Manual Efficiency", "Productivity Gain %") when the column
+  //   is narrow, rather than overflowing horizontally into the adjacent
+  //   header cell. line-height:1.2 keeps wrapped headers tight; the
+  //   table grows vertically by a few px when wrapping happens.
+  // Data cells: keep `white-space:nowrap` so numeric values like
+  //   "762.5h (90.02%)" stay on one line. The autoWidths() algorithm
+  //   sizes each column to fit its widest data cell so this is safe.
+  const TH  =(t,ex='')=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #1e3a5f;text-align:center;line-height:1.2;word-break:normal;overflow-wrap:normal;${ex}">${t}</th>`;
+  const THL =(t)=>`<th style="${F}background:#1e3a5f;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #1e3a5f;text-align:left;line-height:1.2;word-break:normal;overflow-wrap:normal;">${t}</th>`;
   const TD  =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 4px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:center;background:${rowBg(i)};white-space:nowrap;${ex}">${t}</td>`;
   const TDL =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 6px;border:1px solid #e2e8f0;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBg(i)};white-space:nowrap;${ex}">${t}</td>`;
   const TF  =(t,ex='')=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 4px;border:1px solid #93c5fd;text-align:center;white-space:nowrap;${ex}">${t}</td>`;
   const TFL =(t)=>`<td style="${F}background:#dbeafe;color:#1e3a5f;font-size:9pt;font-weight:bold;padding:6px 6px;border:1px solid #93c5fd;text-align:left;word-wrap:break-word;">${t}</td>`;
   // Green header/footer (Team B / AI Data)
-  const THG =(t,ex='')=>`<th style="${F}background:#14532d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #14532d;text-align:center;white-space:nowrap;line-height:1.2;${ex}">${t}</th>`;
-  const THLG=(t)=>`<th style="${F}background:#14532d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #14532d;text-align:left;white-space:nowrap;line-height:1.2;">${t}</th>`;
+  const THG =(t,ex='')=>`<th style="${F}background:#14532d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #14532d;text-align:center;line-height:1.2;word-break:normal;overflow-wrap:normal;${ex}">${t}</th>`;
+  const THLG=(t)=>`<th style="${F}background:#14532d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #14532d;text-align:left;line-height:1.2;word-break:normal;overflow-wrap:normal;">${t}</th>`;
   const TDG =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 4px;border:1px solid #d1fae5;color:#1a1a1a;text-align:center;background:${rowBgGrn(i)};white-space:nowrap;${ex}">${t}</td>`;
   const TDLG=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 6px;border:1px solid #d1fae5;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgGrn(i)};white-space:nowrap;${ex}">${t}</td>`;
   const TFG =(t,ex='')=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 4px;border:1px solid #6ee7b7;text-align:center;white-space:nowrap;${ex}">${t}</td>`;
   const TFLG=(t)=>`<td style="${F}background:#d1fae5;color:#064e3b;font-size:9pt;font-weight:bold;padding:6px 6px;border:1px solid #6ee7b7;text-align:left;word-wrap:break-word;">${t}</td>`;
   // Red header/footer (Defect)
-  const THR =(t,ex='')=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #7f1d1d;text-align:center;white-space:nowrap;line-height:1.2;${ex}">${t}</th>`;
-  const THLR=(t)=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #7f1d1d;text-align:left;white-space:nowrap;line-height:1.2;">${t}</th>`;
+  const THR =(t,ex='')=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 4px;border:1px solid #7f1d1d;text-align:center;line-height:1.2;word-break:normal;overflow-wrap:normal;${ex}">${t}</th>`;
+  const THLR=(t)=>`<th style="${F}background:#7f1d1d;color:#ffffff;font-size:8.5pt;font-weight:bold;padding:7px 6px;border:1px solid #7f1d1d;text-align:left;line-height:1.2;word-break:normal;overflow-wrap:normal;">${t}</th>`;
   const TDR =(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 4px;border:1px solid #fee2e2;color:#1a1a1a;text-align:center;background:${rowBgRed(i)};white-space:nowrap;${ex}">${t}</td>`;
   const TDLR=(t,ex='',i=0)=>`<td style="${F}font-size:9pt;padding:5px 6px;border:1px solid #fee2e2;color:#1a1a1a;text-align:left;font-weight:600;background:${rowBgRed(i)};white-space:nowrap;${ex}">${t}</td>`;
   const TFR =(t,ex='')=>`<td style="${F}background:#fee2e2;color:#7f1d1d;font-size:9pt;font-weight:bold;padding:6px 4px;border:1px solid #fca5a5;text-align:center;white-space:nowrap;${ex}">${t}</td>`;
@@ -2258,23 +2264,35 @@ function scrBuildReport(){
   const SECH=(label)=>`<tr><td colspan="10" style="background:#1e3a8a;padding:8px 12px;border-bottom:2px solid #3b82f6;">
     <span style="${F}font-size:10pt;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.05em;">${label}</span></td></tr>`;
 
-  // Column widths are computed automatically per-table from the header text length,
-  // with the first column boosted to fit the longest data label so it never wraps,
-  // and given a visual-balance boost (~1.4×) so label columns like Type/Discipline
-  // read comfortably wider than the numeric columns next to them.
-  // Headers are uppercase + letter-spaced, so they count ~1.5× per char visually.
-  const autoWidths = (cols, rows) => {
+  // Column widths are computed automatically per-table from the LONGEST of
+  // (header text, every cell value, every footer value) so no column ever
+  // gets sized too small to hold its content. Without this, cells like
+  // "762.5h (90.02%)" overflow into the next column because they're wider
+  // than the header that nominally sits above them.
+  //
+  // Weight heuristic:
+  //   headerWeight = max(len, 3) × 1.5 + 4   ← headers render in
+  //                                            uppercase + letter-spaced,
+  //                                            so they need ~1.5× per char
+  //   cellWeight   = len + 4                 ← cells are mixed-case digits
+  //   columnWeight = max(headerW, max(cellW over rows ∪ foot))
+  // First column gets a visual-balance boost (1.4×) so label columns
+  // read comfortably wider than the dense numeric columns next to them.
+  const autoWidths = (cols, rows, foot) => {
     const headerWeight = h => Math.max((h || '').length, 3) * 1.5 + 4;
-    const cellWeight   = c => (c || '').length + 4;
+    const cellWeight   = c => ((c == null ? '' : String(c)).length) + 4;
+    const allDataRows  = [].concat(rows || [], foot || []);
     const w = cols.map((h, i) => {
       let weight = headerWeight(h);
-      if (i === 0) {
-        for (const r of rows) {
-          const cw = cellWeight(r && r[i]);
-          if (cw > weight) weight = cw;
-        }
-        weight *= 1.4; // visual-balance boost for the label column
+      // Consider every data + footer cell in this column, not just the
+      // label column. This is the key fix — before, columns 1..N were
+      // sized purely from their header text and any wider numeric cell
+      // would visually overflow into the next column.
+      for (const r of allDataRows) {
+        const cw = cellWeight(r && r[i]);
+        if (cw > weight) weight = cw;
       }
+      if (i === 0) weight *= 1.4; // visual-balance boost for label column
       return weight;
     });
     const total = w.reduce((a, b) => a + b, 0) || 1;
@@ -2285,12 +2303,12 @@ function scrBuildReport(){
   // (uses table-layout:fixed only inside <colgroup>'s width directive — auto-layout
   //  on the table itself, so cells use the colgroup widths but content can grow within)
   const _buildTbl=(cols,rows,foot,H,HL,D,DL,Ft,FtL,widths)=>{
-    const w    = widths || autoWidths(cols, rows);
+    const w    = widths || autoWidths(cols, rows, foot);
     const cg   = `<colgroup>${w.map(c=>`<col style="width:${c}">`).join('')}</colgroup>`;
     const hdr  = cols.map((c,i)=>i===0?HL(c):H(c)).join('');
     const body = rows.map((r,i)=>`<tr>${r.map((c,j)=>j===0?DL(c,'',i):D(c,'',i)).join('')}</tr>`).join('');
     const ftr  = foot.map(r=>`<tr>${r.map((c,j)=>j===0?FtL(c):Ft(c)).join('')}</tr>`).join('');
-    return`<table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;table-layout:fixed;margin-bottom:14px;">
+    return`<table border="0" cellpadding="0" cellspacing="0" width="932" style="border-collapse:collapse;width:932px;max-width:932px;table-layout:fixed;margin-bottom:14px;">
       ${cg}
       <thead><tr>${hdr}</tr></thead>
       <tbody>${body}</tbody>${ftr?`<tfoot>${ftr}</tfoot>`:''}
@@ -2339,17 +2357,17 @@ function scrBuildReport(){
 <title>Sprint Closing Report — ${sprint}</title>
 </head>
 <body style="margin:0;padding:16px;background:#f1f5f9;font-family:Verdana,Geneva,Tahoma,sans-serif;">
-<table align="center" border="0" cellpadding="0" cellspacing="0" width="780"
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="980"
   style="border-collapse:collapse;background:#fff;border:1px solid #cbd5e1;">
 
   <!-- HEADER -->
   <tr><td style="padding:0;">
-    <table border="0" cellpadding="0" cellspacing="0" width="780" style="border-collapse:collapse;">
+    <table border="0" cellpadding="0" cellspacing="0" width="980" style="border-collapse:collapse;">
       <tr>
-        <td width="520" bgcolor="#dbeafe" style="background:#dbeafe;padding:14px 18px;vertical-align:middle;border-bottom:2px solid #93c5fd;">
+        <td width="660" bgcolor="#dbeafe" style="background:#dbeafe;padding:14px 18px;vertical-align:middle;border-bottom:2px solid #93c5fd;">
           <span style="${F}font-size:14pt;font-weight:bold;color:#1e3a5f;">Sprint Closing Report — ${area}</span>
         </td>
-        <td width="260" bgcolor="#f0f7ff" style="background:#f0f7ff;padding:10px 14px;text-align:center;vertical-align:middle;border-left:2px solid #93c5fd;border-bottom:2px solid #93c5fd;">
+        <td width="320" bgcolor="#f0f7ff" style="background:#f0f7ff;padding:10px 14px;text-align:center;vertical-align:middle;border-left:2px solid #93c5fd;border-bottom:2px solid #93c5fd;">
           <p style="${F}font-size:7pt;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin:0 0 3px;">SPRINT</p>
           <p style="${F}font-size:11pt;font-weight:bold;color:#1e3a5f;margin:0;">${sprint}</p>
           <p style="${F}font-size:8pt;color:#475569;margin:3px 0 0;">${dates}</p>
@@ -2362,8 +2380,8 @@ function scrBuildReport(){
   <tr><td style="padding:20px 24px 24px;">
 
     <!-- Sprint Goal -->
-    <table border="0" cellpadding="0" cellspacing="0" width="732"
-      style="border-collapse:collapse;width:732px;max-width:732px;margin-bottom:16px;border:1px solid #bfdbfe;">
+    <table border="0" cellpadding="0" cellspacing="0" width="932"
+      style="border-collapse:collapse;width:932px;max-width:932px;margin-bottom:16px;border:1px solid #bfdbfe;">
       <!-- Header row: icon + title + badge -->
       <tr bgcolor="#1e3a8a">
         <td style="background:#1e3a8a;padding:10px 14px;vertical-align:middle;border-bottom:2px solid #3b82f6;">
@@ -2386,10 +2404,10 @@ function scrBuildReport(){
     ${tbl(['Category','Total Items','Closed','Resolved','Open','OnHold','Adhoc','Planning Day','Review Day'], delivery.rows, delivery.foot)}
 
     <!-- Sprint Insight -->
-    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;margin-top:14px;margin-bottom:14px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="932" style="border-collapse:collapse;width:932px;max-width:932px;margin-top:14px;margin-bottom:14px;">
       ${SECH('Sprint Insight')}
       <tr><td colspan="10" style="padding:0;">
-        <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;background:#eff6ff;border:1px solid #bfdbfe;">${insightHtml}</table>
+        <table border="0" cellpadding="0" cellspacing="0" width="932" style="border-collapse:collapse;width:932px;max-width:932px;background:#eff6ff;border:1px solid #bfdbfe;">${insightHtml}</table>
       </td></tr>
     </table>
 
@@ -2407,7 +2425,7 @@ function scrBuildReport(){
     ${tblGreen(['Discipline','Original Planned','Team B Utilized','Team B Completed','Remaining'], teamB.rows, teamB.foot)}
 
     <!-- Footer -->
-    <table border="0" cellpadding="0" cellspacing="0" width="732" style="border-collapse:collapse;width:732px;max-width:732px;table-layout:fixed;border-top:1px solid #e2e8f0;margin-top:18px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="932" style="border-collapse:collapse;width:932px;max-width:932px;table-layout:fixed;border-top:1px solid #e2e8f0;margin-top:18px;">
       <tr>
         <td style="${F}padding:7px 0 0;font-size:7.5pt;color:#94a3b8;">Sprint Closing Report &bull; ${sprint}</td>
         <td style="${F}padding:7px 0 0;font-size:7.5pt;color:#94a3b8;text-align:right;">Generated ${today}</td>
@@ -4279,22 +4297,32 @@ function renderReport(){
         const comp    = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
         if (eff <= 0) return;
 
-        // ── Execution-type bucketing (per user spec) ───────────────────
-        // AI category : exec starts with "AI-" (AI-Generated, AI-Assisted, etc.)
-        // Manual cat  : exec === "Manual"  OR  exec === "Manual-AI-Ineffective"
-        //               Manual-AI-Ineffective used to live in its own MAI
-        //               bucket; the user reclassified it as Manual because
-        //               an "ineffective AI attempt" produced manual output
-        //               in the end. The MAI variables are kept (always 0
-        //               now) so the legacy reporting code paths still
-        //               return cleanly with no value-shape changes.
+        // ── Three-way execution-type bucketing (per user spec) ─────────
+        //   AI    : exec starts with "AI-" (AI-Generated, AI-Assisted, etc.)
+        //   MAI   : exec === "Manual-AI-Ineffective" — failed AI attempt
+        //           that ended up being reworked manually
+        //   Manual: everything else (explicit "Manual", blank, custom values)
+        //
+        // We track MAI as its own bucket so the user's latest spec
+        //   Saved Hours       = AI Saved + AI-Ineffective Saved + Manual Saved
+        //   Productivity Gain = (AI Saved + AI-Ineffective Saved + Manual Saved)
+        //                       / (Total Orig / 1.4) × 100
+        // can be written in the explicit three-way form below. For the
+        // displayed "Manual Tasks" count column we still combine
+        // MAI + Manual (per the earlier "Manual-AI-Ineffective counts as
+        // Manual Tasks" spec) — that combination happens in the row
+        // mapping below, NOT inside the bucket counts.
         const exec = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '';
         const isAI  = exec.startsWith('AI-');
-        const isMan = exec === 'Manual' || exec === 'Manual-AI-Ineffective';
-        if (!isAI && !isMan) return;
+        const isMAI = exec === 'Manual-AI-Ineffective';
+        // isMan covers explicit "Manual", blank exec, and any other
+        // non-AI / non-MAI value — keeping Test discipline's blank-exec
+        // hours in the bucket (per the prior Test-specific fix).
+        const isMan = !isAI && !isMAI;
 
-        if (isAI)  { aiTasks++;  if (revEst <= 0) aiOrig += origEst; aiRev += revEst; aiTot += eff; aiComp += comp; }
-        else       { manTasks++; manOrig += eff; manComp += comp; }
+        if (isAI)       { aiTasks++;  if (revEst <= 0) aiOrig += origEst; aiRev += revEst; aiTot += eff; aiComp += comp; }
+        else if (isMAI) { maiTasks++; maiOrig += eff; maiComp += comp; }
+        else            { manTasks++; manOrig += eff; manComp += comp; }
 
         matched.push(t.id);
       });
@@ -4302,19 +4330,36 @@ function renderReport(){
       const totalTasks  = aiTasks + maiTasks + manTasks;
       const totalHrs    = aiTot + maiOrig + manOrig;
       // AI Adoption % — share of total effort that was AI-executed.
-      // maiOrig is always 0 now (MAI merged into Manual) but kept in the
-      // formula for clarity; result simplifies to aiTot / totalHrs.
-      const adoptionPct = totalHrs > 0 ? Math.round(((aiTot + maiOrig) / totalHrs) * 100) : 0;
+      // MAI hours are NOT credited to AI adoption because MAI represents
+      // failed AI attempts that ultimately required manual rework.
+      const adoptionPct = totalHrs > 0 ? Math.round((aiTot / totalHrs) * 100) : 0;
       const effPct      = aiTot  > 0 ? Math.round(((aiTot - aiComp) / aiTot) * 100) : 0;
-      const savedHrs    = aiTot  - aiComp;
-      // Productivity Gain = (AI Saved + Manual Saved) / (Total Orig / 1.4) × 100
-      const aiSaved_pg    = aiTot - aiComp;
-      const manualSaved_pg= (manOrig + maiOrig) - (manComp + maiComp);
-      const totalOrig_pg  = aiTot + manOrig + maiOrig;
-      const prodGainPct = totalOrig_pg > 0
-        ? Math.round(((aiSaved_pg + manualSaved_pg) / (totalOrig_pg / 1.4)) * 100) : 0;
 
-      // Manual Efficiency = savings on manual hours / manual total
+      // ── Saved Hours (per latest user spec) ─────────────────────────
+      //   AI Saved        = aiTot   - aiComp
+      //   AI-Ineffective  = maiOrig - maiComp
+      //   Manual Saved    = manOrig - manComp
+      //   Saved Hours     = AI Saved + AI-Ineffective + Manual Saved
+      // Previously this column showed AI savings only; it now reflects
+      // total savings across all execution buckets, matching the
+      // Productivity Gain numerator.
+      const aiSaved     = aiTot   - aiComp;
+      const maiSaved    = maiOrig - maiComp;
+      const manualSaved = manOrig - manComp;
+      const savedHrs    = aiSaved + maiSaved + manualSaved;
+
+      // ── Productivity Gain % (per latest user spec) ─────────────────
+      //   PG = (AI Saved + AI-Ineffective Saved + Manual Saved)
+      //        / (Total Orig / 1.4) × 100
+      // The numerator is exactly savedHrs above; denominator is the
+      // sum of effective estimates across all three buckets, scaled by
+      // 1/1.4 to convert hours into the productivity-gain unit.
+      const prodGainPct = totalHrs > 0
+        ? Math.round((savedHrs / (totalHrs / 1.4)) * 100) : 0;
+
+      // Manual Efficiency — based on the COMBINED Manual + MAI bucket
+      // (matches the "Manual Tasks" display column, which also combines
+      // them per the earlier user request).
       const manualEffDenom = manOrig + maiOrig;
       const manualEffPct = manualEffDenom > 0
         ? Math.round(((manualEffDenom - (manComp + maiComp)) / manualEffDenom) * 100) : 0;
@@ -4322,7 +4367,8 @@ function renderReport(){
       return { totalTasks, aiTasks, manTasks, maiTasks, adoptionPct,
                aiOrig, aiTot, aiComp, effPct, manualEffPct, savedHrs,
                manOrig, manComp, maiOrig, maiComp, prodGainPct,
-               taskIds: matched };  // taskIds for popup; manOrig/maiOrig for overall
+               aiSaved, maiSaved, manualSaved,  // breakdown for tooltips
+               taskIds: matched };
     }
 
     const DISCIPLINES = [
@@ -4348,7 +4394,9 @@ function renderReport(){
       if (s.totalTasks > 0) hasData = true;
       totTasks  += s.totalTasks;
       totAI     += s.aiTasks;
-      totMan    += s.manTasks;
+      // Manual Tasks total combines explicit Manual + Manual-AI-Ineffective
+      // — matches the per-row display column which shows manTasks+maiTasks.
+      totMan    += s.manTasks + s.maiTasks;
       totAiTot  += s.aiTot;
       totAiComp += s.aiComp;
       totSaved  += s.savedHrs;
@@ -4370,11 +4418,11 @@ function renderReport(){
         <td style="text-align:left;font-weight:600;color:${d.clr}">${d.label}</td>
         <td style="font-weight:700">${s.totalTasks}</td>
         <td style="color:#60a5fa">${s.aiTasks}</td>
-        <td style="color:#94a3b8">${s.manTasks}</td>
+        <td style="color:#94a3b8" title="Manual + Manual-AI-Ineffective tasks combined">${s.manTasks + s.maiTasks}</td>
         <td style="color:${effColor};font-weight:700">${s.effPct}%</td>
         <td style="color:${manEffColor};font-weight:700">${s.manualEffPct}%</td>
-        <td style="color:${savedColor};font-weight:700">${fmtH(s.savedHrs)}h</td>
-        <td style="color:${pgColor};font-weight:700" title="(AI Saved + Manual Saved) / (Total Orig / 1.4) × 100">${s.prodGainPct}%</td>
+        <td style="color:${savedColor};font-weight:700" title="AI Saved (${fmtH(s.aiSaved)}h) + AI-Ineffective Saved (${fmtH(s.maiSaved)}h) + Manual Saved (${fmtH(s.manualSaved)}h)">${fmtH(s.savedHrs)}h</td>
+        <td style="color:${pgColor};font-weight:700" title="(AI Saved + AI-Ineffective Saved + Manual Saved) / (Total Orig / 1.4) × 100">${s.prodGainPct}%</td>
       </tr>`;
     });
 
@@ -4387,19 +4435,25 @@ function renderReport(){
     if (aiEmpty) aiEmpty.style.display = 'none';
     aiBody.innerHTML = rows.join('');
 
-    // Footer — all values derived from accumulators built during the rows pass (no re-iteration)
-    const totEff  = totAiTot  > 0 ? Math.round(((totAiTot - totAiComp) / totAiTot) * 100) : 0;
-    const ovAdop  = totAllHrs > 0 ? Math.round((totAiTot / totAllHrs) * 100) : 0;
-    // Overall Productivity Gain % — computed from the same formula as the rows
-    // but on the rolled-up hour totals across all disciplines:
-    //   (AI Saved + Manual Saved) / (Total Orig / 1.4) × 100
+    // ── Overall (footer) — computed from the rolled-up accumulators ──
+    // totSaved already contains the new three-way savedHrs sum (AI +
+    // MAI + Manual) per discipline thanks to calcAI's new formula. The
+    // PG formula uses the same numerator/denominator as the per-row
+    // calculation, but on the cross-discipline totals.
+    const totEff       = totAiTot > 0 ? Math.round(((totAiTot - totAiComp) / totAiTot) * 100) : 0;
+    // AI Adoption % — same strict rule as per-row: MAI doesn't count as AI.
+    const ovAdop       = totAllHrs > 0 ? Math.round((totAiTot / totAllHrs) * 100) : 0;
+    // Overall Productivity Gain % — explicit three-way (matches user spec):
+    //   (AI Saved + AI-Ineffective Saved + Manual Saved) / (Total Orig / 1.4) × 100
     const ovAiSaved     = totAiTot   - totAiComp;
-    const ovManSaved    = (totManOrig + totMaiOrig) - (totManComp + totMaiComp);
-    const ovTotalOrig   = totAiTot   + totManOrig + totMaiOrig;
+    const ovMaiSaved    = totMaiOrig - totMaiComp;
+    const ovManualSaved = totManOrig - totManComp;
+    const ovTotalSaved  = ovAiSaved + ovMaiSaved + ovManualSaved;
+    const ovTotalOrig   = totAiTot + totMaiOrig + totManOrig;
     const ovProdGainPct = ovTotalOrig > 0
-      ? Math.round(((ovAiSaved + ovManSaved) / (ovTotalOrig / 1.4)) * 100) : 0;
+      ? Math.round((ovTotalSaved / (ovTotalOrig / 1.4)) * 100) : 0;
     const effColor = totEff  >= 0 ? '#22d3ee' : '#f87171';
-    const savColor = totSaved >= 0 ? '#f472b6' : '#f87171';
+    const savColor = ovTotalSaved >= 0 ? '#f472b6' : '#f87171';
     const adColor  = ovAdop >= 70 ? '#34d399' : ovAdop >= 40 ? '#fbbf24' : '#f87171';
     const ovPgColor = ovProdGainPct > 0 ? '#34d399' : ovProdGainPct < 0 ? '#f87171' : '#94a3b8';
 
@@ -4407,11 +4461,11 @@ function renderReport(){
       <td style="text-align:left;font-weight:700">Overall</td>
       <td style="font-weight:700">${totTasks}</td>
       <td style="color:#60a5fa;font-weight:700">${totAI}</td>
-      <td style="color:#94a3b8;font-weight:700">${totMan}</td>
+      <td style="color:#94a3b8;font-weight:700" title="Manual + Manual-AI-Ineffective tasks combined">${totMan}</td>
       <td style="color:${effColor};font-weight:700">—</td>
       <td style="font-weight:700">—</td>
-      <td style="color:${savColor};font-weight:700">${fmtH(totSaved)}h</td>
-      <td style="color:${ovPgColor};font-weight:700" title="(AI Saved + Manual Saved) / (Total Orig / 1.4) × 100">${ovProdGainPct}%</td>
+      <td style="color:${savColor};font-weight:700" title="AI Saved (${fmtH(ovAiSaved)}h) + AI-Ineffective Saved (${fmtH(ovMaiSaved)}h) + Manual Saved (${fmtH(ovManualSaved)}h)">${fmtH(ovTotalSaved)}h</td>
+      <td style="color:${ovPgColor};font-weight:700" title="(AI Saved + AI-Ineffective Saved + Manual Saved) / (Total Orig / 1.4) × 100">${ovProdGainPct}%</td>
     </tr>`;
   })();
 
