@@ -500,6 +500,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
           pointer-events:none;
         }
         .rpt-manual-input:focus:empty::before{ content:''; }
+
+        /* Persistence checkbox lives in the Delivery Summary section
+           title row — must NOT print/export, since it's a UI control
+           (not data). The email-export readTbl() naturally ignores it
+           (lives outside the <tbody>); this rule covers print/PDF.   */
+        @media print {
+          .ds-plan-persist-control { display:none !important; }
+        }
 .rpt-tbl{width:100%;border-collapse:collapse;font-size:.68rem;}
 .rpt-tbl th{
   background:rgba(0,0,0,0.45);color:#e2e8f0;font-weight:700;
@@ -792,7 +800,21 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     </div>
 
     <!-- Section 1: Delivery Summary -->
-    <div class="rpt-section-title">📊 Delivery Summary</div>
+    <div class="rpt-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <span>📊 Delivery Summary</span>
+      <!-- Persistence checkbox — saves the Deliverable + Non-Deliverable
+           Planning Day manual textbox values to localStorage, keyed by
+           the current Area Path × Iteration Path combination. Outside
+           <tbody> so it does NOT appear in the email/Outlook preview
+           (readTbl only walks tbody rows). Also hidden in @media print. -->
+      <label class="ds-plan-persist-control"
+        title="When enabled, the Planning Day values you type for Deliverable and Non-Deliverable are remembered per Area + Iteration combination. Disable to stop writing to localStorage (existing saved values stay dormant)."
+        style="display:inline-flex;align-items:center;gap:6px;font-size:.62rem;font-weight:500;color:#94a3b8;cursor:pointer;text-transform:none;letter-spacing:0;user-select:none;">
+        <input type="checkbox" id="dsPlanPersistCb" onchange="_dsPlanToggle(this.checked)"
+          style="margin:0;cursor:pointer;accent-color:#fbbf24;">
+        💾 Remember Planning Day for this Area + Iteration
+      </label>
+    </div>
     <div style="overflow-x:auto;margin-bottom:2px">
       <table class="rpt-tbl">
         <thead><tr>
@@ -984,11 +1006,17 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 /* ══ Runtime state ═════════════════════════════════════ */
 let tfsUrl='', pat='', project='', selectedIterPaths=[], selectedAreaPaths=[];
 let requirements=[], bugs=[], tasks=[], taskLookup={}, reqTasksMap={}, bugTasksMap={};
-// Per-adhoc-task historical Original Estimate as of planning day (sprint start).
-// Shape: { [taskId]: { oe: hours, asOfDate: Date|null } }
-let taskOrigPlanMap={};
 let sprintStartDate=null, sprintEndDate=null;
 let teamCapacity=0;
+// Per-ticket-task planning-day Original Estimate snapshot.
+//   Shape: { [taskId]: planningOE_number }
+// Populated by loadTicketTaskOrigPlan() — used by the Team B Summary's
+// "Original Planned" column. We capture the historical OE because
+// ticket-handling tasks frequently get re-estimated mid-sprint or
+// have their OE blanked once Remaining/Completed are filled in, so
+// live values understate the planning commitment. Scope is narrow:
+// only Ticket Handling / Ticket Support child tasks are fetched.
+let taskOrigPlanMap = {};
 let devCapacity=0, qaCapacity=0;
 let devMembers=[]; // members with Development discipline in capacity
 let qaMembers=[];  // members with Test discipline in capacity
@@ -1034,27 +1062,30 @@ async function batchFetch(ids,fields){
   return results.flatMap(r=>r.value||[]);
 }
 
-/* ══ Load Original Estimate snapshots for tasks ═════════════════════
-   For each task ID, fetch /revisions and find:
-     • planningOE: latest revision with ChangedDate ≤ sprintStart 23:00
-                   (planning day evening — captures post-planning state)
-     • reviewOE:   latest revision with ChangedDate ≤ sprintEnd 23:59:59
-                   (review day — sprint last day)
-     • reviewState: System.State on that review-day snapshot (used by
-                   Delivery Summary to count "Closed at sprint end" tasks)
-   - Tasks created after sprint start contribute planningOE = 0.
-   - If sprint dates are unknown, falls back to the task's current OE.
+/* ══ Load planning-day OriginalEstimate snapshot ════════════════════
+   NARROW history fetch — only for tasks under Ticket Handling /
+   Ticket Support requirements (Team B Summary's "Original Planned"
+   column). Reads each task's /revisions and finds the latest
+   revision with ChangedDate ≤ sprint-start day 23:00. Effective
+   estimate rule: Casepoint.TFS.CustomFields.RevisedEstimate when > 0,
+   else Microsoft.VSTS.Scheduling.OriginalEstimate.
+   Stores into the simple map taskOrigPlanMap[tid] = number.
+   - Tasks created after sprint start contribute 0.
+   - If sprintStartDate is null, falls back to the latest revision.
    Concurrency-limited (6 parallel) to avoid hammering TFS. */
-async function loadOrigPlannedForAdhoc(taskIds){
+async function loadTicketTaskOrigPlan(taskIds){
   taskOrigPlanMap = {};
   if(!taskIds || !taskIds.length) return;
 
-  // Planning cutoff: sprint start day at 23:00 (11 PM).
   const planCutoff = sprintStartDate ? new Date(sprintStartDate) : null;
   if(planCutoff) planCutoff.setHours(23,0,0,0);
-  // Review cutoff: sprint end day at 23:59:59.
-  const reviewCutoff = sprintEndDate ? new Date(sprintEndDate) : null;
-  if(reviewCutoff) reviewCutoff.setHours(23,59,59,999);
+
+  const _effEst = rv => {
+    if (!rv) return 0;
+    const rev  = Number(rv.fields?.['Casepoint.TFS.CustomFields.RevisedEstimate']) || 0;
+    const orig = Number(rv.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0;
+    return rev > 0 ? rev : orig;
+  };
 
   const concurrency = 6;
   let idx = 0;
@@ -1064,59 +1095,27 @@ async function loadOrigPlannedForAdhoc(taskIds){
       const tid = taskIds[myIdx];
       try{
         const r = await apiFetch(`${tfsUrl}/_apis/wit/workitems/${tid}/revisions?api-version=5.0`);
-        if(!r.ok){ taskOrigPlanMap[tid] = { oe: 0, oeOriginal: 0, asOfDate: null, reviewOE: 0, reviewOEOriginal: 0, reviewState: '', reviewAsOfDate: null }; continue; }
+        if(!r.ok){ taskOrigPlanMap[tid] = 0; continue; }
         const j = await r.json();
         const revs = (j.value || []).slice().sort((a,b)=>{
           const ad = new Date(a.fields?.['System.ChangedDate'] || 0).getTime();
           const bd = new Date(b.fields?.['System.ChangedDate'] || 0).getTime();
           return ad - bd;
         });
-
-        // Find the latest revision at or before each cutoff.
-        // Single forward pass — `revs` is sorted ascending by ChangedDate.
-        let planChosen = null, reviewChosen = null;
-        for(const rv of revs){
-          const cdMs = new Date(rv.fields?.['System.ChangedDate'] || 0).getTime();
-          if(planCutoff   && cdMs <= planCutoff.getTime())   planChosen   = rv;
-          if(reviewCutoff && cdMs <= reviewCutoff.getTime()) reviewChosen = rv;
+        // Latest revision at or before the planning cutoff. Single
+        // forward pass — revs is sorted ascending.
+        let chosen = null;
+        if (planCutoff) {
+          for(const rv of revs){
+            const cdMs = new Date(rv.fields?.['System.ChangedDate'] || 0).getTime();
+            if(cdMs <= planCutoff.getTime()) chosen = rv;
+          }
+        } else {
+          chosen = revs[revs.length - 1] || null;
         }
-        if(!planCutoff)   planChosen   = revs[revs.length - 1] || null;
-        if(!reviewCutoff) reviewChosen = revs[revs.length - 1] || null;
-
-        // Effective estimate per snapshot:
-        //   if Casepoint.TFS.CustomFields.RevisedEstimate > 0 → use Revised
-        //   else fall back to Microsoft.VSTS.Scheduling.OriginalEstimate
-        // This matches the rest of the report (e.g. AI Adoption section)
-        // where Revised supersedes Original whenever a re-estimate has happened.
-        const _effEst = rv => {
-          if (!rv) return 0;
-          const rev  = Number(rv.fields?.['Casepoint.TFS.CustomFields.RevisedEstimate']) || 0;
-          const orig = Number(rv.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0;
-          return rev > 0 ? rev : orig;
-        };
-        // Raw OriginalEstimate from the snapshot — NEVER substitutes Revised.
-        // This is the literal Microsoft.VSTS.Scheduling.OriginalEstimate value
-        // as it stood on planning day, used by the popup's "Planning Day
-        // Original Estimate" column so reviewers can see the original number
-        // even when a Revised Estimate had already been entered.
-        const _rawOrig = rv => rv ? (Number(rv.fields?.['Microsoft.VSTS.Scheduling.OriginalEstimate']) || 0) : 0;
-        const planOE         = _effEst(planChosen);
-        const planRawOrig    = _rawOrig(planChosen);
-        const revOE          = _effEst(reviewChosen);
-        const reviewRawOrig  = _rawOrig(reviewChosen);
-        const revState       = reviewChosen ? (reviewChosen.fields?.['System.State'] || '') : '';
-
-        taskOrigPlanMap[tid] = {
-          oe: planOE,
-          oeOriginal: planRawOrig,
-          asOfDate: planChosen?.fields?.['System.ChangedDate'] || null,
-          reviewOE: revOE,
-          reviewOEOriginal: reviewRawOrig,
-          reviewState: revState,
-          reviewAsOfDate: reviewChosen?.fields?.['System.ChangedDate'] || null
-        };
+        taskOrigPlanMap[tid] = _effEst(chosen);
       } catch(e){
-        taskOrigPlanMap[tid] = { oe: 0, oeOriginal: 0, asOfDate: null, reviewOE: 0, reviewOEOriginal: 0, reviewState: '', reviewAsOfDate: null };
+        taskOrigPlanMap[tid] = 0;
       }
     }
   });
@@ -1144,9 +1143,83 @@ const safeLS = (() => {
     get(k)       { if(!ok) return null;  try{ return localStorage.getItem(k); }catch(e){ return null; } },
     set(k,v)     { if(!ok) return;       try{ localStorage.setItem(k,v);       }catch(e){} },
     del(k)       { if(!ok) return;       try{ localStorage.removeItem(k);      }catch(e){} },
-    getJSON(k,fb){ const v=this.get(k);  try{ return v?JSON.parse(v):fb;       }catch(e){ return fb; } }
+    getJSON(k,fb){ const v=this.get(k);  try{ return v?JSON.parse(v):fb;       }catch(e){ return fb; } },
+    setJSON(k,v) { this.set(k, JSON.stringify(v)); }
   };
 })();
+
+/* ══ Delivery Summary Planning Day persistence ══════════════════════
+   Optional opt-in feature: store user-typed Planning Day textbox values
+   (Deliverable + Non-Deliverable rows) in localStorage so they survive
+   a page reload / re-fetch. The values are KEYED BY the current
+   (Area Path × Iteration Path) combination — so switching to a
+   different sprint shows that sprint's saved values, not the previous
+   one's. The checkbox lives in the section-title row OUTSIDE the
+   <tbody>, so the email-export readTbl() never sees it (no leakage
+   into the preview / Outlook copy). */
+function _dsPlanKey() {
+  // Stable order: sort path lists so the key is identical regardless
+  // of the order the user clicked the area / iteration checkboxes.
+  const ar = (selectedAreaPaths || []).map(a => a.path).sort().join('|');
+  const it = (selectedIterPaths || []).map(i => i.path).sort().join('|');
+  return `dsPlanValues::${ar}::${it}`;
+}
+function _dsPlanIsEnabled() {
+  return safeLS.getJSON('dsPlanPersistEnabled', false) === true;
+}
+function _dsPlanSave() {
+  // No-op when feature is off — user expects "off = don't touch storage".
+  if (!_dsPlanIsEnabled()) return;
+  const cells = document.querySelectorAll('#rpt-deliverySummaryBody td.rpt-manual-input[data-plan-row]');
+  if (!cells.length) return;
+  const data = {};
+  cells.forEach(c => {
+    const k = c.getAttribute('data-plan-row');
+    if (k) data[k] = (c.textContent || '').trim();
+  });
+  try { safeLS.setJSON(_dsPlanKey(), data); } catch(e) {}
+}
+function _dsPlanRestore() {
+  if (!_dsPlanIsEnabled()) return;
+  const data = safeLS.getJSON(_dsPlanKey(), null);
+  if (!data) return;
+  const cells = document.querySelectorAll('#rpt-deliverySummaryBody td.rpt-manual-input[data-plan-row]');
+  cells.forEach(c => {
+    const k = c.getAttribute('data-plan-row');
+    // Only restore into EMPTY cells — we don't want to clobber a value
+    // the user just typed before the restore call happened to run.
+    if (k && data[k] != null && (c.textContent || '').trim() === '') {
+      c.textContent = data[k];
+    }
+  });
+}
+function _dsPlanToggle(checked) {
+  safeLS.setJSON('dsPlanPersistEnabled', !!checked);
+  if (checked) {
+    // Snapshot whatever is currently in the boxes the moment the user
+    // turns persistence on — so they don't have to re-type to seed.
+    _dsPlanSave();
+  }
+  // We don't auto-clear on disable; the saved value sits dormant in
+  // localStorage and gets ignored. Toggling back on resurrects it.
+}
+function _dsPlanInitCheckbox() {
+  const cb = document.getElementById('dsPlanPersistCb');
+  if (cb) cb.checked = _dsPlanIsEnabled();
+}
+// Event delegation: save the row whenever the user types in a manual
+// Planning Day cell, BUT only when persistence is on. Installed once
+// (window-scoped guard) so we don't stack listeners on every render.
+if (!window.__dsPlanInputListenerInstalled) {
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t && t.matches && t.matches('#rpt-deliverySummaryBody td.rpt-manual-input[data-plan-row]')) {
+      _dsPlanSave();
+    }
+  });
+  window.__dsPlanInputListenerInstalled = true;
+}
+
 /* ══ Query-string helper ════════════════════════════════ */
 function getQS(){
   const p = new URLSearchParams(window.location.search);
@@ -1857,35 +1930,27 @@ async function fetchAndRender(){
   showLoading('Phase 3/3 — Loading team capacity…',82);
   await fetchCapacity();
 
-  // ── Fetch task revisions for Planning Day / Review Day snapshots ───
-  // Loads /revisions for:
-  //   1. Tasks under "Ticket Handling" / "Ticket Support" requirements
-  //      (used by the Adhoc Support Summary's Original Planned column).
-  //   2. ALL tasks under deliverable AND non-deliverable requirements
-  //      (used by the Delivery Summary's new Planning Day / Review Day
-  //      columns to capture historical Original Estimate snapshots).
-  // The same revision response answers both questions, so we de-dupe
-  // task IDs into a single concurrent fetch pass.
+  // ── Fetch planning-day OE snapshot for Team B (Ticket Handling) tasks ──
+  // Narrow history fetch: ONLY tasks under requirements whose title
+  // starts with "Ticket Handling" or "Ticket Support". The Team B
+  // Summary's "Original Planned" column needs the historical OE
+  // because ticket tasks frequently get re-estimated or have their
+  // OE blanked during the sprint, so live values understate the
+  // planning commitment. Everything else in the report uses live data.
   try {
-    const titleMatches = (req) => {
+    const _isTicketReq = (req) => {
       const t = (req.fields?.['System.Title'] || '').trim().toLowerCase();
       return t.startsWith('ticket handling') || t.startsWith('ticket support');
     };
-    const ticketReqIds = requirements.filter(titleMatches).map(r => r.id);
-    const ticketTaskIds = ticketReqIds.flatMap(rid => reqTasksMap[rid] || []);
-
-    // Delivery Summary scope: every requirement with category 'deliverable'
-    // or 'nonDeliverable' contributes its child tasks.
-    const delTaskIds = requirements
-      .filter(r => r.category === 'deliverable' || r.category === 'nonDeliverable')
-      .flatMap(r => reqTasksMap[r.id] || []);
-
-    const allHistoryIds = Array.from(new Set([...ticketTaskIds, ...delTaskIds]));
-    if(allHistoryIds.length){
-      showLoading(`Loading task history (Planning / Review Day) — ${allHistoryIds.length} tasks…`,90);
-      await loadOrigPlannedForAdhoc(allHistoryIds);
+    const _ticketReqIds  = requirements.filter(_isTicketReq).map(r => r.id);
+    const _ticketTaskIds = Array.from(new Set(
+      _ticketReqIds.flatMap(rid => reqTasksMap[rid] || [])
+    ));
+    if (_ticketTaskIds.length) {
+      showLoading(`Loading Team B task history — ${_ticketTaskIds.length} tasks…`, 90);
+      await loadTicketTaskOrigPlan(_ticketTaskIds);
     }
-  } catch(e){ console.warn('Task history fetch failed:', e); }
+  } catch(e){ console.warn('Team B task history fetch failed:', e); }
 
   // ── Render ───────────────────────────────────────────
   showLoading('Rendering report…',95);
@@ -2999,55 +3064,28 @@ function showRptPopup(title, itemsArr, type){
       };
     });
   } else if(type === 'tbAdhocTasks') {
-    // Team B / Delivery-Summary task drill-down. Same popup type is reused
-    // for three different click paths:
-    //   • Team B → discipline cell           (planning context, default)
-    //   • Ticket Handling discipline cell    (planning context)
-    //   • Delivery Summary Planning Day cell (planning context)
-    //   • Delivery Summary Review Day cell   (REVIEW context — different snapshot)
-    // We branch off the title because the popup contract is already
-    // (title, items, type) and changing it would ripple through every
-    // call-site. Title check is intentional and explicit.
+    // Team B / Delivery-Summary task drill-down. Same popup type renders for:
+    //   • Team B → discipline cell
+    //   • Ticket Handling discipline cell
+    //   • Adhoc Support Planning Day cell
+    //   • Delivery Summary Review Day cell (Deliverable / Non-Deliverable / Adhoc)
+    //
+    // All values are LIVE — taken from each task's current field values.
+    // Historical /revisions fetching was removed; the popup no longer has
+    // a "Planning/Review Day Original Estimate" snapshot column or a
+    // "created after cutoff" red-highlight. The _isReviewDay flag is
+    // retained only to keep the criteria subtitle context-aware and the
+    // sub-total label readable ("Review" vs "Plan").
     const _isReviewDay = (title || '').includes('Review Day Tasks');
-    // Snapshot field keys — which entries on the taskOrigPlanMap record
-    // we pull from. For review mode we read reviewOEOriginal so the
-    // "Review Day Original Estimate" column reflects what the OE field
-    // looked like at sprint end (not now).
-    const _snapRawKey  = _isReviewDay ? 'reviewOEOriginal' : 'oeOriginal';
-    const _snapDateKey = _isReviewDay ? 'reviewAsOfDate'   : 'asOfDate';
-    // Cutoff date for the "created-after-snapshot" red-highlight rule.
-    // Planning cutoff: sprint start + 23:00 local. Review cutoff: sprint
-    // end + 23:59:59.999 local. Matches the bounds used by
-    // loadOrigPlannedForAdhoc(), so a task is flagged "late" here iff
-    // it has no revision at or before that cutoff (i.e., didn't exist).
-    let _cutoffMs = null;
-    if (_isReviewDay && sprintEndDate) {
-      const c = new Date(sprintEndDate); c.setHours(23,59,59,999);
-      _cutoffMs = c.getTime();
-    } else if (!_isReviewDay && sprintStartDate) {
-      const c = new Date(sprintStartDate); c.setHours(23,0,0,0);
-      _cutoffMs = c.getTime();
-    }
-    // Context-sensitive header for the snapshot OE column. The second OE
-    // column ("Original Planned (h)") now always shows the CURRENT
-    // OriginalEstimate field value, regardless of mode — per user request.
-    const _rawColHdr   = _isReviewDay ? 'Review Day Original Estimate' : 'Planning Day Original Estimate';
-    const _snapLabel   = _isReviewDay ? 'review day'                   : 'planning day';
+    const _snapLabel   = _isReviewDay ? 'review day' : 'planning day';
 
-    // Column order (12 total):
+    // Column order (11 total):
     //   Task ID | Title | Iteration | Discipline | State | Assigned To
-    //   | Created Date | [Planning/Review] Day Original Estimate
-    //   | Original Planned (h) ← now = CURRENT OE
+    //   | Created Date | Original Planned (h) ← current OE
     //   | Revised Estimate (h) | Completed (h) | Remaining (h)
-    _popupCols = ['Task ID','Title','Iteration','Discipline','State','Assigned To','Created Date',_rawColHdr,'Original Planned (h)','Revised Estimate (h)','Completed (h)','Remaining (h)'];
+    _popupCols = ['Task ID','Title','Iteration','Discipline','State','Assigned To','Created Date','Original Planned (h)','Revised Estimate (h)','Completed (h)','Remaining (h)'];
 
     // ─── Tree mode: group tasks under their parent requirement ───────
-    // Builds a one-time reverse index from `reqTasksMap` (req → tasks[])
-    // into `taskToReqMap` (task → first parent req id). Tasks in TFS
-    // typically have exactly one parent via Hierarchy-Reverse; if a task
-    // appears under multiple requirements we keep the first match for
-    // grouping purposes (the popup's totals still account for the task
-    // exactly once because we iterate `itemsArr`, not the map).
     const _reqLookup = {};
     requirements.forEach(r => { _reqLookup[r.id] = r; });
     const _taskToReqMap = {};
@@ -3059,7 +3097,7 @@ function showRptPopup(title, itemsArr, type){
 
     // Partition itemsArr into per-requirement buckets; tasks without a
     // resolvable parent fall into an "orphan" group rendered last.
-    const _groups = {};   // reqId → { req, tasks: [] }
+    const _groups = {};
     const _orphan = { req: null, tasks: [] };
     itemsArr.forEach(t => {
       const pid = _taskToReqMap[t.id];
@@ -3070,13 +3108,11 @@ function showRptPopup(title, itemsArr, type){
         _orphan.tasks.push(t);
       }
     });
-    // Deterministic ordering: alphabetic by requirement title; orphans last.
     const _groupList = Object.values(_groups).sort((a,b) =>
       (a.req.fields['System.Title']||'').localeCompare(b.req.fields['System.Title']||''));
     if (_orphan.tasks.length) _groupList.push(_orphan);
 
     // Small helper to format a Date-ish value into "dd MMM yyyy".
-    // Returns "—" for missing/invalid dates.
     const _fmtDate = d => {
       if (!d) return '—';
       const dt = new Date(d);
@@ -3086,16 +3122,13 @@ function showRptPopup(title, itemsArr, type){
 
     // ─── Build interleaved rows: [groupHeader, ...tasks, groupHeader, ...] ───
     // Accumulators for the GRAND totals footer (one across all groups).
-    let _ttlRaw = 0, _ttlCurOE = 0, _ttlRev = 0, _ttlComp = 0, _ttlRem = 0;
+    let _ttlCurOE = 0, _ttlRev = 0, _ttlComp = 0, _ttlRem = 0;
     _popupRows = [];
     _groupList.forEach(grp => {
-      // Stable group id used for chevron/tbody pairing. Real requirement
-      // → its TFS id; orphan bucket → string sentinel that won't collide.
       const groupId = grp.req ? grp.req.id : '__orphan__';
       // Per-group accumulators — go into the group header banner so the
-      // user sees the bucket's planning-day / review-day total at a glance
-      // without having to mentally sum the child rows.
-      let _gRaw = 0, _gCurOE = 0, _gRev = 0, _gComp = 0, _gRem = 0;
+      // user sees the bucket's totals at a glance without summing by eye.
+      let _gCurOE = 0, _gRev = 0, _gComp = 0, _gRem = 0;
       const taskRows = grp.tasks.map(t => {
         const tState  = t.fields['System.State'] || '';
         const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
@@ -3105,57 +3138,28 @@ function showRptPopup(title, itemsArr, type){
         const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
         const tRem    = t.fields['Microsoft.VSTS.Scheduling.RemainingWork'] || 0;
         // Current OE — live value of Microsoft.VSTS.Scheduling.OriginalEstimate.
-        // Goes into the "Original Planned (h)" column (semantics per latest
-        // user spec: "Original Estimate hours what actual current day").
         const tCurOE  = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
-        const histRec = taskOrigPlanMap[t.id] || { oe: 0, oeOriginal: 0, reviewOE: 0, reviewOEOriginal: 0, asOfDate: null, reviewAsOfDate: null };
-        const asOf    = histRec[_snapDateKey] ? _fmtDate(histRec[_snapDateKey]) : '—';
-        // Created date — used for both the new column AND the "task created
-        // after snapshot" detection that drives the red highlight.
         const createdRaw = t.fields['System.CreatedDate'] || null;
-        const createdMs  = createdRaw ? new Date(createdRaw).getTime() : NaN;
         const createdStr = _fmtDate(createdRaw);
-        const _isLate    = _cutoffMs != null && !isNaN(createdMs) && createdMs > _cutoffMs;
-        // Raw OE at the snapshot: stored value if the task existed back then,
-        // forced to 0 (and red-highlighted) for tasks created AFTER the
-        // snapshot — those tasks were not part of the plan/review baseline.
-        const tRaw = _isLate ? 0 : (histRec[_snapRawKey] || 0);
-
         const iterFull  = t.fields['System.IterationPath'] || '';
         const iterShort = iterFull ? (iterFull.split('\\').pop() || iterFull) : '—';
         const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
-        _gRaw += tRaw; _gCurOE += tCurOE; _gRev += tRev; _gComp += tComp; _gRem += tRem;
-        _ttlRaw += tRaw; _ttlCurOE += tCurOE; _ttlRev += tRev; _ttlComp += tComp; _ttlRem += tRem;
-
-        // Cell styling for the snapshot OE column. When _isLate, paint the
-        // cell red and add a "Created after snapshot" tooltip so the user
-        // understands why it's 0 rather than wondering if data is missing.
-        const lateBg  = _isLate ? 'background:rgba(239,68,68,.18);' : '';
-        const lateClr = _isLate ? '#fca5a5' : '#38bdf8';
-        const rawTip  = _isLate
-          ? `Created ${createdStr} — AFTER the ${_snapLabel} cutoff. Task wasn't part of the snapshot, so its Planning/Review Day Original Estimate counts as 0.`
-          : `Raw Microsoft.VSTS.Scheduling.OriginalEstimate as of ${asOf} (${_snapLabel} snapshot).`;
+        _gCurOE += tCurOE; _gRev += tRev; _gComp += tComp; _gRem += tRem;
+        _ttlCurOE += tCurOE; _ttlRev += tRev; _ttlComp += tComp; _ttlRem += tRem;
 
         return {
           _groupId: groupId,
-          // _cells drives sort. Created-Date uses the raw ISO string
-          // (e.g. "2026-05-13T08:30:00Z") because string-sort on ISO 8601
-          // is the same as chronological sort. createdStr (the display
-          // form) would have sorted alphabetically — wrong.
-          _cells: [String(t.id), t.fields['System.Title']||'', iterFull, tDisc, tState, tAssign, (createdRaw || ''), String(tRaw), String(tCurOE), String(tRev), String(tComp), String(tRem)],
+          // _cells drives sort. Created-Date uses the raw ISO string so
+          // string-sort matches chronological sort.
+          _cells: [String(t.id), t.fields['System.Title']||'', iterFull, tDisc, tState, tAssign, (createdRaw || ''), String(tCurOE), String(tRev), String(tComp), String(tRem)],
           _htmlCells: [
-            // Task ID column is left-padded to visually indent the row
-            // under its requirement banner (tree-style hierarchy cue).
             `<td style="padding:7px 10px 7px 28px;position:relative;white-space:nowrap;"><span style="color:#475569;position:absolute;left:14px;top:7px;font-size:.7rem;">└</span>${tLink}</td>`,
-            // Title gets min-width so it doesn't get squeezed to three lines
-            // by the other columns; wraps gracefully if very long.
             `<td style="padding:7px 10px;color:#e2e8f0;min-width:240px;line-height:1.4;">${t.fields['System.Title']||''}</td>`,
             `<td style="padding:7px 10px;color:#94a3b8;font-size:.67rem;white-space:nowrap;" title="${iterFull}">${iterShort}</td>`,
             `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;white-space:nowrap;">${tDisc}</td>`,
             `<td style="padding:7px 10px;color:${tStateC};font-weight:600;white-space:nowrap;">${tState}</td>`,
             `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${tAssign.replace(/"/g,'&quot;')}">${tAssign}</td>`,
-            `<td style="padding:7px 10px;color:${_isLate?'#fca5a5':'#cbd5e1'};font-size:.67rem;white-space:nowrap;" title="System.CreatedDate${_isLate?` — AFTER the ${_snapLabel} cutoff`:''}">${createdStr}</td>`,
-            `<td style="padding:7px 10px;text-align:center;color:${lateClr};font-weight:600;white-space:nowrap;${lateBg}" title="${rawTip}">${tRaw>0?fmtH(tRaw)+'h':'0h'}</td>`,
+            `<td style="padding:7px 10px;color:#cbd5e1;font-size:.67rem;white-space:nowrap;" title="System.CreatedDate">${createdStr}</td>`,
             `<td style="padding:7px 10px;text-align:center;color:#a78bfa;font-weight:600;white-space:nowrap;" title="Microsoft.VSTS.Scheduling.OriginalEstimate (current value)">${tCurOE>0?fmtH(tCurOE)+'h':'0h'}</td>`,
             `<td style="padding:7px 10px;text-align:center;color:#c084fc;white-space:nowrap;" title="Casepoint.TFS.CustomFields.RevisedEstimate (current value)">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
             `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;white-space:nowrap;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
@@ -3164,10 +3168,7 @@ function showRptPopup(title, itemsArr, type){
         };
       });
 
-      // Build the parent-requirement banner row. Uses a single colspan'd
-      // <td> so it spans the whole popup width regardless of column count.
-      // All sub-totals are computed BEFORE this row is pushed so the banner
-      // shows accurate per-group hours.
+      // Build the parent-requirement banner row.
       const r = grp.req;
       const reqState   = r ? (r.fields['System.State'] || '') : '';
       const reqStateC  = reqState==='Closed' ? '#34d399'
@@ -3181,11 +3182,6 @@ function showRptPopup(title, itemsArr, type){
       const reqStateBadge = r ? `<span style="background:rgba(255,255,255,.06);color:${reqStateC};padding:1px 7px;border-radius:8px;font-size:.6rem;font-weight:700;border:1px solid ${reqStateC}40;">${reqState}</span>` : '';
 
       // ── Tags as small pills ─────────────────────────────────────────
-      // System.Tags is a semicolon-separated string in TFS (e.g. "Deliverable;
-      // Sprint Goal; AI"). We split, trim, filter empties, and render each as
-      // a compact pill. Each pill gets a stable hash-based hue so the same
-      // tag is the same color across banners — visually scannable when the
-      // same tag appears on many requirements.
       const _tagHue = s => {
         let h = 0;
         for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
@@ -3213,10 +3209,8 @@ function showRptPopup(title, itemsArr, type){
       _popupRows.push({
         _isGroupHeader: true,
         _groupId: groupId,
-        _cells: [], // explicitly empty → sort comparator never sees these
+        _cells: [],
         _htmlCells: [
-          // The outer <td>'s onclick mirrors the chevron button so users
-          // can click anywhere on the banner row to toggle.
           `<td colspan="${_popupCols.length}" onclick="togglePopupTreeGroup('${groupId}', this.querySelector('button[data-group-id]'))" style="padding:9px 14px;background:linear-gradient(90deg,rgba(59,130,246,.18) 0%, rgba(59,130,246,.04) 100%);border-top:2px solid rgba(59,130,246,.35);border-bottom:1px solid rgba(59,130,246,.15);cursor:pointer;user-select:none;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
               <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;flex-wrap:wrap;">
@@ -3229,8 +3223,7 @@ function showRptPopup(title, itemsArr, type){
               </div>
               <div style="display:flex;gap:14px;font-size:.62rem;color:#94a3b8;white-space:nowrap;">
                 <span title="Tasks in this group">📋 <strong style="color:#cbd5e1;">${grp.tasks.length}</strong> task${grp.tasks.length!==1?'s':''}</span>
-                <span title="${_snapLabel} raw Original Estimate (sub-total; late tasks count as 0)">${_isReviewDay?'Review':'Plan'} OE: <strong style="color:#38bdf8;">${_gRaw>0?fmtH(_gRaw)+'h':'0h'}</strong></span>
-                <span title="Current Original Estimate (sub-total)">Cur OE: <strong style="color:#a78bfa;">${_gCurOE>0?fmtH(_gCurOE)+'h':'0h'}</strong></span>
+                <span title="Current Original Estimate (sub-total)">OE: <strong style="color:#a78bfa;">${_gCurOE>0?fmtH(_gCurOE)+'h':'0h'}</strong></span>
                 <span title="Completed work (sub-total)">Done: <strong style="color:#34d399;">${_gComp>0?fmtH(_gComp)+'h':'0h'}</strong></span>
                 <span title="Remaining work (sub-total)">Left: <strong style="color:#f87171;">${_gRem>0?fmtH(_gRem)+'h':'0h'}</strong></span>
               </div>
@@ -3241,10 +3234,7 @@ function showRptPopup(title, itemsArr, type){
       _popupRows.push(...taskRows);
     });
 
-    // Build the GRAND totals row — one <td> per column, matches _popupCols
-    // length (12). The two OE columns now have distinct semantics:
-    //   • snapshot raw OE total (late tasks contribute 0)
-    //   • current OE total (live field value sum)
+    // Build the GRAND totals row — 11 columns matching _popupCols.
     _popupTotalRow = [
       `<td style="padding:8px 10px;font-weight:700;color:#e2e8f0;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">TOTAL <span style="color:#94a3b8;font-weight:500;font-size:.66rem;">(${itemsArr.length} task${itemsArr.length!==1?'s':''} • ${_groupList.length} req${_groupList.length!==1?'s':''})</span></td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
@@ -3253,7 +3243,6 @@ function showRptPopup(title, itemsArr, type){
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
       `<td style="padding:8px 10px;color:#475569;border-top:2px solid rgba(255,255,255,.18);">—</td>`,
-      `<td style="padding:8px 10px;text-align:center;color:#38bdf8;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;" title="Raw OE at ${_snapLabel} snapshot (tasks created later count as 0)">${_ttlRaw>0?fmtH(_ttlRaw)+'h':'0h'}</td>`,
       `<td style="padding:8px 10px;text-align:center;color:#a78bfa;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;" title="Current Microsoft.VSTS.Scheduling.OriginalEstimate (live value)">${_ttlCurOE>0?fmtH(_ttlCurOE)+'h':'0h'}</td>`,
       `<td style="padding:8px 10px;text-align:center;color:#c084fc;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlRev>0?fmtH(_ttlRev)+'h':'—'}</td>`,
       `<td style="padding:8px 10px;text-align:center;color:#34d399;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlComp>0?fmtH(_ttlComp)+'h':'—'}</td>`,
@@ -3379,10 +3368,31 @@ function renderReport(){
   if(expBar) expBar.style.display='flex';
 
   // ── Sprint Goal ───────────────────────────────────────
+  // Always reset first so a previous render's content doesn't leak when
+  // the user switches to a different Area / Iteration where no items
+  // carry the "sprint goal" tag. We tear down both the table contents
+  // and the badge state (text, class, MutationObserver) every time.
   const goalBlock=document.getElementById('rpt-goalBlock');
+  const goalTbody=document.getElementById('rpt-goalTableBody');
+  const goalBadge=document.getElementById('rpt-goalBadge');
+  if (goalTbody) goalTbody.innerHTML = '';
+  if (goalBadge) {
+    // Disconnect any observer left over from a previous render — its
+    // closure captured a stale `goalAchieved`, so leaving it attached
+    // would let it fight against the new render.
+    if (goalBadge.__sgObserver) {
+      try { goalBadge.__sgObserver.disconnect(); } catch(e){}
+      goalBadge.__sgObserver = null;
+    }
+    goalBadge.textContent = '';
+    goalBadge.className = '';
+    goalBadge.style.display = 'none';
+  }
+  if (goalBlock) goalBlock.style.display = 'none';
+
   if(sprintGoalReqs.length && goalBlock){
     goalBlock.style.display='block';
-    const tbody=document.getElementById('rpt-goalTableBody');
+    const tbody=goalTbody;
     if(tbody) tbody.innerHTML=sprintGoalReqs.map((r,i)=>{
       const st=r.fields['System.State']||'';
       const stColor=st==='Closed'?'#34d399':st==='Resolved'?'#60a5fa':st==='Active'||st==='Open'?'#fbbf24':'#94a3b8';
@@ -3420,7 +3430,7 @@ function renderReport(){
         sprintGoalReqs.map(r => ({ id: r.id, title: r.fields['System.Title'], state: r.fields['System.State'] })),
         '→ achieved=', goalAchieved);
     } catch(e){}
-    const badge=document.getElementById('rpt-goalBadge');
+    const badge=goalBadge;
     if(badge){
       // ── Helper that owns ALL writes to the badge. Calling it again
       // is idempotent and always reflects the strict closure rule.
@@ -3432,16 +3442,11 @@ function renderReport(){
       _applyBadge();
 
       // ── MutationObserver watchdog ─────────────────────────────────
-      // Belt-and-suspenders against any external mutation of the badge
-      // (browser-extension theming, downstream code, leftover legacy
-      // handlers, stale cached scripts). If anything flips the badge to
-      // "Goal Achieved" while a non-Closed sprint-goal item still
-      // exists, the observer reverts the change to the strict result
-      // and logs the offending mutation for diagnosis.
-      // We only install once per render and only when the strict rule
-      // determined the goal is NOT achieved — there's nothing to defend
-      // against in the happy path.
-      if (!goalAchieved && !badge.__sgObserverInstalled) {
+      // Belt-and-suspenders against any external mutation of the badge.
+      // Previous renders' observers are already disconnected above, so
+      // this fresh one captures the CURRENT goalAchieved in its closure
+      // — no stale state on subsequent area/iteration changes.
+      if (!goalAchieved) {
         try {
           const obs = new MutationObserver(muts => {
             const txt = (badge.textContent || '').toLowerCase();
@@ -3454,7 +3459,7 @@ function renderReport(){
             }
           });
           obs.observe(badge, { attributes: true, attributeFilter: ['class', 'style'], childList: true, characterData: true, subtree: true });
-          badge.__sgObserverInstalled = true;
+          badge.__sgObserver = obs;
         } catch(e) { /* MutationObserver unavailable — fall through */ }
       }
     }
@@ -3490,17 +3495,12 @@ function renderReport(){
   const dsbody=document.getElementById('rpt-deliverySummaryBody');
 
   // ── Planning Day / Review Day computation ─────────────────────────
-  // For each Delivery Summary row, sum child-task hours from the historical
-  // revisions snapshot loaded at fetch time (taskOrigPlanMap):
-  //   • Planning Day = sum of OriginalEstimate as it stood on sprint-start
-  //                    evening (11:00 PM cutoff) for ALL child tasks.
-  //   • Review Day:
-  //       Deliverable  → sum of OriginalEstimate at sprint-end for tasks
-  //                      whose state was 'Closed' on that snapshot.
-  //       Non-Deliverable → sum of OriginalEstimate at sprint-end for ALL
-  //                      child tasks (any state).
-  //       Adhoc Support → blank (per spec, only the 2 hour-columns shown).
-  // Total denominators (sum of Planning across Deliverable + Non-Deliverable)
+  // For each Delivery Summary row, sum child-task hours from the LIVE
+  // task field values (Revised Estimate when > 0, else Original Estimate).
+  // Historical /revisions fetching was removed — the Planning Day cells
+  // for Deliverable and Non-Deliverable are now manual textboxes (the
+  // calculated values below feed only the Adhoc Support row's Planning
+  // Day cell and the Review Day cells across all rows).
   // power the percentages displayed alongside each value.
   function _sumTaskHours(reqRows, mode, disciplineFilter){
     let h = 0;
@@ -3510,43 +3510,44 @@ function renderReport(){
       cIds.forEach(tid => {
         // ── Iteration-scope filter ──────────────────────────────────────
         // reqTasksMap contains EVERY child task ID from a requirement's
-        // Hierarchy-Forward relations regardless of iteration, but the
-        // Delivery Summary represents the SELECTED sprint(s) only.
-        // taskLookup is built from `taskData` (WIQL filtered by iteration),
-        // so it acts as our in-sprint allow-list. Without this filter,
-        // tasks belonging to other iterations would be summed into the
-        // cell value but excluded from the popup task list (the popup
-        // filters via taskLookup), causing the cell-vs-popup mismatch
-        // the user observed for Deliverable and Non-Deliverable rows.
-        if (!taskLookup[tid]) return;
+        // Hierarchy-Forward relations regardless of iteration. taskLookup
+        // is built from `taskData` (WIQL filtered by iteration), so it
+        // acts as our in-sprint allow-list.
+        const tk = taskLookup[tid];
+        if (!tk) return;
 
         // ── Discipline-scope filter ─────────────────────────────────────
-        // Optional Set of lowercase discipline strings (e.g. {'development',
-        // 'test'}). When provided, only tasks whose
-        // Microsoft.VSTS.Common.Discipline matches are counted toward both
-        // the cell hours AND the popup task list — keeping cell ↔ popup
-        // in sync. Comparison is case-insensitive + trimmed to absorb
-        // minor TFS field variance. Used by the Deliverable row per spec
-        // ("consider only Tasks with Discipline Development and Test").
+        // Optional Set of lowercase discipline strings. When provided,
+        // only tasks whose Microsoft.VSTS.Common.Discipline matches are
+        // counted. Used by Deliverable Planning/Review Day and
+        // Non-Deliverable Review Day (Dev/Test only).
         if (disciplineFilter) {
-          const tk   = taskLookup[tid];
           const disc = (tk.fields['Microsoft.VSTS.Common.Discipline'] || '').trim().toLowerCase();
           if (!disciplineFilter.has(disc)) return;
         }
 
-        const rec = taskOrigPlanMap[tid];
-        if (!rec) return;
-        if (mode === 'planning') {
-          h += rec.oe || 0;
+        // ── Effective estimate (LIVE field values, no history) ──────────
+        // Both Planning Day and Review Day modes now read the task's
+        // current Original Estimate / Revised Estimate fields rather than
+        // a snapshot from /revisions. History fetching was removed because
+        // Planning Day for Deliverable/Non-Deliverable is a manual textbox
+        // (no auto-calc needed). For closed sprints the current OE is
+        // effectively the sprint-end snapshot; for active sprints it
+        // reflects the latest state. The 'reviewClosed' branch (which
+        // used the snapshot's System.State) now reads the live state.
+        const revEst  = tk.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
+        const origEst = tk.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
+        const eff     = revEst > 0 ? revEst : origEst;
+        if (eff <= 0) return;  // skip tasks with no estimate at all
+
+        if (mode === 'planning' || mode === 'reviewAll') {
+          h += eff;
           taskIds.push(tid);
         } else if (mode === 'reviewClosed') {
-          if ((rec.reviewState || '').toLowerCase() === 'closed') {
-            h += rec.reviewOE || 0;
+          if ((tk.fields['System.State'] || '').toLowerCase() === 'closed') {
+            h += eff;
             taskIds.push(tid);
           }
-        } else if (mode === 'reviewAll') {
-          h += rec.reviewOE || 0;
-          taskIds.push(tid);
         }
       });
     });
@@ -3633,6 +3634,7 @@ function renderReport(){
     // _delPlanningReqs above); Review Day keeps them. The tooltips
     // diverge so each cell tells the truth about its own scope.
     const isDel        = row.label.includes('Deliverable') && !isNonDel;
+    const isAdhoc      = row.label.includes('Adhoc Support');
     // Review Day Dev/Test discipline note now applies to BOTH Deliverable
     // and Non-Deliverable (per user spec — both Review Day calculations
     // are scoped to Dev/Test). Adhoc Support stays unfiltered.
@@ -3643,21 +3645,30 @@ function renderReport(){
     const dash = `<td class="rpt-edit" contenteditable="true" style="color:#94a3b8">—</td>`;
 
     // ── Planning Day cell ───────────────────────────────────────────
-    // Deliverable + Non-Deliverable rows: MANUAL TEXTBOX (amber, dashed).
-    // The auto-calculation and the Planning Day Tasks drill-down popup
-    // are intentionally suppressed for these two rows per user spec —
-    // teams enter the planned value (e.g. "609h (84%)") themselves from
-    // a separate planning document. ondblclick stopPropagation prevents
-    // the row's "All Items" popup from firing when the user double-clicks
-    // to select inside the textbox.
+    // • Deliverable + Non-Deliverable → MANUAL TEXTBOX (amber, dashed).
+    //   Users type the value themselves; no auto-calc, no popup.
+    // • Adhoc Support → "—" (per user spec). Adhoc work is unplanned by
+    //   definition, so there is no Planning Day commitment to display.
+    // • Any other row → auto-calculated cell with popup drill (legacy
+    //   fallback; no row currently hits this branch).
     //
-    // Adhoc Support (and any other row): keeps the auto-calculated
-    // value + Planning Day Tasks popup drill, as before.
+    // ── Review Day cell ─────────────────────────────────────────────
+    // • Deliverable + Non-Deliverable → auto-calculated (live OE,
+    //   Dev/Test only), popup drill enabled.
+    // • Adhoc Support → "—" (per user spec). Adhoc work isn't part of
+    //   the planned commitment, so Review Day reconciliation doesn't
+    //   apply.
     const isManualPlan = isDel || isNonDel;
-    const planCell = isManualPlan
-      ? `<td class="rpt-manual-input" contenteditable="true" title="Manual entry — type the Planning Day value for ${row.label} (e.g. 609h (84%)). No auto-calculation or popup; the value you type is what's shown and exported." ondblclick="event.stopPropagation();" onclick="event.stopPropagation();"></td>`
-      : `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#a78bfa;font-weight:600;" title="Sum of all child tasks' Original Estimate as of sprint start (11:00 PM). Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Planning Day Tasks',window['_rpt_${key}_planTasks'],'tbAdhocTasks')">${fmtHours(planHrs, planPct)}</td>`;
-    const revCell    = `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#34d399;font-weight:600;" title="Sum of all child tasks' Original Estimate at sprint end. Revised Estimate used when > 0.${revScopeNote}" ondblclick="event.stopPropagation();showRptPopup('${row.label} — Review Day Tasks',window['_rpt_${key}_revTasks'],'tbAdhocTasks')">${fmtHours(revHrs, revPct)}</td>`;
+    // Stable key for localStorage: matches what _dsPlanSave/Restore look up.
+    const planRowKey = isDel ? 'deliverable' : (isNonDel ? 'nonDeliverable' : '');
+    const planCell = isAdhoc
+      ? dash
+      : (isManualPlan
+        ? `<td class="rpt-manual-input" data-plan-row="${planRowKey}" contenteditable="true" title="Manual entry — type the Planning Day value for ${row.label} (e.g. 609h (84%)). No auto-calculation or popup; the value you type is what's shown and exported. Enable the 💾 checkbox above the table to remember this value per Area + Iteration." ondblclick="event.stopPropagation();" onclick="event.stopPropagation();"></td>`
+        : `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#a78bfa;font-weight:600;" title="Sum of all child tasks' Original Estimate as of sprint start (11:00 PM). Revised Estimate used when > 0." ondblclick="event.stopPropagation();showRptPopup('${row.label} — Planning Day Tasks',window['_rpt_${key}_planTasks'],'tbAdhocTasks')">${fmtHours(planHrs, planPct)}</td>`);
+    const revCell  = isAdhoc
+      ? dash
+      : `<td class="rpt-edit rpt-drill" contenteditable="true" style="color:#34d399;font-weight:600;" title="Sum of all child tasks' Original Estimate at sprint end. Revised Estimate used when > 0.${revScopeNote}" ondblclick="event.stopPropagation();showRptPopup('${row.label} — Review Day Tasks',window['_rpt_${key}_revTasks'],'tbAdhocTasks')">${fmtHours(revHrs, revPct)}</td>`;
 
     return`<tr ondblclick="showRptPopup('${row.label} — All Items',window['_rpt_${key}_all'],'reqs')" style="cursor:pointer;" title="Double-click to view all items">
       <td>${row.label}</td>
@@ -3671,6 +3682,13 @@ function renderReport(){
       ${revCell}
     </tr>`;
   }).join('');
+
+  // After the body is in the DOM, sync the persistence checkbox with
+  // its stored state, then restore any saved Planning Day values for
+  // the current Area × Iteration combination. Restore is a no-op when
+  // persistence is off or when the lookup misses (different sprint).
+  _dsPlanInitCheckbox();
+  _dsPlanRestore();
 
   // ── Section 4: Capacity Toward ────────────────────────
   function capToward(disciplineFilter){
@@ -3793,7 +3811,13 @@ function renderReport(){
       childTasks.forEach(t => {
         const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
         if (!discTicketData[disc]) discTicketData[disc] = { origPlan: 0, taskIds: [] };
-        const histOE = (taskOrigPlanMap[t.id] && taskOrigPlanMap[t.id].oe) || 0;
+        // Planning-day OE snapshot from /revisions (populated narrowly
+        // for Ticket Handling tasks only — see loadTicketTaskOrigPlan).
+        // We use the historical value here, not live, because ticket
+        // tasks' Original Estimate often gets cleared or revised down
+        // during the sprint, which would otherwise zero out this
+        // column.
+        const histOE = taskOrigPlanMap[t.id] || 0;
         discTicketData[disc].origPlan += histOE;
         discTicketData[disc].taskIds.push(t.id);
       });
