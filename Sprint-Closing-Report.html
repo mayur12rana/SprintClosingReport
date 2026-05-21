@@ -863,7 +863,19 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     </div>
 
     <!-- Section 7: Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) -->
-    <div class="rpt-section-title" style="margin-top:16px">🐛 Bug Report — Sprint Quality Analysis</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;margin-bottom:0;">
+      <div class="rpt-section-title" style="margin-top:0;margin-bottom:0;flex:1;">🐛 Bug Report — Sprint Quality Analysis</div>
+      <button class="no-export" id="viewAllBugsBtn" onclick="showAllBugsPopup()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+               background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);
+               color:#fca5a5;border-radius:7px;font-size:.72rem;font-weight:700;
+               cursor:pointer;font-family:inherit;white-space:nowrap;
+               transition:background .2s,border-color .2s;"
+        onmouseover="this.style.background='rgba(239,68,68,0.28)';this.style.borderColor='rgba(239,68,68,0.65)'"
+        onmouseout="this.style.background='rgba(239,68,68,0.15)';this.style.borderColor='rgba(239,68,68,0.4)'"
+        title="Open a popup listing all bugs in this sprint with their Type classification"
+      >🐛 View All Bugs</button>
+    </div>
     <div id="rpt-bugTotalEffortBar" style="display:none;margin-bottom:6px;padding:6px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:7px;font-size:.7rem;color:#94a3b8;cursor:pointer;"
          ondblclick="showRptPopup('All Bug Tasks',window._rpt_allBugs,'tasks')"
          title="Double-click to view all tasks">
@@ -2564,7 +2576,7 @@ function _renderPopupTable() {
   const summaryBar = `<div style="padding:6px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);font-size:.68rem;color:#64748b;">
     Showing <strong style="color:#e2e8f0">${itemCount}</strong> ${itemNoun}${itemCount!==1?'s':''}</div>`;
 
-  const isRed = _popupType === 'bugs';
+  const isRed = _popupType === 'bugs' || _popupType === 'allbugs';
   const hdrBg  = isRed ? 'rgba(127,29,29,.5)' : 'rgba(30,58,138,.6)';
   const hdrClr = isRed ? '#fca5a5' : '#93c5fd';
 
@@ -3299,6 +3311,66 @@ function showRptPopup(title, itemsArr, type){
         ]
       };
     });
+  } else if(type === 'allbugs') {
+    // All bugs with an extra "Type" column — bugs only, no task sub-rows.
+    _popupCols = ['ID','Type','Title','State','Reason','Resolved Reason','Root Cause','Tags','Found in Env','Area Path','Created Date','Effort Taken (h)'];
+    const _allbugTypeColor = b => {
+      const lbl = (b._bugType || '').toLowerCase();
+      if (lbl.includes('current sprint'))   return '#38bdf8';
+      if (lbl.includes('rejected'))         return '#f87171';
+      if (lbl.includes('cannot reproduce')) return '#fbbf24';
+      if (lbl.includes('production'))       return '#fb923c';
+      if (lbl.includes('other'))            return '#a5b4fc';
+      return '#94a3b8';
+    };
+    _popupRows = itemsArr.map((b,bi) => {
+      const st    = b.fields['System.State']||'';
+      const stC   = st==='Closed'?'#34d399':st==='Resolved'?'#60a5fa':'#fbbf24';
+      const reason= b.fields['System.Reason']||'\u2014';
+      const resolvedReasonRaw = b.fields['Microsoft.VSTS.Common.ResolvedReason'] || '';
+      const resolvedReason = resolvedReasonRaw || '\u2014';
+      const rrLower = resolvedReasonRaw.toLowerCase().trim();
+      const rrColor = rrLower==='cannot reproduce'?'#fbbf24':(rrLower==='deferred'?'#94a3b8':(resolvedReasonRaw?'#cbd5e1':'#475569'));
+      const rootCauseRaw = b.fields['Microsoft.VSTS.CMMI.RootCause']||b.fields['Casepoint.TFS.CustomFields.RootCause']||'';
+      const rootCause = rootCauseRaw || '\u2014';
+      const rcLower = rootCauseRaw.toLowerCase().trim();
+      const isDevRC = rcLower==='coding error'||rcLower==='code merge error'||rcLower==='unknown';
+      const rcColor = rootCauseRaw?(isDevRC?'#38bdf8':'#a78bfa'):'#475569';
+      const tagsRaw  = (b.fields['System.Tags']||'').split(';').map(t=>t.trim()).filter(Boolean);
+      const tagsHtml = tagsRaw.length
+        ? tagsRaw.map(t=>`<span style="display:inline-block;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:10px;padding:1px 7px;font-size:.6rem;margin:1px 2px 1px 0;">${t}</span>`).join('')
+        : '<span style="color:#475569;">\u2014</span>';
+      const foundEnvRaw = b.fields['Microsoft.VSTS.CMMI.FoundInEnvironment']||b.fields['_foundInEnv']||b.fields['Casepoint.TFS.CustomFields.FoundInEnvironment']||b.fields['Microsoft.VSTS.Build.FoundIn']||'\u2014';
+      const cdRaw  = b.fields['System.CreatedDate'];
+      const cdDate = cdRaw ? new Date(cdRaw) : null;
+      const cdStr  = cdDate ? cdDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '\u2014';
+      const cdSort = cdDate ? cdDate.getTime() : 0;
+      const areaFull  = b.fields['System.AreaPath'] || '';
+      const areaShort = areaFull ? (areaFull.split('\\\\').slice(1).join('\\\\') || areaFull) : '\u2014';
+      const childIds = bugTasksMap[b.id]||[];
+      const compWork = childIds.reduce((s,tid)=>{const t=taskLookup[tid];return s+(t?t.fields['Microsoft.VSTS.Scheduling.CompletedWork']||0:0);},0);
+      const cw = compWork>0 ? fmtH(compWork)+'h' : '—';
+      const link= tfsBase?`<a href="${tfsBase}${b.id}" target="_blank" style="color:#f87171;">${b.id}</a>`:`${b.id}`;
+      const bugTypeLabel = b._bugType || '—';
+      const btColor = _allbugTypeColor(b);
+      return {
+        _cells: [String(b.id), bugTypeLabel, b.fields['System.Title']||'', st, reason, resolvedReason, rootCause, tagsRaw.join(' '), foundEnvRaw, areaFull, String(cdSort), String(compWork)],
+        _htmlCells: [
+          `<td style="padding:7px 12px;">${link}</td>`,
+          `<td style="padding:6px 10px;white-space:nowrap;"><span style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid ${btColor}55;color:${btColor};border-radius:10px;padding:2px 9px;font-size:.63rem;font-weight:700;">${bugTypeLabel}</span></td>`,
+          `<td style="padding:7px 12px;color:#e2e8f0;font-weight:600;">${b.fields['System.Title']||''}</td>`,
+          `<td style="padding:7px 12px;color:${stC};font-weight:600;">${st}</td>`,
+          `<td style="padding:7px 12px;color:#94a3b8;font-size:.68rem;">${reason}</td>`,
+          `<td style="padding:7px 12px;color:${rrColor};font-size:.68rem;font-weight:600;white-space:nowrap;">${resolvedReason}</td>`,
+          `<td style="padding:7px 12px;color:${rcColor};font-size:.68rem;font-weight:600;white-space:nowrap;">${rootCause}</td>`,
+          `<td style="padding:7px 12px;font-size:.68rem;">${tagsHtml}</td>`,
+          `<td style="padding:7px 12px;color:#fbbf24;font-size:.68rem;">${foundEnvRaw}</td>`,
+          `<td style="padding:7px 12px;color:#94a3b8;font-size:.67rem;white-space:nowrap;" title="${areaFull}">${areaShort}</td>`,
+          `<td style="padding:7px 12px;color:#94a3b8;font-size:.68rem;white-space:nowrap;">${cdStr}</td>`,
+          `<td style="padding:7px 12px;text-align:center;color:#fbbf24;font-weight:600;">${cw}</td>`
+        ]
+      };
+    });
   }
 
   _renderPopupTable();
@@ -3342,6 +3414,16 @@ function showAiAdoptionPopup(disc){
     ? 'All Contributing Tasks'
     : `${titleMap[disc] || disc} — Contributing Tasks`;
   showRptPopup(`🤖 AI Adoption — ${titleSuffix}`, tasksArr, 'aiTasks');
+}
+
+/* Open "View All Bugs" popup — shows every bug in the sprint with a Type column */
+function showAllBugsPopup(){
+  const allBugs = window._rpt_allBugs || [];
+  if (!allBugs.length) {
+    xtoast('⚠️ No bugs loaded — generate the report first.', 3000);
+    return;
+  }
+  showRptPopup('🐛 All Bugs — Sprint Quality Analysis', allBugs, 'allbugs');
 }
 
 
@@ -4198,6 +4280,9 @@ function renderReport(){
       { label: '🚀 PT/Production Bug', bugsArr: productionArr    },
       { label: '📋 Other',             bugsArr: otherArr         },
     ];
+    // Stamp each bug with its classification label so the "View All Bugs" popup
+    // can show a Type column without re-running the cascade.
+    bugTypeRows.forEach(row => row.bugsArr.forEach(b => { b._bugType = row.label; }));
     bugTypeBodyEl.innerHTML = bugTypeRows.map((row,ri) => {
       const eff = bugEffort(row.bugsArr);
       const key = `bugtype_${ri}`;
@@ -4874,6 +4959,8 @@ function buildExportClone(){
 
   clone.querySelectorAll('.sec').forEach(s=>{s.style.display='block';s.classList.add('on')});
   clone.querySelectorAll('.snav,#cfgBrand,#configPanel,#filterPanel,#manualHint,#ldgOverlay,#xtoast').forEach(el=>el.style.display='none');
+  // Strip UI-only elements that must not appear in any export (preview / HTML / email)
+  clone.querySelectorAll('.no-export').forEach(el=>el.remove());
 
   // No canvases to snapshot
   return clone;
@@ -4923,8 +5010,10 @@ function doCopyEmail(){
         body{background:#fff;color:#0f172a;font-size:13px;margin:0;padding:0}
         /* Hero */
         .hero{background:#1e3a8a;color:#fff;padding:20px 24px 16px;border-bottom:3px solid #1e40af}
-        .hi{max-width:816px;margin:0 auto}
-        .htop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+        .hi{max-width:960px;margin:0 auto}
+        .htop{display:table;width:100%;margin-bottom:10px}
+        .htop>*:first-child{display:table-cell;vertical-align:top}
+        .hr{display:table-cell;vertical-align:top;text-align:right;width:200px}
         .hey{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e0e7ff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;margin-bottom:8px}
         .htitle{font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:4px}
         .hdate{display:none}
@@ -4936,18 +5025,19 @@ function doCopyEmail(){
         .ba{background:rgba(16,185,129,.3);border:1.5px solid rgba(16,185,129,.6);color:#fff}
         .bna{background:rgba(239,68,68,.3);border:1.5px solid rgba(239,68,68,.6);color:#fff}
         /* Page wrap */
-        .pw{max-width:816px;margin:0 auto;padding:16px 24px 32px;background:#fff}
+        .pw{max-width:960px;margin:0 auto;padding:16px 24px 32px;background:#fff}
         /* Section dividers */
-        .div{display:flex;align-items:center;gap:10px;margin:24px 0 14px}
-        .div-lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap;padding:5px 14px;background:#1e3a8a;border:1px solid #1e40af;border-radius:5px}
-        .div::after{content:'';flex:1;height:1px;background:rgba(56,189,248,0.2);margin-left:10px}
-        /* Grids */
+        .div{display:table;width:100%;margin:24px 0 14px}
+        .div-lbl{display:table-cell;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap;padding:5px 14px;background:#1e3a8a;border:1px solid #1e40af;border-radius:5px;width:1%}
+        .div::after{display:none}
+        /* Grids — table-based for Outlook compatibility */
         .g4{display:table;width:100%;border-collapse:separate;border-spacing:8px;margin-bottom:14px}
         .g3{display:table;width:100%;border-collapse:separate;border-spacing:8px;margin-bottom:14px}
-        .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+        .g2{display:table;width:100%;border-collapse:separate;border-spacing:10px;margin-bottom:14px}
         .g4>.sc,.g4>.cc,.g3>.sc,.g3>.cc,.g3>.cal{display:table-cell;vertical-align:top;width:25%}
+        .g2>.sc,.g2>.cc,.g2>.cal,.g2>.bcol{display:table-cell;vertical-align:top;width:50%}
         /* Stat cards */
-        .sc{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:12px;display:inline-block;width:100%}
+        .sc{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:12px;display:table-cell;vertical-align:top}
         .si{width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:6px}
         .sv{font-size:1.3rem;font-weight:700;color:#0f172a;line-height:1}
         .sl{font-size:11px;color:#64748b;margin-top:3px}
@@ -4992,8 +5082,9 @@ function doCopyEmail(){
         .mrn{flex:1;font-size:12px;color:#475569}
         .mrv{font-size:14px;font-weight:700;color:#0f172a}
         .mrs{font-size:10px;color:#94a3b8;text-align:right}
-        /* Bug columns */
-        .bcg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+        /* Bug columns — table layout for Outlook */
+        .bcg{display:table;width:100%;border-collapse:separate;border-spacing:8px;margin-bottom:14px}
+        .bcg>.bcol{display:table-cell;vertical-align:top;width:33%}
         .bcol{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;overflow:hidden}
         .bch{padding:8px 12px;border-bottom:1px solid #e8edf2;display:flex;align-items:center;justify-content:space-between}
         .bcht{font-size:11px;font-weight:700;color:#334155}
@@ -5002,8 +5093,9 @@ function doCopyEmail(){
         .bs:last-child{border-bottom:none}
         .bsl{font-size:11px;color:#475569}
         .bsv{font-size:12px;font-weight:700}
-        /* KPI pair */
-        .kpair{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+        /* KPI pair — table layout for Outlook */
+        .kpair{display:table;width:100%;border-collapse:separate;border-spacing:6px;margin-top:10px}
+        .kpair>.ki{display:table-cell;vertical-align:top;width:50%}
         .ki{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:6px;padding:7px 9px;text-align:center}
         .kn{font-size:1.1rem;font-weight:700;line-height:1}
         .kl{font-size:10px;color:#64748b;margin-top:2px}
@@ -5039,6 +5131,29 @@ function doCopyEmail(){
         #dq-openBugs,#db-open,#qb-open,#pb-open{color:#dc2626}
         #dq-prodBugs{color:#b45309}
         #db-resolved,#qb-resolved,#pb-resolved{color:#0891b2}
+        /* rpt-tbl — override dark-theme for email */
+        .rpt-tbl{width:100%;border-collapse:collapse;font-size:12px}
+        .rpt-tbl th{background:#1e3a8a;color:#fff;font-weight:700;padding:7px 9px;border:1px solid #1e40af;text-align:center;white-space:nowrap;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+        .rpt-tbl th:first-child{text-align:left;min-width:130px}
+        .rpt-tbl td{padding:6px 9px;border:1px solid #e2e8f0;color:#334155;vertical-align:middle;text-align:center;background:#fff}
+        .rpt-tbl td:first-child{text-align:left;font-weight:500;color:#1e293b}
+        .rpt-tbl tbody tr:nth-child(odd) td{background:#f8fafc}
+        .rpt-tbl tfoot td{background:#1e3a8a;font-weight:700;color:#fff;border-top:2px solid #1e40af;text-align:center}
+        .rpt-tbl tfoot td:first-child{text-align:left}
+        /* Bug Report — Type col wider (longer content e.g. "PT/Production Bug") */
+        .rpt-bug-tbl th:first-child{min-width:170px}
+        /* Bug Report — Dev Owned (col 6), QA Owned (col 7), Others (col 8), Effort Taken (col 9)
+           Slightly distinct red-tinted background aligned with the red bug-table theme */
+        .rpt-bug-tbl th:nth-child(6),.rpt-bug-tbl th:nth-child(7),.rpt-bug-tbl th:nth-child(8),.rpt-bug-tbl th:nth-child(9){background:#7f1d1d;border-color:#991b1b;color:#fecaca}
+        .rpt-bug-tbl td:nth-child(6),.rpt-bug-tbl td:nth-child(7),.rpt-bug-tbl td:nth-child(8),.rpt-bug-tbl td:nth-child(9){background:#fff5f5;border-color:#fecaca;color:#991b1b;font-weight:600}
+        .rpt-bug-tbl tbody tr:nth-child(odd) td:nth-child(6),.rpt-bug-tbl tbody tr:nth-child(odd) td:nth-child(7),.rpt-bug-tbl tbody tr:nth-child(odd) td:nth-child(8),.rpt-bug-tbl tbody tr:nth-child(odd) td:nth-child(9){background:#fee2e2}
+        /* Metric rows — use table layout */
+        .mr{display:table;width:100%;padding:7px 0;border-bottom:1px solid #f1f5f9}
+        .mr:last-child{border-bottom:none}
+        .mri{display:table-cell;font-size:1rem;width:28px;vertical-align:middle;text-align:center}
+        .mrn{display:table-cell;font-size:12px;color:#475569;vertical-align:middle;padding:0 8px}
+        .mrv{display:table-cell;font-size:14px;font-weight:700;color:#0f172a;vertical-align:middle}
+        .mrs{display:table-cell;font-size:10px;color:#94a3b8;text-align:right;vertical-align:middle;white-space:nowrap}
         /* Misc */
         img{max-width:100%}
         .cw img{width:100%}
