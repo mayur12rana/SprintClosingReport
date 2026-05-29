@@ -2760,13 +2760,13 @@ function _bugPopupCriteria(title) {
   // ── Bucket criteria (rows in the cascade, top-priority first) ────
   let bucket = '';
   if (t.includes('current sprint')) {
-    bucket = 'Bugs created INSIDE the sprint window AND either (a) tagged "CS", OR (b) FoundInEnvironment="PT" with parent requirement in the active iteration. Excludes anything claimed earlier in the cascade.';
+    bucket = 'Bugs created INSIDE the sprint window AND either (a) tagged "CS", OR (b) FoundInEnvironment="PT" with the "CS" tag OR parent requirement in the active iteration (e.g. the parent requirement was moved into the current sprint). Excludes anything claimed earlier in the cascade.';
   } else if (t.includes('rejected')) {
     bucket = 'Bugs WHERE System.Reason = "Rejected". Excludes Forced-Other (Reason=Duplicate, ResolvedReason=Deferred, Tags Deployment Error / Third party library Error).';
   } else if (t.includes('cannot reproduce')) {
     bucket = 'Bugs WHERE ResolvedReason = "Cannot Reproduce" OR Tags contain "Cannot Reproduce". Excludes Forced-Other and Rejected bugs.';
   } else if (t.includes('pt/production') || t.includes('production bug')) {
-    bucket = 'Bugs WHERE (a) FoundInEnvironment ∈ standard prod envs (any date), OR (b) FoundInEnvironment="PT" AND CreatedDate is OUTSIDE the sprint window, OR (c) FoundInEnvironment="PT" created INSIDE the sprint window with parent requirement NOT in the active iteration (regression on prior-sprint work). Excludes Forced-Other / Rejected / Cannot Reproduce.';
+    bucket = 'Bugs WHERE (a) FoundInEnvironment ∈ standard prod envs (any date), OR (b) FoundInEnvironment="PT" AND CreatedDate is OUTSIDE the sprint window, OR (c) FoundInEnvironment="PT" created INSIDE the sprint window with NO "CS" tag AND parent requirement NOT in the active iteration (regression on prior-sprint work). PT in-sprint bugs that carry the "CS" tag or whose parent requirement is in the active iteration are counted under Current Sprint instead. Excludes Forced-Other / Rejected / Cannot Reproduce.';
   } else if (t.includes('other')) {
     bucket = 'Catch-all: Forced-Other (Reason=Duplicate, ResolvedReason=Deferred, Tags "Deployment Error" / "Third party library Error") PLUS bugs not matched by any earlier row (e.g. non-PT bugs created in-sprint without a CS tag, or bugs created before the sprint window).';
   } else if (t.includes('all bug')) {
@@ -4079,15 +4079,26 @@ function renderReport(){
     return pid != null && currentSprintReqIds.has(pid);
   };
 
+  // Shared "CS" tag check (case-insensitive, exact tag match). The CS tag is the
+  // team's explicit marker that a defect belongs to the work done in the current
+  // sprint, so it is treated as an authoritative Current-Sprint signal below.
+  const hasCSTag = b => (b.fields['System.Tags'] || '')
+    .split(';').map(t => t.trim().toLowerCase()).includes('cs');
+
   const isProductionBug = b => {
     const env = _foundEnv(b);
     if (PROD_ENVS.has(env)) return true;                       // standard prod env — always
     if (PT_ENVS.has(env)) {
       if (!inCurrentSprint(b)) return true;                    // PT outside sprint window
-      // PT in-sprint: route based on parent requirement's iteration.
-      // Parent in current sprint → routed to Current Sprint by the cascade,
-      // so don't claim it here. Otherwise → PT/Production.
-      return !parentInCurrentSprint(b);
+      // PT in-sprint: belongs to Current Sprint (NOT Production) when EITHER
+      //   • the bug carries the "CS" tag (explicit current-sprint marker), OR
+      //   • its parent requirement is in the active iteration (e.g. the parent
+      //     requirement was moved/pulled into the current sprint).
+      // In either case the Current-Sprint row claims it, so don't claim it here.
+      // Only PT in-sprint bugs that have NEITHER signal fall through to
+      // PT/Production (a regression on prior-sprint work).
+      if (hasCSTag(b) || parentInCurrentSprint(b)) return false;
+      return true;
     }
     return false;
   };
@@ -4193,14 +4204,16 @@ function renderReport(){
     //        a) FoundInEnvironment ∈ standard prod envs (any date)
     //        b) FoundInEnvironment = "PT" AND CreatedDate OUTSIDE sprint window
     //        c) FoundInEnvironment = "PT" AND CreatedDate INSIDE sprint window
+    //           AND the bug has NO "CS" tag
     //           AND parent requirement is NOT in the active iteration
     //           (i.e. parent was closed in a previous sprint — this is a
     //            regression on prior work).
     //   4. Current Sprint:
     //        a) has "CS" tag AND CreatedDate inside the sprint window, OR
     //        b) FoundInEnvironment = "PT" AND CreatedDate inside sprint window
-    //           AND parent requirement IS in the active iteration
-    //           (no CS tag required for PT bugs)
+    //           AND (has the "CS" tag OR parent requirement IS in the active
+    //           iteration — e.g. the parent requirement was moved into the
+    //           current sprint).
     //   5. Other            (forced-Other + everything not matched above)
     // Each bug is counted in exactly ONE row.
     //
@@ -4236,19 +4249,18 @@ function renderReport(){
 
     // Current Sprint — qualifies via either of these (in-sprint window required):
     //   • Standard rule: has the "CS" tag AND CreatedDate inside the sprint window
-    //   • PT rule: FoundInEnvironment = PT AND parent requirement is in the current
-    //     iteration. (Production-env bugs are claimed by PT/Production above and
-    //     never reach this filter.) The PT path does not require a CS tag.
-    const hasCSTag = b => {
-      const tags = (b.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
-      return tags.includes('cs');
-    };
+    //   • PT rule: FoundInEnvironment = PT AND (has the "CS" tag OR parent
+    //     requirement is in the current iteration). (Production-env bugs are
+    //     claimed by PT/Production above and never reach this filter.) A PT bug
+    //     that carries the CS tag or whose parent requirement has been moved into
+    //     the current sprint is counted here even without the other signal.
+    // (hasCSTag is defined once above, alongside isProductionBug.)
     const currentSprintArr = bugs.filter(b => {
       if (claimed.has(b.id)) return false;
       if (!inCurrentSprint(b)) return false;
-      // PT bug AND parent is in the active iteration → Current Sprint (no CS tag needed)
+      // PT bug with the CS tag OR parent in the active iteration → Current Sprint
       const env = _foundEnv(b);
-      if (PT_ENVS.has(env) && parentInCurrentSprint(b)) return true;
+      if (PT_ENVS.has(env) && (hasCSTag(b) || parentInCurrentSprint(b))) return true;
       // Otherwise: original CS-tag rule
       return hasCSTag(b);
     });
