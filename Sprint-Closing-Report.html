@@ -3871,9 +3871,19 @@ function renderReport(){
     // ── Pass 1: All-adhoc accumulator (Used / Completed / Remaining + row popup)
     // Iterates Reqs+CRs (already in `adhoc`) and Bugs (in `adhocBugs`) — both
     // contribute their child-task hours to the per-discipline totals.
+    // Only tasks whose IterationPath matches one of the selected sprint paths are counted.
+    const isInSelectedSprint = (task) => {
+      const taskIter = (task.fields['System.IterationPath'] || '').toLowerCase();
+      return selectedIterPaths.some(si => {
+        const selIter = (si.path || '').toLowerCase();
+        return taskIter === selIter || taskIter.startsWith(selIter + '\\');
+      });
+    };
+
     adhoc.forEach(r => {
       const childIds   = reqTasksMap[r.id] || [];
-      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean);
+      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean)
+                                 .filter(isInSelectedSprint);
 
       childTasks.forEach(t => {
         const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
@@ -3889,7 +3899,8 @@ function renderReport(){
     // bugTasksMap (built earlier from System.Parent + Hierarchy-Forward).
     adhocBugs.forEach(b => {
       const childIds   = bugTasksMap[b.id] || [];
-      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean);
+      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean)
+                                 .filter(isInSelectedSprint);
 
       childTasks.forEach(t => {
         const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
@@ -3903,10 +3914,12 @@ function renderReport(){
 
     // ── Pass 2: Ticket Handling / Ticket Support accumulator (Original Planned + OP popup)
     // Iterate ALL requirements — tag is NOT considered, only the title prefix.
+    // Only tasks whose IterationPath matches a selected sprint are counted.
     requirements.forEach(r => {
       if (!titleMatchesTicket(r)) return;
       const childIds   = reqTasksMap[r.id] || [];
-      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean);
+      const childTasks = childIds.map(id => taskLookup[id]).filter(Boolean)
+                                 .filter(isInSelectedSprint);
 
       childTasks.forEach(t => {
         const disc = (t.fields['Microsoft.VSTS.Common.Discipline'] || 'Other').trim();
