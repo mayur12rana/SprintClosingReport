@@ -417,16 +417,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
         body.light-theme .tb-disc-tbl tbody tr:hover td{background:rgba(99,102,241,.1)!important;}
         body.light-theme .tb-disc-tbl tfoot td{background:#ede9fe;color:#312e81;border-top-color:rgba(99,102,241,.25);}
 
-        /* ── AI Data table — blue header/footer ───── */
-        #rpt-aiDataTable th{
-          background:rgba(59,130,246,.28);color:#bfdbfe;
-          border-bottom-color:rgba(59,130,246,.4);border-right-color:rgba(59,130,246,.15);
-        }
-        #rpt-aiDataTable tfoot td{
-          background:rgba(59,130,246,.2);color:#93c5fd;
-          border-top:1px solid rgba(59,130,246,.4);
-        }
-        #rpt-aiDataTable tbody tr:hover{background:rgba(59,130,246,.07)!important;}
         /* Team B discipline table — light green */
         .tb-disc-tbl th{
           background:rgba(16,185,129,.28)!important;color:#6ee7b7!important;
@@ -447,8 +437,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
         }
         .rpt-bug-tbl tbody tr:hover{background:rgba(239,68,68,.06)!important;}
         /* Light theme */
-        body.light-theme #rpt-aiDataTable th{background:rgba(5,150,105,.18)!important;color:#065f46!important;border-bottom-color:rgba(5,150,105,.3)!important;}
-        body.light-theme #rpt-aiDataTable tfoot td{background:rgba(5,150,105,.12)!important;color:#064e3b!important;border-top-color:rgba(5,150,105,.3)!important;}
         body.light-theme .tb-disc-tbl th{background:rgba(5,150,105,.15)!important;color:#065f46!important;}
         body.light-theme .tb-disc-tbl tfoot td{background:rgba(5,150,105,.1)!important;color:#064e3b!important;}
         body.light-theme .rpt-bug-tbl th{background:rgba(239,68,68,.12)!important;color:#991b1b!important;}
@@ -844,22 +832,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
       padding:8px;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">
       No insights added yet.
     </div>
-    </div>
-
-    <!-- Section 9: AI Data (moved here from below) -->
-    <div class="rpt-section-title" style="margin-top:16px">🤖 AI Adoption Data Summary</div>
-    <div style="overflow-x:auto;margin-bottom:2px">
-      <table class="rpt-tbl" id="rpt-aiDataTable">
-        <thead><tr>
-          <th style="text-align:left;min-width:90px">Discipline</th>
-          <th>Total Tasks</th><th>AI Tasks</th><th>Manual Tasks</th>
-          <th>AI Efficiency %</th><th>Manual Efficiency %</th><th>Saved Hours</th>
-          <th title="(AI Saved + Manual Saved) / (Total Orig / 1.4) × 100&#10;where AI Saved = AI Orig − AI Comp, Manual Saved = (Manual Orig + MAI Orig) − (Manual Comp + MAI Comp), Total Orig = AI Orig + Manual Orig + MAI Orig">Productivity Gain %</th>
-        </tr></thead>
-        <tbody id="rpt-aiDataBody"></tbody>
-        <tfoot id="rpt-aiDataFoot"></tfoot>
-      </table>
-      <div id="rpt-aiDataEmpty" style="display:none;text-align:center;padding:8px;font-size:.65rem;color:#94a3b8;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;">No AI task data found for this sprint.</div>
     </div>
 
     <!-- Section 7: Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) -->
@@ -2215,7 +2187,6 @@ function scrBuildReport(){
   const delivery    = stripFirstColIcons(readTbl('rpt-deliverySummaryBody'));
   const teamB       = stripFirstColIcons(readTbl('rpt-teamBBody','rpt-teamBFoot'));
   const bugTypeData = stripFirstColIcons(readTbl('rpt-bugTypeBody'));
-  const aiData      = stripFirstColIcons(readTbl('rpt-aiDataBody','rpt-aiDataFoot'));
 
   // Adhoc Support: pull the "(N tickets · Closed:X Resolved:Y Open:Z)" descriptor
   // out of the Total footer cell and render it as a caption above the table.
@@ -2422,10 +2393,6 @@ function scrBuildReport(){
         <table border="0" cellpadding="0" cellspacing="0" width="932" style="border-collapse:collapse;width:932px;max-width:932px;background:#eff6ff;border:1px solid #bfdbfe;">${insightHtml}</table>
       </td></tr>
     </table>
-
-    <!-- AI Data (moved up) -->
-    <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">AI Adoption Data Summary</p>
-    ${tbl(['Discipline','Total Tasks','AI Tasks','Manual Tasks','AI Efficiency','Manual Efficiency','Saved Hours','Productivity Gain %'], aiData.rows, aiData.foot)}
 
     <!-- Bug Report — Sprint Quality Analysis (formerly Bug Type Classification) -->
     <p style="${F}font-size:8pt;font-weight:bold;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;">Bug Report — Sprint Quality Analysis</p>
@@ -3278,39 +3245,6 @@ function showRptPopup(title, itemsArr, type){
       `<td style="padding:8px 10px;text-align:center;color:#34d399;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlComp>0?fmtH(_ttlComp)+'h':'—'}</td>`,
       `<td style="padding:8px 10px;text-align:center;color:#f87171;font-weight:700;border-top:2px solid rgba(255,255,255,.18);white-space:nowrap;">${_ttlRem>0?fmtH(_ttlRem)+'h':'—'}</td>`
     ];
-  } else if(type === 'aiTasks') {
-    // AI Adoption Data — contributing tasks (Closed/Resolved, eff>0, exec set)
-    _popupCols = ['Task ID','Title','Discipline','State','Assigned To','Execution','Original Est','Revised Est','Completed','Effort'];
-    _popupRows = itemsArr.map(t => {
-      const tState  = t.fields['System.State'] || '';
-      const tStateC = tState==='Closed'?'#34d399':tState==='Resolved'?'#60a5fa':'#fbbf24';
-      const tDisc   = t.fields['Microsoft.VSTS.Common.Discipline'] || '—';
-      const tAssign = t.fields['System.AssignedTo']?.displayName || '—';
-      const tExec   = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '—';
-      const execColor = tExec.startsWith('AI-') ? '#34d399'
-                      : tExec === 'Manual-AI-Ineffective' ? '#fca5a5'
-                      : tExec === 'Manual' ? '#94a3b8' : '#64748b';
-      const tOrig   = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
-      const tRev    = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
-      const tEff    = tRev > 0 ? tRev : tOrig;
-      const tComp   = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
-      const tLink   = tfsBase ? `<a href="${tfsBase}${t.id}" target="_blank" style="color:#60a5fa;">${t.id}</a>` : `${t.id}`;
-      return {
-        _cells: [String(t.id), t.fields['System.Title']||'', tDisc, tState, tAssign, tExec, String(tOrig), String(tRev), String(tComp), String(tEff)],
-        _htmlCells: [
-          `<td style="padding:7px 10px;">${tLink}</td>`,
-          `<td style="padding:7px 10px;color:#e2e8f0;">${t.fields['System.Title']||''}</td>`,
-          `<td style="padding:7px 10px;color:#a5b4fc;font-size:.7rem;">${tDisc}</td>`,
-          `<td style="padding:7px 10px;color:${tStateC};font-weight:600;">${tState}</td>`,
-          `<td style="padding:7px 10px;color:#94a3b8;font-size:.7rem;">${tAssign}</td>`,
-          `<td style="padding:7px 10px;color:${execColor};font-size:.65rem;font-weight:600;">${tExec}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#fbbf24;">${tOrig>0?fmtH(tOrig)+'h':'—'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#a78bfa;">${tRev>0?fmtH(tRev)+'h':'—'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#34d399;font-weight:600;">${tComp>0?fmtH(tComp)+'h':'—'}</td>`,
-          `<td style="padding:7px 10px;text-align:center;color:#22d3ee;font-weight:700;">${tEff>0?fmtH(tEff)+'h':'—'}</td>`
-        ]
-      };
-    });
   } else if(type === 'allbugs') {
     // All bugs with an extra "Type" column — bugs only, no task sub-rows.
     _popupCols = ['ID','Type','Title','State','Reason','Resolved Reason','Root Cause','Tags','Found in Env','Area Path','Created Date','Effort Taken (h)'];
@@ -3400,20 +3334,6 @@ function showTbTicketTasksPopup(disc){
     ? 'All Ticket Handling / Ticket Support Tasks'
     : `${disc} — Ticket Handling / Ticket Support Tasks`;
   showRptPopup(`🎟️ ${titleSuffix}`, tasksArr, 'tbAdhocTasks');
-}
-
-/* Open AI Adoption Data popup. Pass discipline key ('development' / 'test') or '__all__' */
-function showAiAdoptionPopup(disc){
-  const map = window._aiAdoptionTaskMap || {};
-  const ids = (disc === '__all__')
-    ? (window._aiAdoptionAllTaskIds || [])
-    : (map[disc] || []);
-  const tasksArr = ids.map(id => taskLookup[id]).filter(Boolean);
-  const titleMap = { development: '💻 Development', test: '🧪 Test' };
-  const titleSuffix = disc === '__all__'
-    ? 'All Contributing Tasks'
-    : `${titleMap[disc] || disc} — Contributing Tasks`;
-  showRptPopup(`🤖 AI Adoption — ${titleSuffix}`, tasksArr, 'aiTasks');
 }
 
 /* Open "View All Bugs" popup — shows every bug in the sprint with a Type column */
@@ -4347,237 +4267,6 @@ function renderReport(){
       </tr>`;
     }).join('');
   }
-
-  // ── Section 9: AI Data — Dev & QA Adoption Summary ──────────────────────
-  (function buildAIData() {
-    const aiBody  = document.getElementById('rpt-aiDataBody');
-    const aiFoot  = document.getElementById('rpt-aiDataFoot');
-    const aiEmpty = document.getElementById('rpt-aiDataEmpty');
-    if (!aiBody) return;
-
-    // Valid parent IDs: Deliverable, Deliverables Adhoc, Deliverables OnHold,
-    // Non-Deliverable, Adhoc Support (same criteria as index.html)
-    const validReqIds = new Set();
-    requirements.forEach(req => {
-      const tags = (req.fields['System.Tags'] || '').split(';').map(t => t.trim().toLowerCase());
-      if (tags.includes('deliverable') || tags.includes('deliverables adhoc') ||
-          tags.includes('deliverables onhold') || tags.includes('non-deliverable') ||
-          req.isAdhocSupport) {
-        validReqIds.add(req.id);
-      }
-    });
-    bugs.forEach(b => {
-      if ((b.fields['System.Tags'] || '').toLowerCase().includes('adhoc support'))
-        validReqIds.add(b.id);
-    });
-
-    // Build a fast parent-lookup from reqTasksMap + bugTasksMap
-    const taskParent = {};
-    const allTaskMaps = [reqTasksMap, bugTasksMap];
-    allTaskMaps.forEach(map => {
-      Object.entries(map).forEach(([pid, tids]) => {
-        if (Array.isArray(tids)) tids.forEach(tid => { taskParent[tid] = parseInt(pid); });
-      });
-    });
-
-    // Accumulate stats for one discipline string (e.g. 'Development', 'Test')
-    function calcAI(disciplineLabel) {
-      let aiTasks=0, manTasks=0, maiTasks=0;
-      let aiOrig=0, aiRev=0, aiTot=0, aiComp=0;
-      let manOrig=0, manComp=0;
-      let maiOrig=0, maiComp=0;
-      const matched = []; // tasks that contributed to this discipline's stats
-
-      tasks.forEach(t => {
-        if (!t.fields) return;
-        const pid = taskParent[t.id];
-        if (!pid || !validReqIds.has(pid)) return;
-
-        const disc  = (t.fields['Microsoft.VSTS.Common.Discipline'] || '').toLowerCase();
-        if (disc !== disciplineLabel.toLowerCase()) return;
-
-        const state  = t.fields['System.State']  || '';
-        const reason = t.fields['System.Reason'] || '';
-        if (!['Resolved','Closed'].includes(state)) return;
-        if (reason === 'Rejected') return;
-
-        const revEst  = t.fields['Casepoint.TFS.CustomFields.RevisedEstimate'] || 0;
-        const origEst = t.fields['Microsoft.VSTS.Scheduling.OriginalEstimate'] || 0;
-        const eff     = revEst > 0 ? revEst : origEst;
-        const comp    = t.fields['Microsoft.VSTS.Scheduling.CompletedWork'] || 0;
-        if (eff <= 0) return;
-
-        // ── Three-way execution-type bucketing (per user spec) ─────────
-        //   AI    : exec starts with "AI-" (AI-Generated, AI-Assisted, etc.)
-        //   MAI   : exec === "Manual-AI-Ineffective" — failed AI attempt
-        //           that ended up being reworked manually
-        //   Manual: everything else (explicit "Manual", blank, custom values)
-        //
-        // We track MAI as its own bucket so the user's latest spec
-        //   Saved Hours       = AI Saved + AI-Ineffective Saved + Manual Saved
-        //   Productivity Gain = (AI Saved + AI-Ineffective Saved + Manual Saved)
-        //                       / (Total Orig / 1.4) × 100
-        // can be written in the explicit three-way form below. For the
-        // displayed "Manual Tasks" count column we still combine
-        // MAI + Manual (per the earlier "Manual-AI-Ineffective counts as
-        // Manual Tasks" spec) — that combination happens in the row
-        // mapping below, NOT inside the bucket counts.
-        const exec = t.fields['Casepoint.TFS.CustomFields.TaskExecutionType'] || '';
-        const isAI  = exec.startsWith('AI-');
-        const isMAI = exec === 'Manual-AI-Ineffective';
-        // isMan covers explicit "Manual", blank exec, and any other
-        // non-AI / non-MAI value — keeping Test discipline's blank-exec
-        // hours in the bucket (per the prior Test-specific fix).
-        const isMan = !isAI && !isMAI;
-
-        if (isAI)       { aiTasks++;  if (revEst <= 0) aiOrig += origEst; aiRev += revEst; aiTot += eff; aiComp += comp; }
-        else if (isMAI) { maiTasks++; maiOrig += eff; maiComp += comp; }
-        else            { manTasks++; manOrig += eff; manComp += comp; }
-
-        matched.push(t.id);
-      });
-
-      const totalTasks  = aiTasks + maiTasks + manTasks;
-      const totalHrs    = aiTot + maiOrig + manOrig;
-      // AI Adoption % — share of total effort that was AI-executed.
-      // MAI hours are NOT credited to AI adoption because MAI represents
-      // failed AI attempts that ultimately required manual rework.
-      const adoptionPct = totalHrs > 0 ? Math.round((aiTot / totalHrs) * 100) : 0;
-      const effPct      = aiTot  > 0 ? Math.round(((aiTot - aiComp) / aiTot) * 100) : 0;
-
-      // ── Saved Hours (per latest user spec) ─────────────────────────
-      //   AI Saved        = aiTot   - aiComp
-      //   AI-Ineffective  = maiOrig - maiComp
-      //   Manual Saved    = manOrig - manComp
-      //   Saved Hours     = AI Saved + AI-Ineffective + Manual Saved
-      // Previously this column showed AI savings only; it now reflects
-      // total savings across all execution buckets, matching the
-      // Productivity Gain numerator.
-      const aiSaved     = aiTot   - aiComp;
-      const maiSaved    = maiOrig - maiComp;
-      const manualSaved = manOrig - manComp;
-      const savedHrs    = aiSaved + maiSaved + manualSaved;
-
-      // ── Productivity Gain % (per latest user spec) ─────────────────
-      //   PG = (AI Saved + AI-Ineffective Saved + Manual Saved)
-      //        / (Total Orig / 1.4) × 100
-      // The numerator is exactly savedHrs above; denominator is the
-      // sum of effective estimates across all three buckets, scaled by
-      // 1/1.4 to convert hours into the productivity-gain unit.
-      const prodGainPct = totalHrs > 0
-        ? Math.round((savedHrs / (totalHrs / 1.4)) * 100) : 0;
-
-      // Manual Efficiency — based on the COMBINED Manual + MAI bucket
-      // (matches the "Manual Tasks" display column, which also combines
-      // them per the earlier user request).
-      const manualEffDenom = manOrig + maiOrig;
-      const manualEffPct = manualEffDenom > 0
-        ? Math.round(((manualEffDenom - (manComp + maiComp)) / manualEffDenom) * 100) : 0;
-
-      return { totalTasks, aiTasks, manTasks, maiTasks, adoptionPct,
-               aiOrig, aiTot, aiComp, effPct, manualEffPct, savedHrs,
-               manOrig, manComp, maiOrig, maiComp, prodGainPct,
-               aiSaved, maiSaved, manualSaved,  // breakdown for tooltips
-               taskIds: matched };
-    }
-
-    const DISCIPLINES = [
-      { label: '💻 Development', key: 'development', clr: '#60a5fa' },
-      { label: '🧪 Test',        key: 'test',        clr: '#34d399' },
-    ];
-
-    let totTasks=0, totAI=0, totMan=0, totSaved=0, hasData=false;
-    let totAiTot=0, totAiComp=0, totAllHrs=0;
-    // Accumulators for the Overall (footer) Productivity Gain %.
-    // We must NOT average the per-discipline percentages — the metric is a
-    // weighted ratio and has to be recomputed from the underlying hour sums.
-    let totManOrig=0, totManComp=0, totMaiOrig=0, totMaiComp=0;
-
-    // Stash per-discipline contributing-task IDs for double-click popup
-    window._aiAdoptionTaskMap   = {};
-    window._aiAdoptionAllTaskIds= [];
-
-    const rows = DISCIPLINES.map(d => {
-      const s = calcAI(d.key);
-      window._aiAdoptionTaskMap[d.key] = s.taskIds;
-      window._aiAdoptionAllTaskIds.push(...s.taskIds);
-      if (s.totalTasks > 0) hasData = true;
-      totTasks  += s.totalTasks;
-      totAI     += s.aiTasks;
-      // Manual Tasks total combines explicit Manual + Manual-AI-Ineffective
-      // — matches the per-row display column which shows manTasks+maiTasks.
-      totMan    += s.manTasks + s.maiTasks;
-      totAiTot  += s.aiTot;
-      totAiComp += s.aiComp;
-      totSaved  += s.savedHrs;
-      totAllHrs += s.aiTot + s.manOrig + s.maiOrig;  // for overall adoption
-      // Roll up manual + MAI hours so the footer can compute Productivity
-      // Gain % from the same formula (it is not the average of the rows).
-      totManOrig  += s.manOrig;
-      totManComp  += s.manComp;
-      totMaiOrig  += s.maiOrig;
-      totMaiComp  += s.maiComp;
-
-      const effColor    = s.effPct >= 0 ? '#22d3ee' : '#f87171';
-      const manEffColor = s.manualEffPct >= 0 ? '#a78bfa' : '#f87171';
-      const savedColor  = s.savedHrs >= 0 ? '#f472b6' : '#f87171';
-      // Productivity Gain %: green when positive, red when negative, grey when zero.
-      const pgColor     = s.prodGainPct > 0 ? '#34d399' : s.prodGainPct < 0 ? '#f87171' : '#94a3b8';
-
-      return `<tr ondblclick="showAiAdoptionPopup('${d.key}')" title="Double-click to view contributing tasks for ${d.label}" style="cursor:pointer;">
-        <td style="text-align:left;font-weight:600;color:${d.clr}">${d.label}</td>
-        <td style="font-weight:700">${s.totalTasks}</td>
-        <td style="color:#60a5fa">${s.aiTasks}</td>
-        <td style="color:#94a3b8" title="Manual + Manual-AI-Ineffective tasks combined">${s.manTasks + s.maiTasks}</td>
-        <td style="color:${effColor};font-weight:700">${s.effPct}%</td>
-        <td style="color:${manEffColor};font-weight:700">${s.manualEffPct}%</td>
-        <td style="color:${savedColor};font-weight:700" title="AI Saved (${fmtH(s.aiSaved)}h) + AI-Ineffective Saved (${fmtH(s.maiSaved)}h) + Manual Saved (${fmtH(s.manualSaved)}h)">${fmtH(s.savedHrs)}h</td>
-        <td style="color:${pgColor};font-weight:700" title="(AI Saved + AI-Ineffective Saved + Manual Saved) / (Total Orig / 1.4) × 100">${s.prodGainPct}%</td>
-      </tr>`;
-    });
-
-    if (!hasData) {
-      aiBody.innerHTML = '';
-      if (aiFoot) aiFoot.innerHTML = '';
-      if (aiEmpty) aiEmpty.style.display = '';
-      return;
-    }
-    if (aiEmpty) aiEmpty.style.display = 'none';
-    aiBody.innerHTML = rows.join('');
-
-    // ── Overall (footer) — computed from the rolled-up accumulators ──
-    // totSaved already contains the new three-way savedHrs sum (AI +
-    // MAI + Manual) per discipline thanks to calcAI's new formula. The
-    // PG formula uses the same numerator/denominator as the per-row
-    // calculation, but on the cross-discipline totals.
-    const totEff       = totAiTot > 0 ? Math.round(((totAiTot - totAiComp) / totAiTot) * 100) : 0;
-    // AI Adoption % — same strict rule as per-row: MAI doesn't count as AI.
-    const ovAdop       = totAllHrs > 0 ? Math.round((totAiTot / totAllHrs) * 100) : 0;
-    // Overall Productivity Gain % — explicit three-way (matches user spec):
-    //   (AI Saved + AI-Ineffective Saved + Manual Saved) / (Total Orig / 1.4) × 100
-    const ovAiSaved     = totAiTot   - totAiComp;
-    const ovMaiSaved    = totMaiOrig - totMaiComp;
-    const ovManualSaved = totManOrig - totManComp;
-    const ovTotalSaved  = ovAiSaved + ovMaiSaved + ovManualSaved;
-    const ovTotalOrig   = totAiTot + totMaiOrig + totManOrig;
-    const ovProdGainPct = ovTotalOrig > 0
-      ? Math.round((ovTotalSaved / (ovTotalOrig / 1.4)) * 100) : 0;
-    const effColor = totEff  >= 0 ? '#22d3ee' : '#f87171';
-    const savColor = ovTotalSaved >= 0 ? '#f472b6' : '#f87171';
-    const adColor  = ovAdop >= 70 ? '#34d399' : ovAdop >= 40 ? '#fbbf24' : '#f87171';
-    const ovPgColor = ovProdGainPct > 0 ? '#34d399' : ovProdGainPct < 0 ? '#f87171' : '#94a3b8';
-
-    if (aiFoot) aiFoot.innerHTML = `<tr ondblclick="showAiAdoptionPopup('__all__')" title="Double-click to view all contributing tasks" style="cursor:pointer;">
-      <td style="text-align:left;font-weight:700">Overall</td>
-      <td style="font-weight:700">${totTasks}</td>
-      <td style="color:#60a5fa;font-weight:700">${totAI}</td>
-      <td style="color:#94a3b8;font-weight:700" title="Manual + Manual-AI-Ineffective tasks combined">${totMan}</td>
-      <td style="color:${effColor};font-weight:700">—</td>
-      <td style="font-weight:700">—</td>
-      <td style="color:${savColor};font-weight:700" title="AI Saved (${fmtH(ovAiSaved)}h) + AI-Ineffective Saved (${fmtH(ovMaiSaved)}h) + Manual Saved (${fmtH(ovManualSaved)}h)">${fmtH(ovTotalSaved)}h</td>
-      <td style="color:${ovPgColor};font-weight:700" title="(AI Saved + AI-Ineffective Saved + Manual Saved) / (Total Orig / 1.4) × 100">${ovProdGainPct}%</td>
-    </tr>`;
-  })();
 
   // ── Show report ───────────────────────────────────────
   const wrap=document.getElementById('rptWrap');
